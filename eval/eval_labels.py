@@ -85,7 +85,9 @@ def main():
             label_results.append({"doc": name, "class": cls, "located": True, "block": bool(fs),
                                   "category": any(f["category"] == cls for f in fs),
                                   "strict": any(f["category"] == cls and quote_hit(f, lab["было"]) for f in fs),
-                                  "exact": bool(ex)})
+                                  "exact": bool(ex), "exact_sources": [f["source"] for f in ex],
+                                  "strict_sources": [f["source"] for f in fs if f["category"] == cls and quote_hit(f, lab["было"])],
+                                  "block_sources": [f["source"] for f in fs]})
             if fs:
                 hit[cls] += 1
                 matched_findings.update(f["id"] for f in fs)
@@ -99,7 +101,11 @@ def main():
         fin = check(FINAL[name], use_llm=args.llm)
         report[name] = {"findings_src": len(res["findings"]), "matched_findings": len(matched_findings),
                         "findings_final": len(fin["findings"]),
-                        "high_final": sum(1 for f in fin["findings"] if f["severity"] == "high")}
+                        "high_final": sum(1 for f in fin["findings"] if f["severity"] == "high"),
+                        "seconds_src": res.get("seconds"), "seconds_final": fin.get("seconds"),
+                        "src": [{k: f.get(k) for k in ("id", "block_id", "quote", "category", "severity", "source", "section")} for f in res["findings"]],
+                        "matched_ids": sorted(matched_findings),
+                        "final": [{k: f.get(k) for k in ("id", "block_id", "quote", "category", "severity", "source", "section")} for f in fin["findings"]]}
     allt, allh, allc, alls = sum(total.values()), sum(hit.values()), sum(hit_cat.values()), sum(strict.values())
     print(f"Метки: {allt}, не найдено место в документе: {unlocated}")
     print(f"Полнота по блокам: {allh}/{allt} = {allh / allt:.0%}; с верной категорией: {allc}/{allt} = {allc / allt:.0%}; "
