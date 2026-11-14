@@ -24,6 +24,13 @@ RUN if [ "$WITH_RAG" = "1" ]; then \
       pip install --retries 10 --timeout 120 --index-url https://download.pytorch.org/whl/cpu torch \
       && pip install --retries 10 --timeout 120 -r requirements-rag.txt; fi
 
+ARG WITH_PII_NER=0
+ARG PII_NER_REVISION=c802e8cd26f85d1cf920973ea6f83965a0618d63
+COPY requirements-pii.txt .
+# модель NER для маскирования ПД (около 680 МБ) скачивается при сборке в /opt/pii-ner, вне тома models
+RUN if [ "$WITH_PII_NER" = "1" ]; then       (python -c "import torch" 2>/dev/null || pip install --retries 10 --timeout 120 --index-url https://download.pytorch.org/whl/cpu torch)       && pip install --retries 10 --timeout 120 -r requirements-pii.txt       && python -c "from huggingface_hub import snapshot_download; snapshot_download('redmadrobot-rnd/rubert-base-pii-ner', revision='$PII_NER_REVISION', local_dir='/opt/pii-ner')"; fi
+ENV TZCHECK_PII_NER_MODEL=/opt/pii-ner
+
 ARG WITH_BROWSER=0
 RUN if [ "$WITH_BROWSER" = "1" ]; then pip install playwright==1.58.0 && python -m playwright install --with-deps chromium; fi
 
