@@ -344,6 +344,48 @@ def test_verify_asks_again_when_answer_has_no_decision(stub):
     assert len(asked) == 2 and [f.evidence["вторая проверка"] for f in out] == ["подтверждено"]
 
 
+def test_two_models_second_check(monkeypatch):
+    """TZCHECK_VERIFY2_MODEL: в основной список идёт подтверждённое обеими моделями, снимается снятое обеими, подтверждённое одной
+    идёт на ручную проверку."""
+    votes = {"stub/a": ["keep", "keep", "reject", "reject"], "stub/b": ["keep", "reject", "reject", "lower"]}
+    items = [_finding(), _finding(block_id="t1r2", quote="Длина", category="Противоречие"),
+             _finding(block_id="t1r4", quote="Высота сиденья", category="Противоречие"), _finding(block_id="t1r4", quote="450", category="Лишнее в ТЗ")]
+
+    def completion(**kw):
+        prompt = kw["messages"][-1]["content"]
+        if prompt.startswith("Задача: паспорт"):
+            data = PASS
+        elif prompt.startswith("Задача: разметка шапки"):
+            data = HEADER
+        elif prompt.startswith("Задача: найти дефекты"):
+            data = {"findings": [i for i in items if f"[{i['block_id']}]" in prompt.split("<<<ТЗ>>>")[-1]], "lookups": []}
+        elif prompt.startswith("Задача: независимая вторая проверка"):
+            ns = [int(x) for x in prompt.split("их номера: ")[1].split(".")[0].split(", ")]
+            data = {"decisions": [{"n": n, "decision": votes[kw["model"]][n], "reason": kw["model"], "confidence": 80} for n in ns]}
+        else:
+            data = {}
+        text = json.dumps(data, ensure_ascii=False)
+        return SimpleNamespace(choices=[SimpleNamespace(finish_reason="stop", message=SimpleNamespace(content=text))], usage=None)
+    monkeypatch.setitem(sys.modules, "litellm", SimpleNamespace(completion=completion))
+    monkeypatch.setenv("TZCHECK_LLM_MODEL", "stub/a")
+    monkeypatch.setenv("TZCHECK_VERIFY2_MODEL", "stub/b")
+    doc = spec_doc()
+    pipeline.start_core(doc)
+    passport.detect(doc, Scrubber())
+    tables.build(doc, Scrubber())
+    found = core.find(doc, Scrubber(), CATS)
+    order = [f.quote for f in found]
+    out = {f.quote: f for f in core.verify(doc, Scrubber(), found)}
+    verdict = {q: (out[q].evidence["вторая проверка"], out[q].needs_review) if q in out else ("снято", None) for q in order}
+    assert [verdict[q][0] for q in order] == ["подтверждено", "подтверждено одной из двух моделей, на проверку", "снято",
+                                              "понижено, на проверку"]
+    assert [verdict[q][1] for q in order] == [False, True, None, True]
+    assert out[order[1]].evidence["вторая проверка, две модели"] == "подтверждено / снято" and out[order[1]].severity == "high"
+    assert {c["model"] for c in doc.journal.calls if c["stage"] == "verify2"} == {"stub/b"}
+    assert pipeline.route(out[order[1]].finalize()).section == "llm_review" and len(doc.llm_rejected) == 1
+    assert core._two_checks("keep", "") == "split" and core._two_checks("lower", "reject") == "lower" and core._two_checks("", "") == "lower"
+
+
 def test_verify_can_reject_or_lower_but_not_raise(stub):
     items = [_finding(), _finding(block_id="t1r4", quote="Высота сиденья", severity="medium", category="Противоречие"),
              _finding(block_id="t1r2", quote="Длина", severity="low", category="Стандарты (ГОСТ, поверка)")]
