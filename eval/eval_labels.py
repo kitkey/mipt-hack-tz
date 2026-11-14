@@ -5,6 +5,7 @@ import os
 import re
 import sys
 from collections import Counter, defaultdict
+from difflib import SequenceMatcher
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ.setdefault("TZCHECK_REFDATA_OFFLINE", "1")
@@ -37,6 +38,16 @@ def quote_hit(f, was):
     return len(w & q) >= min(3, len(w)) or norm(f["quote"])[:40] in norm(was) or norm(was)[:40] in norm(f["quote"])
 
 
+def quote_exact(f, was):
+    q, w = norm(f["quote"]).strip(" .,;:|"), norm(was)
+    if len(q) < 4 or not w:
+        return False
+    if q in w or w in q:
+        return True
+    m = SequenceMatcher(None, q, w, autojunk=False).find_longest_match(0, len(q), 0, len(w))
+    return m.size >= min(25, int(len(q) * 0.6))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--labels", default="eval/labels.csv")
@@ -44,7 +55,8 @@ def main():
     ap.add_argument("--out", default="eval/result.json")
     args = ap.parse_args()
     labels = list(csv.DictReader(open(args.labels, encoding="utf-8-sig"), delimiter=";"))
-    total, hit, hit_cat, strict = Counter(), Counter(), Counter(), Counter()
+    total, hit, hit_cat, strict, exact = Counter(), Counter(), Counter(), Counter(), Counter()
+    exact_findings = set()
     unlocated = 0
     report = {}
     misses = []
@@ -63,12 +75,17 @@ def main():
             blocks = find_blocks(doc, lab["было"])
             if not blocks:
                 unlocated += 1
-                label_results.append({"doc": name, "class": cls, "located": False, "block": False, "category": False, "strict": False})
+                label_results.append({"doc": name, "class": cls, "located": False, "block": False, "category": False, "strict": False, "exact": False})
                 continue
             fs = [f for b in blocks for f in by_block.get(b, [])]
+            ex = [f for f in fs if f["category"] == cls and quote_exact(f, lab["было"])]
+            if ex:
+                exact[cls] += 1
+                exact_findings.add((name, ex[0]["id"]))
             label_results.append({"doc": name, "class": cls, "located": True, "block": bool(fs),
                                   "category": any(f["category"] == cls for f in fs),
-                                  "strict": any(f["category"] == cls and quote_hit(f, lab["было"]) for f in fs)})
+                                  "strict": any(f["category"] == cls and quote_hit(f, lab["было"]) for f in fs),
+                                  "exact": bool(ex)})
             if fs:
                 hit[cls] += 1
                 matched_findings.update(f["id"] for f in fs)
@@ -87,11 +104,14 @@ def main():
     print(f"Метки: {allt}, не найдено место в документе: {unlocated}")
     print(f"Полнота по блокам: {allh}/{allt} = {allh / allt:.0%}; с верной категорией: {allc}/{allt} = {allc / allt:.0%}; "
           f"строго (категория + цитата про это место): {alls}/{allt} = {alls / allt:.0%}")
+    alle = sum(exact.values())
+    print(f"Точно (категория + цитата дословно из этого места, общий отрезок от 25 знаков): {alle}/{allt} = {alle / allt:.0%}; "
+          f"разных замечаний на этих совпадениях: {len(exact_findings)}")
     for cls in sorted(total, key=lambda c: -total[c]):
-        print(f"  {cls}: блок {hit[cls]}/{total[cls]}, категория {hit_cat[cls]}, строго {strict[cls]}")
+        print(f"  {cls}: блок {hit[cls]}/{total[cls]}, категория {hit_cat[cls]}, строго {strict[cls]}, точно {exact[cls]}")
     for name, r in report.items():
         print(f"{name}: замечаний на исходном {r['findings_src']}, из них у размеченных мест {r['matched_findings']}; на итоговом {r['findings_final']} (высокий {r['high_final']})")
-    json.dump({"total": dict(total), "hit": dict(hit), "hit_cat": dict(hit_cat), "strict": dict(strict), "docs": report, "misses": misses, "label_results": label_results}, open(args.out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    json.dump({"total": dict(total), "hit": dict(hit), "hit_cat": dict(hit_cat), "strict": dict(strict), "exact": dict(exact), "exact_findings": len(exact_findings), "docs": report, "misses": misses, "label_results": label_results}, open(args.out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 
 
 if __name__ == "__main__":
