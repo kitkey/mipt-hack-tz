@@ -9,9 +9,8 @@ from . import progress as prog
 from .checks import categories_for, group_names, group_stats, is_full, only_groups, parse_checks, partial_note, steps_note, verdict_code
 from .model import SECTION_LLM, SECTION_MAIN, SECTION_UNCHECKED, STATUS_ERROR, STATUS_REVIEW, Finding, from_model, status_title
 from .norms import NORMS, apply_editions
-from .parse import ParseError, ParsedDoc, parse, parse_many
+from .parse import Block, ParseError, ParsedDoc, parse, parse_many
 from .pii import Scrubber
-from .rules import _item_name
 
 SEV_ORDER = {"high": 0, "medium": 1, "low": 2}
 HIDDEN_RE = re.compile("[​-‏‪-‮⁠-⁤⁦-⁩﻿\U000e0000-\U000e007f]")
@@ -53,6 +52,11 @@ def _verdict(findings) -> str:
     if findings:
         return f"Ошибок не найдено, замечаний на проверку: {review or len(findings)}."
     return ""
+
+
+def _item_name(b: Block) -> str:
+    cell = next((c for c in b.cells if c.strip() and not re.fullmatch(r"[\d.,\s]+", c) and len(c) < 200), "")
+    return re.split(r"\s+(?:Референс|Страна происхождения|Изготовитель)", cell, maxsplit=1, flags=re.I)[0].strip()
 
 
 def _collapse_repeats(findings: list[Finding], doc: ParsedDoc) -> list[Finding]:
