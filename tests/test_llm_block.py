@@ -62,7 +62,7 @@ def test_model_findings_go_to_separate_block(monkeypatch):
     r = check(FIN, use_llm=True)
     main = [f for f in r["findings"] if f["section"] == "main"]
     extra = [f for f in r["findings"] if f["section"] == "llm_review"]
-    assert len(main) == len(rules_only["findings"])
+    assert len(main) == sum(f["section"] == "main" for f in rules_only["findings"])
     assert extra and all(f["id"].startswith("M") and f["needs_review"] and f["status"] == "ручная проверка" for f in extra)
     assert r["stats"]["from_model"] == len(extra)
     assert r["summary"].split(".")[0] == rules_only["summary"].split(".")[0]
@@ -78,7 +78,7 @@ def test_doc_budget_skips_model_calls(monkeypatch):
     r = check(FIN, use_llm=True)
     assert stub.calls == 0
     assert any("бюджет" in w for w in r["warnings"])
-    assert all(f["section"] == "main" for f in r["findings"])
+    assert not any(f["section"] == "llm_review" for f in r["findings"])
 
 
 class StubTwoStage(Stub):
@@ -110,7 +110,7 @@ def test_block_and_confidence_in_both_orchestrators(monkeypatch, orchestrator):
     main = [f for f in r["findings"] if f["section"] == "main"]
     extra = [f for f in r["findings"] if f["section"] == "llm_review"]
     assert r["orchestrator"] == orchestrator
-    assert len(main) == len(rules_only["findings"])
+    assert len(main) == sum(f["section"] == "main" for f in rules_only["findings"])
     reviewed = [f for f in main if "вторая проверка" in f["evidence"]]
     assert reviewed and all("решает закупщик" in f["evidence"]["вторая проверка"] and f["confidence_pct"] is not None for f in reviewed)
     if orchestrator == "graph":
@@ -148,3 +148,29 @@ def test_summary_built_by_code_and_chips_count_main_only(monkeypatch, orchestrat
     assert "марка лифта" not in head and f'id="cshown">{len(main)}<' in head
     assert html.index("марка лифта") > html.index("Замечания модели: проверить вручную") > html.index('id="frows"')
     assert "не входит" in html[html.index("марка лифта"):]
+
+
+class Recorder(Stub):
+    def __init__(self):
+        super().__init__()
+        self.prompts = []
+
+    def __call__(self, prompt, max_tokens=4000):
+        self.prompts.append(prompt)
+        return super().__call__(prompt, max_tokens)
+
+
+def test_llm_mode_on_other_customer_and_practice_only_for_own(monkeypatch):
+    """ТЗ не МФТИ: правила практики пропущены, режим с моделью не падает, практики МФТИ в промпте проверки нет."""
+    monkeypatch.setenv("TZCHECK_CUSTOMER", "none")
+    rec = Recorder()
+    monkeypatch.setattr(llm, "_call", rec)
+    r = check(FIN, use_llm=True)
+    assert r["status"] == "ok" and not any("упало" in w or "KeyError" in w for w in r["warnings"])
+    verify = [p for p in rec.prompts if p.startswith("Кандидаты в ошибки")]
+    assert verify and not any("Практика закупщиков" in p for p in rec.prompts)
+    monkeypatch.setenv("TZCHECK_CUSTOMER", "mipt")
+    rec = Recorder()
+    monkeypatch.setattr(llm, "_call", rec)
+    check(FIN, use_llm=True)
+    assert any("Практика закупщиков заказчика (МФТИ)" in p for p in rec.prompts if p.startswith("Кандидаты в ошибки"))
