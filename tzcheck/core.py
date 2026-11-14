@@ -62,6 +62,33 @@ FIND_PROMPT = """Задача: найти дефекты техническог�
 "lookups": [{{"type": "standard|okpd|ktru|si", "value": "обозначение как в тексте", "block_id": "id строки", "item": "к какой позиции относится"}}]}}
 Если дефектов нет, верни {{"findings": [], "lookups": [...]}}."""
 
+COMPLETE_PROMPT = """Задача: полнота и проверяемость описания одной позиции закупки: {what}.
+Паспорт закупки: {passport}
+Общие условия из других разделов, которые могут относиться к этой позиции:
+{terms}
+
+Позиция. Строки в формате [id] текст; у строк таблицы подписаны столбцы.
+{data}
+
+1. Перечисли, что описывает эта позиция: каждое изделие, каждую составную часть комплекта, каждую работу или услугу отдельно.
+2. По каждому пункту реши по виду предмета, хватает ли описания, чтобы участник понял, что предложить, а заказчик смог принять:
+   - наименование и назначение понятны;
+   - у каждой названной характеристики есть значение и единица, которые можно проверить (число, диапазон, перечень), а не оценочное слово;
+   - названы характеристики, без которых предмет такого вида нельзя сравнить с предложением или принять; не требуй того, чего у такого
+     предмета не бывает;
+   - определены количество и состав комплекта;
+   - у средства измерений названы диапазон и точность измерений.
+   Оценка пункта: "pass" (описания хватает), "weak" (есть неточность), "fail" (не хватает существенного).
+3. Для каждого "weak" и "fail" дай замечание с цитатой из строки, где описан этот пункт. Одному пункту может понадобиться несколько
+   замечаний: по одному на каждую недостающую или непроверяемую характеристику.
+Не считай недостатком то, что указано в другой строке этой позиции или в общих условиях. Товарные знаки и коды здесь не оценивай.
+
+Верни JSON: {{"items": [{{"name": "что это", "verdict": "pass|weak|fail"}}],
+"findings": [{{"block_id": "id строки", "quote": "дословная цитата из этой строки, 3-25 слов", "category": "{categories}",
+"severity": "high|medium|low", "explanation": "чего не хватает или что нельзя проверить, по тексту, 1-2 предложения", "fix": "что добавить или уточнить",
+"absent": true|false, "missing": "чего нет", "confidence": целое 0-100, уверенность, что это действительно дефект}}]}}
+Если описания хватает, верни {{"items": [...], "findings": []}}."""
+
 REF_PROMPT = """Задача: проверить обозначения из технического задания по справочным записям.
 Паспорт закупки: {passport}
 
@@ -360,6 +387,36 @@ def find(doc, scr, cats: list) -> list[Finding]:
         for f in out:
             f._unit = u
         u.lookups = [x for x in data.get("lookups") or [] if isinstance(x, dict) and x.get("type") in ("standard", "okpd", "ktru", "si") and x.get("value")]
+        return out
+
+    found = []
+    for res in pmap(work, units):
+        found.extend(res)
+    return found
+
+
+COMPLETE_CATEGORIES = ("Неполнота или комплектность", "Некорректная характеристика")
+
+
+def complete(doc, scr, cats: list) -> list[Finding]:
+    """Отдельный проход по позициям спецификации: модель перечисляет изделия позиции и по каждому решает, хватает ли описания
+    (значения и единицы характеристик, состав комплекта, диапазон и точность у средств измерений). Замечания идут дальше общим
+    путём: «не указано» проверяется по комплекту, затем вторая проверка. TZCHECK_COMPLETENESS=0 выключает проход."""
+    own = [c for c in cats if c in COMPLETE_CATEGORIES]
+    if not own or os.environ.get("TZCHECK_COMPLETENESS", "1").lower() in ("0", "off", "false", "no"):
+        return []
+    units = [u for u in getattr(doc, "core_units", []) if u.kind == "position"]
+    pline = scr.scrub(passport.line(doc))
+
+    def work(u: Unit):
+        what = f"позиция спецификации «{u.title[:120]}»"
+        prompt = COMPLETE_PROMPT.format(what=scr.scrub(what), passport=pline, terms=_terms(doc, scr, u), data=wrap(u.text), categories="|".join(own))
+        data = ask(doc, prompt, 6000, "полнота описания", "complete", "Полнота описания: " + what, unit_of(u.kind, u.title, u.block_ids)) or {}
+        blocks = [doc.block(x) for x in u.block_ids if doc.block(x)]
+        call = data.get("_call", "")
+        out = [f for f in (_finding(doc, i, blocks, scr, "model:complete", own, call) for i in data.get("findings") or []) if f]
+        for f in out:
+            f._unit = u
         return out
 
     found = []
