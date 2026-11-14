@@ -255,6 +255,8 @@ h1{font-size:32px;line-height:40px;font-weight:600;letter-spacing:-.01em;margin:
 .ev{display:grid;grid-template-columns:max-content 1fr;gap:4px 16px;margin:0 0 8px;font-size:14px;line-height:20px}
 .ev dt{color:var(--text-2)}
 .ev dd{margin:0;overflow-wrap:anywhere}
+.ev .nm{color:var(--text-2)}
+.ev .nm-off{color:var(--s-unclear);font-weight:500}
 .f-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:12px}
 .src{font-size:13px;color:var(--text-3)}
 .decide{display:inline-flex;border:1px solid var(--line-strong);border-radius:10px;overflow:hidden}

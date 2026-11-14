@@ -447,7 +447,8 @@ function normHtml(data, ids) {
   }).join("");
 }
 
-const EV_SKIP = new Set(["найдено", "нормы", "source", "norm_ids", "цитата найдена в тексте", "основание из базы норм", "второй блок"]);
+const EV_SKIP = new Set(["найдено", "нормы", "source", "norm_ids", "цитата найдена в тексте", "основание из базы норм", "второй блок", "основание пункта"]);
+const NORM_UNCHECKED = "применимость не проверена";
 const EV_LABEL = {"блок отчёта": "раздел", "довод проверки": "довод второй проверки", "обратная связь": "решения закупщиков"};
 const GOST_STATUS = {approved: "утверждён", verified: "сверен", draft: "черновик"};
 
@@ -472,11 +473,16 @@ function basisTitle(b) {
   return String(b || "").replace(/^модель (при )/, "$1");
 }
 
+function normMark(ev) {
+  const mark = ev["пункт нормы"] ? ev["основание пункта"] : "";
+  return mark ? ` <span class="nm${mark === NORM_UNCHECKED ? " nm-off" : ""}">(${esc(mark)})</span>` : "";
+}
+
 function evidenceHtml(ev) {
   if (!ev || typeof ev !== "object") return "";
   const rows = Object.entries(ev).filter(([k, v]) => !EV_SKIP.has(k) && v !== null && v !== "" && !(Array.isArray(v) && !v.length));
   if (!rows.length) return "";
-  return `<dl class="ev">${rows.map(([k, v]) => `<dt>${esc(evLabel(k))}</dt><dd>${esc(evValue(k, v))}</dd>`).join("")}</dl>`;
+  return `<dl class="ev">${rows.map(([k, v]) => `<dt>${esc(evLabel(k))}</dt><dd>${esc(evValue(k, v))}${k === "пункт нормы" ? normMark(ev) : ""}</dd>`).join("")}</dl>`;
 }
 
 
@@ -499,7 +505,7 @@ const TRACE_STEP = {
 const STAGE_TITLE = {
   passport: "Паспорт закупки", roles: "Роли разделов", tables: "Разметка таблиц", find: "Поиск замечаний",
   refs: "Сверка со справочниками", gost: "Применимость ГОСТ", gost_check: "Сверка с ГОСТ", absent: "Проверка «не указано»",
-  cross: "Сверка частей комплекта", verify: "Вторая проверка", fixcheck: "Проверка правок", summary: "Заключение",
+  cross: "Сверка частей комплекта", verify: "Вторая проверка", normcheck: "Применимость пунктов норм", fixcheck: "Проверка правок", summary: "Заключение",
 };
 
 async function getTrace(rv) {
