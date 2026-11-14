@@ -80,16 +80,20 @@ REF_PROMPT = """Задача: проверить обозначения из т�
 
 ABSENT_PROMPT = """Задача: проверить утверждения «не указано» по всему комплекту документов.
 Паспорт закупки: {passport}
-Для каждого утверждения даны места из всего комплекта, найденные поиском: [id] (роль части; место) текст.
-Реши:
-- "not_found": в кандидатах этого нет, утверждение верно;
-- "same": это указано в той же части или в общих условиях, которые к ней относятся, утверждение неверно;
-- "other": это указано в другой части комплекта (договор, другой раздел, приложение), утверждение неверно.
-В "block_id" укажи id кандидата, где это указано (для same и other); без такого кандидата решение "not_found".
+Для каждого утверждения дана исходная часть вокруг замечания (строка замечания отмечена знаком ») и места из всего комплекта,
+найденные поиском: [id] (роль части; место) текст вокруг слов запроса.
+Реши по показанному тексту:
+- "not_found": показанные места явно относятся к этой теме (там такие сведения и должны стоять), и нужных сведений в них нет, утверждение верно;
+- "same": это указано в исходной части или в общих условиях, которые к ней относятся, утверждение неверно;
+- "other": это указано в другой части комплекта (договор, другой раздел, приложение), утверждение неверно;
+- "unclear": показанного текста мало для решения: место, где такие сведения обычно стоят, не показано или обрезано.
+Для same и other в "block_id" укажи id показанного места, где это указано, в "quote" дословную цитату из него (3-25 слов) с самими
+сведениями (значение, срок, перечень, условие), а не повтор фрагмента, о котором утверждение: без такой цитаты решение не принимается.
+Место, где сказано так же общо, как в замечании, сведениями не считается.
 
 {items}
 
-Верни JSON: {{"decisions": [{{"n": номер, "decision": "not_found|same|other", "block_id": "...", "reason": "коротко"}}]}}"""
+Верни JSON: {{"decisions": [{{"n": номер, "decision": "not_found|same|other|unclear", "block_id": "...", "quote": "...", "reason": "коротко"}}]}}"""
 
 CROSS_PROMPT = """Задача: сверка частей комплекта документов по позиции и условиям.
 Паспорт закупки: {passport}
@@ -451,54 +455,148 @@ def _role(b) -> str:
     return passport.ROLES.get(b.role, "роль не определена")
 
 
+def _rows_of(doc, scr, p) -> tuple[str, list, list]:
+    """Позиция построчно: строка-заголовок, id строк и строки с подписями столбцов (как в запросе поиска дефектов)."""
+    lines = tables.render(doc, p, scr, limit=10 ** 6).split("\n")
+    rows = [ln for ln in lines[1:] if ln.startswith("[") and "] " in ln]
+    return lines[0], [ln[1:ln.index("] ")] for ln in rows], rows
+
+
+def _place(doc, scr, b, query: str, size: int) -> str:
+    """Найденное место: роль части, где стоит, и текст вокруг слов запроса; у строки таблицы заголовок её позиции и подписи столбцов."""
+    p = tables.position(doc, b.id)
+    if p is not None:
+        head, ids, rows = _rows_of(doc, scr, p)
+        if b.id in ids:
+            row = rows[ids.index(b.id)].split("] ", 1)[1]
+            return f"[{b.id}] ({_role(b)}; {b.location()}; {head[:150]}) {chunks.window(row, query, size)}"
+    return f"[{b.id}] ({_role(b)}; {b.location()}) {scr.scrub(chunks.window(b.text, query, size))}"
+
+
+def _around(doc, scr, f: Finding, size: int) -> tuple[str, list]:
+    """Исходная часть вокруг замечания: строки его позиции с подписями столбцов или соседние блоки того же файла по обе стороны
+    от блока замечания, строка замечания отмечена «»». Возвращает текст и показанные блоки."""
+    p = tables.position(doc, f.block_id)
+    head, ids, rows = _rows_of(doc, scr, p) if p is not None else ("", [], [])
+    if f.block_id in ids:
+        def line(j):
+            bid, body = rows[j][1:].split("] ", 1)
+            return f"[{bid}] ", body
+    else:
+        b0 = doc.block(f.block_id)
+        same = [b for b in doc.blocks if b0 is not None and b.source == b0.source]
+        head, ids = "", [b.id for b in same]
+
+        def line(j):
+            return f"[{same[j].id}] ({scr.scrub(same[j].section[:60])}) ", scr.scrub(same[j].text)
+    if f.block_id not in ids:
+        return "", []
+    c = ids.index(f.block_id)
+    pre, body = line(c)
+    picked = {c: "» " + pre + chunks.window(body, f.quote, size // 2)}
+    used = len(head) + len(picked[c])
+    for d in range(1, len(ids)):
+        for j in (c + d, c - d):
+            if 0 <= j < len(ids) and used < size:
+                pre, body = line(j)
+                t = pre + chunks.clip(body, 500)
+                if used + len(t) <= size:
+                    picked[j] = t
+                used += len(t)
+        if used >= size:
+            break
+    order = sorted(picked)
+    text = "\n".join(([head] if head else []) + [picked[j] for j in order])
+    return text, [doc.block(ids[j]) for j in order if doc.block(ids[j])]
+
+
+def _proof(doc, scr, f: Finding, d: dict, blocks: list) -> tuple | None:
+    """Цитата модели, где сведения указаны, дословно в одном из показанных ей мест (сначала в названном блоке). Цитата из блока
+    замечания, которая целиком входит в его же цитату, доказательством не считается: это сам спорный фрагмент. Обрывок короче
+    трёх слов тоже: в нём нет самих сведений."""
+    pref = str(d.get("block_id") or "")
+    quote = scr.restore(str(d.get("quote") or "")).strip(" …»")
+    if len(quote.split()) < 3:
+        return None
+    hit = locate(quote, sorted(blocks, key=lambda b: b.id != pref), _labels(doc))
+    if hit and hit[0].id == f.block_id and _norm(hit[1]).lower() in _norm(f.quote).lower():
+        return None
+    return hit
+
+
+ABSENT_BATCH = 6
+ABSENT_SOURCE_CHARS = 2000
+
+
 def absent(doc, scr, findings: list[Finding]) -> list[Finding]:
+    """Утверждения «не указано»: модель видит исходную часть вокруг замечания (своя часть из поиска не исключается) и места всего
+    комплекта вокруг слов запроса. Снять замечание можно только с дословной цитатой показанного места, где сведения указаны;
+    «мало контекста» оставляет замечание на ручную проверку с меньшей важностью."""
     claims = [f for f in findings if getattr(f, "_absent", False)]
     if not claims:
         return findings
     idx = search.of(doc)
     pline = scr.scrub(passport.line(doc))
-    items, cands = [], {}
+    items, cands, shown = [], {}, {}
     for n, f in enumerate(claims, 1):
         u = getattr(f, "_unit", None)
-        what = f._missing or f.explanation
-        query = what + " " + (u.title if u else "")
-        hits = idx.top(query, 6, exclude=u.block_ids if u else [f.block_id])
+        p = tables.position(doc, f.block_id)
+        what = getattr(f, "_missing", "") or f.explanation
+        obj = p.name if p is not None and p.name else (u.title if u else "")
+        src, src_blocks = _around(doc, scr, f, ABSENT_SOURCE_CHARS)
+        seen = {b.id for b in src_blocks} | {f.block_id}
+        query = what + " " + obj
+        hits = idx.top(query, 6, exclude=seen)
+        hits += idx.top(query, 2, exclude=seen | {b.id for b, _ in hits}, only=lambda b: b.role in ("terms", "warranty"))
         cands[n] = hits
-        lines = "\n".join(f"   [{b.id}] ({_role(b)}; {b.location()}) {scr.scrub(chunks.window(b.text, what, 400))}" for b, _ in hits) or "   кандидатов нет"
+        shown[n] = src_blocks + [b for b, _ in hits]
+        lines = "\n".join("   " + _place(doc, scr, b, what, 400) for b, _ in hits) or "   кандидатов нет"
         items.append(f"{n}. Утверждение: {scr.scrub(chunks.clip(f.explanation, 400))} Чего нет: {scr.scrub(chunks.clip(what, 200))}. "
-                     f"Где: [{f.block_id}] ({u.title[:80] if u else ''})\n   Кандидаты:\n{lines}")
+                     f"Где: [{f.block_id}] ({scr.scrub(obj[:80])})\n   Исходная часть:\n{src or '   не найдена'}\n   Кандидаты:\n{lines}")
+    batches = [list(range(s, min(s + ABSENT_BATCH, len(claims)))) for s in range(0, len(claims), ABSENT_BATCH)]
+
+    def work(batch):
+        unit = unit_of("finding", f"утверждения «не указано» ({len(batch)})", [claims[i].block_id for i in batch])
+        return batch, ask(doc, ABSENT_PROMPT.format(passport=pline, items=wrap("\n\n".join(items[i] for i in batch))), 3000,
+                          "проверка «не указано»", "absent", "Проверка «не указано» по всему комплекту", unit) or {}
+
     decided, calls = {}, {}
-    for start in range(0, len(items), 8):
-        part = claims[start:start + 8]
-        unit = unit_of("finding", f"утверждения «не указано» ({len(part)})", [x.block_id for x in part])
-        data = ask(doc, ABSENT_PROMPT.format(passport=pline, items=wrap("\n".join(items[start:start + 8]))), 3000, "проверка «не указано»",
-                   "absent", "Проверка «не указано» по всему комплекту", unit) or {}
-        for n in range(start + 1, start + len(part) + 1):
-            calls[n] = data.get("_call", "")
+    for batch, data in pmap(work, batches):
+        for i in batch:
+            calls[i + 1] = data.get("_call", "")
         for d in data.get("decisions") or []:
             try:
-                decided[int(d.get("n"))] = d
+                n = int(d.get("n"))
             except (TypeError, ValueError, AttributeError):
                 continue
-    out = []
+            if n - 1 in batch:
+                decided[n] = d
+    out, number = [], {id(f): n for n, f in enumerate(claims, 1)}
     for f in findings:
-        if f not in claims:
+        n = number.get(id(f))
+        if n is None:
             out.append(f)
             continue
-        n = claims.index(f) + 1
         d = decided.get(n)
         hits = cands.get(n) or []
         f.evidence["поиск по комплекту"] = [f"{b.location()}: {b.text[:160]}" for b, _ in hits[:3]] or "кандидатов не найдено"
         why = scr.restore(str((d or {}).get("reason") or ""))
         tail = f". {why}" if why else ""
-        dec, where = str((d or {}).get("decision")), doc.block(str((d or {}).get("block_id") or ""))
-        # «указано» принимается только со ссылкой на показанный кандидат: место, которого модель не видела, утверждение не снимает
-        shown = where is not None and where.id in {b.id for b, _ in hits}
-        if d and dec in ("same", "other") and not shown:
+        dec = str((d or {}).get("decision"))
+        if dec not in ("same", "other", "not_found", "unclear"):
+            d = None
+        # «указано» принимается только с дословной цитатой из показанного места: место, которого модель не видела, пересказ или повтор
+        # спорного фрагмента утверждение не снимают
+        proof = _proof(doc, scr, f, d, shown.get(n) or []) if d and dec in ("same", "other") else None
+        if d and dec in ("same", "other") and proof is None:
             dec = "unproved"
+        where, quote = proof or (None, "")
         verdict = {"same": f"снято: указано в той же части или общих условиях{tail}", "other": f"снято: указано в другой части комплекта{tail}",
                    "unproved": f"модель не назвала место, где это указано: на проверку{tail}",
+                   "unclear": f"на проверку с меньшей важностью: мало контекста{tail}",
                    "not_found": f"оставлено: не найдено по комплекту{tail}"}.get(dec if d else "", "решения модели нет, на проверку")
+        if where is not None:
+            verdict += f"; цитата: {where.location()} (блок {where.id})"
         f.trace.append({"step": "absent_search", "call": calls.get(n, ""), "item": d,
                         "text": f"поиск по комплекту: кандидатов {len(hits)} ({', '.join(b.id for b, _ in hits)}); {verdict}"})
         if not d or dec == "unproved":
@@ -508,8 +606,15 @@ def absent(doc, scr, findings: list[Finding]) -> list[Finding]:
             continue
         if dec in ("same", "other"):
             # утверждение «не указано» опровергнуто текстом комплекта; расхождения между местами ищет сверка частей
-            f.evidence["проверка «не указано»"] = ("указано: " if dec == "same" else "указано в другой части комплекта: ") + f"{where.location()}{tail}"
+            f.evidence["проверка «не указано»"] = (("указано: " if dec == "same" else "указано в другой части комплекта: ")
+                                                   + f"{where.location()}: «{chunks.clip(quote, 200)}»{tail}")
             doc.llm_rejected.append(f)
+            continue
+        if dec == "unclear":
+            f.severity = SEV[max(0, SEV.index(f.severity) - 1)] if f.severity in SEV else "low"
+            f.needs_review = True
+            f.evidence["проверка «не указано»"] = f"мало контекста для решения{tail}"
+            out.append(f)
             continue
         f.evidence["проверка «не указано»"] = f"не найдено по комплекту{tail}"
         out.append(f)

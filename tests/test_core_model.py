@@ -230,9 +230,9 @@ def _finding(**kw):
     return base
 
 
-def _prep(stub, answers):
+def _prep(stub, answers, doc=None):
     s = stub(dict({"паспорт": PASS, "разметка шапки": HEADER}, **answers))
-    doc = spec_doc()
+    doc = doc or spec_doc()
     pipeline.start_core(doc)
     passport.detect(doc, Scrubber())
     tables.build(doc, Scrubber())
@@ -261,17 +261,21 @@ def test_absent_claim_checked_against_whole_set(stub):
 
     def decide(prompt):
         assert "[p2]" in prompt  # кандидат поиска по комплекту
-        return {"decisions": [{"n": 1, "decision": "same", "block_id": "p2", "reason": "гарантия 12 месяцев в общих условиях"}]}
+        assert "» [t1r4]" in prompt  # исходная часть со строкой замечания
+        return {"decisions": [{"n": 1, "decision": "same", "block_id": "p2", "quote": "Гарантийный срок не менее 12 месяцев",
+                               "reason": "гарантия 12 месяцев в общих условиях"}]}
     s, doc = _prep(stub, {"найти дефекты": lambda p: {"findings": [claim] if "Стул" in p else []}, "проверить утверждения": decide})
     found = core.absent(doc, Scrubber(), core.find(doc, Scrubber(), CATS))
     assert found == [] and len(doc.llm_rejected) == 1
+    assert "Гарантийный срок не менее 12 месяцев" in doc.llm_rejected[0].evidence["проверка «не указано»"]
 
 
 def test_absent_claim_stated_elsewhere_is_rejected(stub):
     """«Не указано», которое нашлось в другой части комплекта, неверно: замечание снимается и остаётся в журнале снятых."""
     claim = _finding(block_id="t1r4", quote="Высота сиденья", explanation="Не указан гарантийный срок.", absent=True, missing="гарантийный срок")
     s, doc = _prep(stub, {"найти дефекты": lambda p: {"findings": [claim] if "Стул" in p else []},
-                          "проверить утверждения": {"decisions": [{"n": 1, "decision": "other", "block_id": "p2", "reason": "есть"}]}})
+                          "проверить утверждения": {"decisions": [{"n": 1, "decision": "other", "block_id": "p2", "quote": "не менее 12 месяцев",
+                                                                    "reason": "есть"}]}})
     found = core.absent(doc, Scrubber(), core.find(doc, Scrubber(), CATS))
     assert found == [] and len(doc.llm_rejected) == 1
     assert doc.llm_rejected[0].evidence["проверка «не указано»"].startswith("указано в другой части комплекта: ")
@@ -290,10 +294,63 @@ def test_absent_claim_needs_shown_candidate_to_be_rejected(stub):
 
 def test_absent_claim_confirmed_stays(stub):
     claim = _finding(absent=True, missing="значение высоты")
-    s, doc = _prep(stub, {"найти дефекты": lambda p: {"findings": [claim] if "Стол" in p else []},
-                          "проверить утверждения": {"decisions": [{"n": 1, "decision": "not_found", "reason": "нет"}]}})
+
+    def decide(prompt):
+        # своя позиция из поиска не исключается: соседняя строка той же позиции видна в исходной части
+        assert "» [t1r3]" in prompt and "[t1r2]" in prompt
+        return {"decisions": [{"n": 1, "decision": "not_found", "reason": "нет"}]}
+    s, doc = _prep(stub, {"найти дефекты": lambda p: {"findings": [claim] if "Стол" in p else []}, "проверить утверждения": decide})
     found = core.absent(doc, Scrubber(), core.find(doc, Scrubber(), CATS))
     assert len(found) == 1 and found[0].severity == "high"
+
+
+def _warranty_claim(stub, decision, doc=None, quote="Высота сиденья"):
+    claim = _finding(block_id="t1r4", quote=quote, explanation="Не указан гарантийный срок.", absent=True, missing="гарантийный срок")
+    s, doc = _prep(stub, {"найти дефекты": lambda p: {"findings": [claim] if "Стул" in p else []}, "проверить утверждения": decision}, doc)
+    return doc, core.absent(doc, Scrubber(), core.find(doc, Scrubber(), CATS))
+
+
+def test_absent_needs_verbatim_quote_to_reject(stub):
+    """Снять замечание можно только с цитатой, которая дословно есть в показанном месте; иначе оно идёт на ручную проверку."""
+    doc, found = _warranty_claim(stub, {"decisions": [{"n": 1, "decision": "same", "block_id": "p2", "quote": "гарантия 36 месяцев", "reason": "есть"}]})
+    assert len(found) == 1 and found[0].severity == "high" and found[0].needs_review and doc.llm_rejected == []
+    assert found[0].evidence["проверка «не указано»"].startswith("не подтверждена")
+    doc, found = _warranty_claim(stub, {"decisions": [{"n": 1, "decision": "other", "block_id": "p2", "reason": "есть"}]})
+    assert len(found) == 1 and doc.llm_rejected == []
+
+
+def test_absent_quote_repeating_the_finding_is_not_proof(stub):
+    doc, found = _warranty_claim(stub, {"decisions": [{"n": 1, "decision": "same", "block_id": "t1r4", "quote": "Высота сиденья | 450",
+                                                       "reason": "указано в исходной части"}]}, quote="Высота сиденья | 450 | мм")
+    assert len(found) == 1 and found[0].severity == "high" and doc.llm_rejected == []
+
+
+def test_absent_fragment_shorter_than_three_words_is_not_proof(stub):
+    doc, found = _warranty_claim(stub, {"decisions": [{"n": 1, "decision": "other", "block_id": "p2", "quote": "12 месяцев", "reason": "есть"}]})
+    assert len(found) == 1 and found[0].needs_review and doc.llm_rejected == []
+    assert found[0].evidence["проверка «не указано»"].startswith("не подтверждена")
+
+
+def test_absent_unclear_keeps_with_lower_severity(stub):
+    doc, found = _warranty_claim(stub, {"decisions": [{"n": 1, "decision": "unclear", "reason": "раздел гарантии не показан"}]})
+    assert len(found) == 1 and found[0].severity == "medium" and found[0].needs_review and doc.llm_rejected == []
+    assert found[0].evidence["проверка «не указано»"].startswith("мало контекста")
+    assert "мало контекста" in found[0].trace[-1]["text"]
+
+
+def test_absent_candidate_shown_around_match_not_from_start(stub):
+    """В длинном блоке модели показывается текст вокруг слов запроса, а не начало блока."""
+    doc = spec_doc()
+    filler = "Поставщик передаёт товар по накладной в рабочее время заказчика. " * 40
+    doc.blocks.append(_para("c2", filler + "Гарантийный срок на стулья составляет 24 месяца с даты поставки.", "Проект договора",
+                            source="договор.docx"))
+
+    def decide(prompt):
+        assert "[c2]" in prompt and "24 месяца" in prompt
+        return {"decisions": [{"n": 1, "decision": "other", "block_id": "c2", "quote": "Гарантийный срок на стулья составляет 24 месяца",
+                               "reason": "в договоре"}]}
+    doc, found = _warranty_claim(stub, decide, doc)
+    assert found == [] and "24 месяца" in doc.llm_rejected[0].evidence["проверка «не указано»"]
 
 
 def test_distinct_findings_of_one_answer_on_one_quote_are_kept(stub):
