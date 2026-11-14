@@ -484,6 +484,7 @@ const TRACE_STEP = {
   found: "Модель нашла",
   reference: "Справочники",
   located: "Цитата в документе",
+  category: "Категория",
   absent_search: "Поиск по комплекту",
   norm: "Пункт нормы",
   verify: "Вторая проверка",

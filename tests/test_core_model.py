@@ -271,6 +271,26 @@ def test_quote_is_bound_verbatim_to_block(stub):
     assert len(out) == 1 and out[0].block_id == "t1r2" and out[0].quote == "Стол рабочий | Длина"
 
 
+def test_group_prefixed_category_is_kept(stub):
+    s, doc = _prep(stub, {"найти дефекты": {"findings": [_finding(category="Логика: Противоречие")]}})
+    out = core.find(doc, Scrubber(), CATS)
+    assert len(out) == 1 and out[0].category == "Противоречие"
+
+
+def test_bare_group_category_is_chosen_by_model(stub):
+    s, doc = _prep(stub, {"найти дефекты": {"findings": [_finding(category="Логика")]},
+                          "уточнить категории": {"items": [{"n": 1, "category": "Некорректная характеристика"}]}})
+    out = core.find(doc, Scrubber(), CATS)
+    assert len(out) == 1 and out[0].category == "Некорректная характеристика"
+    assert len(s.asked("уточнить категории")) == 1 and any(t["step"] == "category" for t in out[0].trace)
+
+
+def test_bare_group_without_choice_is_dropped(stub):
+    s, doc = _prep(stub, {"найти дефекты": {"findings": [_finding(category="Риски")]}, "уточнить категории": {"items": []}})
+    assert core.find(doc, Scrubber(), CATS) == []
+    assert "только группу" in doc.model_dropped[0]["почему"]
+
+
 def test_unknown_category_is_dropped(stub):
     s, doc = _prep(stub, {"найти дефекты": {"findings": [_finding(category="Прочее")]}})
     assert core.find(doc, Scrubber(), CATS) == []

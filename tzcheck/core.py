@@ -341,12 +341,75 @@ def _terms(doc, scr, unit: Unit) -> str:
     return "\n".join(out) or "нет"
 
 
+CLASSIFY_PROMPT = """Задача: уточнить категории замечаний к техническому заданию на закупку по 223-ФЗ.
+У каждого замечания ниже названа только группа категорий. Выбери каждому одну категорию из списка по сути замечания. Категорию
+из другой группы бери, только если суть замечания явно относится к ней.
+
+Категории:
+{categories}
+
+Замечания:
+{items}
+
+Верни JSON: {{"items": [{{"n": номер замечания, "category": "название категории дословно из списка"}}]}}"""
+
+
+def _category(cat, cats: list) -> tuple:
+    """Категория из ответа модели: дословно из списка или в виде «Группа: категория». Если названа только группа, вторым
+    значением возвращается группа: категорию тогда выбирает отдельный вызов модели."""
+    s = str(cat or "").strip()
+    if s in cats:
+        return s, None
+    low = {c.lower(): c for c in cats}
+    tail = s.split(":", 1)[1].strip() if ":" in s else s
+    if tail.lower() in low:
+        return low[tail.lower()], None
+    groups = {g.lower(): g for g in set(CATEGORY_GROUP.values())}
+    group = groups.get(s.split(":", 1)[0].strip().lower())
+    if group and any(CATEGORY_GROUP.get(c) == group for c in cats):
+        return None, group
+    return None, None
+
+
+def _reclassified(doc, scr, pending: list, cats: list) -> list:
+    """Замечания, у которых модель назвала только группу («Логика», «Риски»): категорию по сути замечания выбирает отдельный
+    вызов, дальше замечание идёт общим путём. Без этого такие замечания терялись до всех проверок."""
+    out = []
+    notes = "\n".join(f"- {c} (группа {CATEGORY_GROUP.get(c, '')}): {CATEGORY_NOTES[c]}." for c in cats if c in CATEGORY_NOTES)
+    for k in range(0, len(pending), 25):
+        part = pending[k:k + 25]
+        lines = "\n".join(f"{n}. группа «{i['_group']}»; цитата: «{i.get('quote') or ''}»; суть: {i.get('explanation') or ''}"
+                          for n, (i, *_rest) in enumerate(part, 1))
+        data = ask(doc, CLASSIFY_PROMPT.format(categories=notes, items=wrap(lines)), 1500, "уточнение категории", "find",
+                   "Уточнение категории замечаний") or {}
+        chosen = {}
+        for x in data.get("items") or []:
+            if isinstance(x, dict):
+                try:
+                    chosen[int(x.get("n"))] = x.get("category")
+                except (TypeError, ValueError):
+                    pass
+        for n, (i, blocks, call, u) in enumerate(part, 1):
+            group = i.pop("_group")
+            cat, _g = _category(chosen.get(n), cats)
+            if cat is None:
+                _drop(doc, "model:find", i, call, f"модель назвала только группу «{group}», категория не выбрана")
+                continue
+            i["category"] = cat
+            f = _finding(doc, i, blocks, scr, "model:find", cats, call)
+            if f:
+                f._unit = u
+                f.trace.insert(1, {"step": "category", "text": f"модель указала только группу «{group}», категорию «{cat}» выбрал отдельный вызов"})
+                out.append(f)
+    return out
+
+
 def _finding(doc, item: dict, blocks: list, scr, source: str, cats: list, call: str = "") -> Finding | None:
     if not isinstance(item, dict):
         return None
-    cat = item.get("category")
-    if cat not in cats:
-        _drop(doc, source, item, call, f"категории «{cat}» нет среди проверяемых")
+    cat, _group = _category(item.get("category"), cats)
+    if cat is None:
+        _drop(doc, source, item, call, f"категории «{item.get('category')}» нет среди проверяемых")
         return None
     pref = str(item.get("block_id") or "")
     ordered = sorted(blocks, key=lambda b: b.id != pref)
@@ -377,6 +440,7 @@ def find(doc, scr, cats: list) -> list[Finding]:
     practice = passport.practice(doc)
     norms = norm_list_for_prompt(bool(practice))
     ctext = categories_text(cats)
+    pending = []
 
     def work(u: Unit):
         what = (f"позиция спецификации «{u.title[:120]}»" if u.kind == "position" else f"раздел «{u.title[:120]}»")
@@ -387,7 +451,13 @@ def find(doc, scr, cats: list) -> list[Finding]:
         data = ask(doc, prompt, 6000, "поиск замечаний", "find", title, unit_of(u.kind, u.title, u.block_ids)) or {}
         blocks = [doc.block(x) for x in u.block_ids if doc.block(x)]
         call = data.get("_call", "")
-        out = [f for f in (_finding(doc, i, blocks, scr, "model:find", cats, call) for i in data.get("findings") or []) if f]
+        items = [i for i in data.get("findings") or [] if isinstance(i, dict)]
+        for i in items:
+            cat, group = _category(i.get("category"), cats)
+            if cat is None and group:
+                i["_group"] = group
+        pending.extend((i, blocks, call, u) for i in items if i.get("_group"))
+        out = [f for f in (_finding(doc, i, blocks, scr, "model:find", cats, call) for i in items if not i.get("_group")) if f]
         for f in out:
             f._unit = u
         u.lookups = [x for x in data.get("lookups") or [] if isinstance(x, dict) and x.get("type") in ("standard", "okpd", "ktru", "si") and x.get("value")]
@@ -396,6 +466,7 @@ def find(doc, scr, cats: list) -> list[Finding]:
     found = []
     for res in pmap(work, units):
         found.extend(res)
+    found.extend(_reclassified(doc, scr, pending, cats))
     return found
 
 
