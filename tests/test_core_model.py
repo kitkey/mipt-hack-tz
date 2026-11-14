@@ -649,3 +649,24 @@ def test_pipeline_routes_by_second_check(tmp_path, stub):
     assert r["stats"]["from_model"] == 1 and r["stats"]["by_status"] == {"ошибка": 1}
     assert r["findings"][1]["evidence"]["блок отчёта"] == "на проверку: вторая проверка: понижено, на проверку"
     assert "«На проверку»" in r["summary"]
+
+
+@pytest.mark.parametrize("explanation", ["", "  ", "...", "-"])
+def test_finding_without_explanation_is_dropped(stub, explanation):
+    s, doc = _prep(stub, {"найти дефекты": lambda p: {"findings": [_finding(explanation=explanation)]} if "Стол" in p else {}})
+    assert core.find(doc, Scrubber(), CATS) == []
+    assert doc.model_dropped[0]["почему"] == "модель не объяснила замечание"
+    assert doc.journal.dropped[0]["reason"] == "модель не объяснила замечание"
+
+
+def test_finding_without_fix_goes_to_review_after_confirmation(stub):
+    s, doc = _prep(stub, {"найти дефекты": lambda p: {"findings": [_finding(fix=""), _finding(quote="Длина", block_id="t1r2")]} if "Стол" in p else {},
+                          "независимая вторая проверка": {"decisions": [{"n": 0, "decision": "keep", "reason": "по тексту"},
+                                                                        {"n": 1, "decision": "keep", "reason": "по тексту"}]}})
+    found = core.find(doc, Scrubber(), CATS)
+    assert [f.fix for f in found] == ["", "Указать высоту."]
+    assert found[0].needs_review and found[0].evidence["неполный ответ модели"] == "не указано, как исправить"
+    routed = [pipeline.route(f.finalize()) for f in core.verify(doc, Scrubber(), found)]
+    assert routed[0].section == "llm_review" and routed[0].needs_review
+    assert "модель не указала, как исправить" in routed[0].evidence["блок отчёта"]
+    assert routed[1].section == "main" and not routed[1].needs_review
