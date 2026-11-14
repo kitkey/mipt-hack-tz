@@ -83,7 +83,7 @@ def _doc(public=False):
 
 @pytest.fixture
 def external_no_ner(monkeypatch):
-    for k in ("TZCHECK_PII_NER", "TZCHECK_DOC_PUBLIC"):
+    for k in ("TZCHECK_PII_NER", "TZCHECK_DOC_PUBLIC", "TZCHECK_EXTERNAL_MASKED"):
         monkeypatch.delenv(k, raising=False)
     _model(monkeypatch, "openrouter/qwen/qwen3")
     monkeypatch.setattr(pii, "_load", lambda: None)
@@ -99,11 +99,27 @@ def test_allow_external(external_no_ner, monkeypatch):
     assert llm.allow_external() is True
     monkeypatch.delenv("TZCHECK_DOC_PUBLIC")
     monkeypatch.setattr(pii, "_load", lambda: object())
+    # закрытый документ при доступном NER без разрешения заказчика наружу не уходит
+    assert llm.allow_external() is False
+    monkeypatch.setenv("TZCHECK_EXTERNAL_MASKED", "1")
     assert llm.allow_external() is True
     monkeypatch.setenv("TZCHECK_PII_NER", "0")
     assert llm.allow_external() is False
     _model(monkeypatch, "openai/qwen", "http://localhost:8091/v1")
     assert llm.allow_external() is True
+
+
+def test_closed_doc_with_ner_needs_customer_permission(external_no_ner, monkeypatch):
+    monkeypatch.setattr(pii, "_load", lambda: object())
+    doc = _doc()
+    assert llm.gate(doc) is False and doc.warnings == [llm.BLOCKED]
+    with pytest.raises(llm.ExternalBlocked):
+        llm._call("ТЗ")
+    assert external_no_ner == []
+    monkeypatch.setenv("TZCHECK_EXTERNAL_MASKED", "1")
+    assert llm.gate(_doc()) is True
+    monkeypatch.setenv("TZCHECK_EXTERNAL_MASKED", "0")
+    assert llm.gate(_doc(public=True)) is True and llm.allow_external({"public": True}) is True
 
 
 def test_call_blocked_before_sending(external_no_ner):

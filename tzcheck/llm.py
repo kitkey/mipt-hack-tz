@@ -152,7 +152,8 @@ def enabled() -> bool:
     return bool(os.environ.get("TZCHECK_LLM_MODEL"))
 
 
-BLOCKED = "модель не вызвана: документ не помечен открытым и маскирование ПД недоступно"
+BLOCKED = ("модель не вызвана: документ не помечен открытым, а закрытый документ уходит во внешнюю модель только с разрешения "
+           "заказчика (TZCHECK_EXTERNAL_MASKED=1) и при доступном маскировании ПД")
 NER_DOWN = "ПД маскируются только по шаблонам, ФИО могут остаться открытыми"
 _flags = threading.local()
 
@@ -184,14 +185,20 @@ def call_target(stage: str = "") -> tuple[str, str]:
     return model, os.environ.get(f"TZCHECK_{stage.upper()}_API_BASE" if own else "TZCHECK_LLM_API_BASE", "")
 
 
+def external_masked() -> bool:
+    """Заказчик разрешил отправлять закрытый документ во внешнюю модель под маской ПД (TZCHECK_EXTERNAL_MASKED=1, по умолчанию нет)."""
+    return os.environ.get("TZCHECK_EXTERNAL_MASKED", "0").strip().lower() in ("1", "true", "yes", "on")
+
+
 def allow_external(doc_flags: dict | None = None, stage: str = "") -> bool:
-    """Текст ТЗ уходит во внешнюю модель, только если включён и загрузился слой NER или документ помечен открытым.
-    Внешняя модель или нет, решают модель и адрес самого вызова (stage: шаг со своей моделью). Локальная модель без ограничений."""
+    """Текст ТЗ уходит во внешнюю модель, только если документ помечен открытым или заказчик явно разрешил отправку закрытого
+    документа (TZCHECK_EXTERNAL_MASKED=1) и маскирование ПД доступно (слой NER включён и загрузился). Внешняя модель или нет,
+    решают модель и адрес самого вызова (stage: шаг со своей моделью). Локальная модель без ограничений."""
     if not pii.external_model(*call_target(stage)):
         return True
     if (doc_flags or {}).get("public") or os.environ.get("TZCHECK_DOC_PUBLIC", "0").strip().lower() in ("1", "true", "yes", "on"):
         return True
-    return pii.ner_enabled() and pii.ner_available()
+    return external_masked() and pii.ner_enabled() and pii.ner_available()
 
 
 def gate(doc) -> bool:
