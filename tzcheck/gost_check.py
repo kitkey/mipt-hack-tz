@@ -89,7 +89,7 @@ def _item_line(n: int, it: dict) -> str:
     cond = f"; условие: {it['condition']}" if it.get("condition") else ""
     return (f"{n}. {it.get('designation')}, п. {it.get('clause')}; {KIND_TITLES.get(it.get('kind'), it.get('kind'))}; "
             f"{STATUS_TITLES.get(it.get('status'), it.get('status'))}; {it.get('param')}; {it.get('requirement') or ''}{lim}{cond}; "
-            f"«{str(it.get('quote') or '')[:300]}»")
+            f"«{str(it.get('quote') or '')}»")
 
 
 def _applicability_calls(doc, title: str) -> list[str]:

@@ -371,7 +371,7 @@ def verify_rules(doc: ParsedDoc, findings: list[Finding], scr: Scrubber) -> list
             continue
         dec, reason, score = decided[id(f)]
         f.evidence["вторая проверка"] = DEC_RU.get(dec, dec)
-        f.evidence["довод проверки"] = scr.restore(reason)[:300]
+        f.evidence["довод проверки"] = scr.restore(reason)
         confidence.set_model_score(f, score, confidence.STAGE_VERIFY)
         if dec == "reject":
             # модель на A/B снимала верные находки правил, поэтому замечание правила остаётся и уходит закупщику
@@ -394,7 +394,7 @@ def verify_new(doc: ParsedDoc, found: list[Finding], scr: Scrubber) -> list[Find
     for f in found:
         dec, reason, score = decided.get(id(f), ("", "", None))
         f.evidence["вторая проверка"] = DEC_RU.get(dec, "не проведена")
-        f.evidence["довод проверки"] = scr.restore(reason)[:300]
+        f.evidence["довод проверки"] = scr.restore(reason)
         if dec:
             confidence.set_model_score(f, score, confidence.STAGE_VERIFY)
         if dec == "confirm":
@@ -463,7 +463,7 @@ def recheck(doc: ParsedDoc, findings: list[Finding], scr: Scrubber, threshold: i
             continue
         dec, reason, score = decided[id(f)]
         f.evidence["повторная проверка"] = DEC_RU.get(dec, dec)
-        f.evidence["довод повторной проверки"] = scr.restore(reason)[:300]
+        f.evidence["довод повторной проверки"] = scr.restore(reason)
         confidence.set_model_score(f, score, confidence.STAGE_RECHECK)
         if dec == "reject" and not f.source.startswith("rule"):
             _rejected(doc).append(f)
