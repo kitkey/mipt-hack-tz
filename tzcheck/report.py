@@ -7,10 +7,12 @@ import docx
 
 from .confidence import label as conf_label, show_threshold
 from .model import status_title
+from .rag.verify import BASIS as NORM_BASIS, NOT_CHECKED as NORM_NOT_CHECKED
 
 SEV_RU = {"high": "высокий", "medium": "средний", "low": "низкий"}
 # ключи основания, которые не выводятся (служебные или уже показаны в строке), и подписи остальных
-EV_SKIP = {"найдено", "нормы", "source", "norm_ids", "цитата найдена в тексте", "основание из базы норм", "второй блок", "второе место", "вторая цитата"}
+EV_SKIP = {"найдено", "нормы", "source", "norm_ids", "цитата найдена в тексте", "основание из базы норм", "второй блок", "второе место", "вторая цитата",
+           NORM_BASIS}
 EV_LABEL = {"блок отчёта": "раздел", "довод проверки": "довод второй проверки", "обратная связь": "решения закупщиков"}
 GOST_STATUS = {"approved": "утверждён", "verified": "сверен", "draft": "черновик"}
 
@@ -40,6 +42,7 @@ details{margin-top:6px;font-size:12px;color:var(--muted)}details ul{padding-left
 .chips{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;padding:0;list-style:none}.chips li{background:var(--soft);border-radius:12px;padding:3px 10px;font-size:13px}
 .conf b{font-size:16px}.conf small{display:block;color:var(--muted);font-size:12px}.conf-none{color:var(--muted);font-size:13px}
 .ctl{display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin:10px 0;font-size:14px}.ctl input[type=range]{vertical-align:middle}
+.nm{color:var(--muted)}.nm-off{color:var(--mid);font-weight:600}
 """
 
 FB_JS = """
@@ -78,10 +81,17 @@ def ev_value(key: str, v) -> str:
     return str(v)
 
 
+def norm_mark(ev: dict) -> str:
+    """Признак приложенного пункта нормы: «проверено моделью» или «применимость не проверена»; без пункта пусто."""
+    return str(ev.get(NORM_BASIS) or "") if ev.get("пункт нормы") else ""
+
+
 def _evidence(f: dict) -> str:
     esc = html.escape
     ev = f.get("evidence") or {}
-    items = [f"<li>{esc(ev_label(k))}: {esc(ev_value(k, v))}</li>" for k, v in ev.items()
+    mark = norm_mark(ev)
+    tail = {"пункт нормы": f' <span class="nm{" nm-off" if mark == NORM_NOT_CHECKED else ""}">({esc(mark)})</span>'} if mark else {}
+    items = [f"<li>{esc(ev_label(k))}: {esc(ev_value(k, v))}{tail.get(k, '')}</li>" for k, v in ev.items()
              if k not in EV_SKIP and v not in (None, "", [], {})]
     return f"<details><summary>Основание</summary><ul>{''.join(items)}</ul></details>" if items else ""
 
@@ -320,7 +330,8 @@ def to_docx_comments(result: dict, src_path: str, out_path: str) -> bool:
         if norms:
             text += " Норма: " + "; ".join(norms) + "."
         if ev.get("пункт нормы") and ev.get("цитата нормы"):
-            text += f" Пункт нормы {ev['пункт нормы']}: «{ev['цитата нормы']}»."
+            mark = norm_mark(ev)
+            text += f" Пункт нормы {ev['пункт нормы']}{f' ({mark})' if mark else ''}: «{ev['цитата нормы']}»."
         try:
             d.add_comment(target.runs, text=text, author="Проверка ТЗ", initials="ТЗ")
             added += 1

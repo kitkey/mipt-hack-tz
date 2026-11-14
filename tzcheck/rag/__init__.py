@@ -626,3 +626,11 @@ def enrich(findings, doc=None, scr=None, use_llm: bool = False) -> None:
         attach(f, ev)
         if ev["how"].startswith("поиском"):
             f.needs_review = True
+    # пункты без решения модели о применимости (статья, стандарт из ТЗ, поиск, пункт второй проверки ядра): одна проверка
+    # моделью на документ; без ответа пункт остаётся с пометкой «применимость не проверена»
+    from .verify import check_attached
+    try:
+        check_attached(findings, search, doc, scr, use_llm=use_llm)
+    except Exception as e:
+        if doc is not None:
+            doc.warnings.append(f"RAG: проверка применимости пунктов норм не выполнена ({type(e).__name__}: {str(e)[:120]})")
