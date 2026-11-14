@@ -442,7 +442,7 @@ NAV = ('<nav class="tabs"><a href="/#/"{a}>Проверка</a><a href="/#/histo
        '<a href="/refdata"{b}>Справочники</a></nav>')
 
 
-TOP = ('<header class="top"><a class="brand" href="/#/"><span class="brand-name">tzcheck</span><span class="brand-sub">Проверка ТЗ по 223-ФЗ</span></a>'
+TOP = ('<header class="top"><a class="brand" href="/#/"><span class="brand-name">Чекни!</span><span class="brand-sub">Проверка ТЗ по 223-ФЗ</span></a>'
        '<nav class="nav"><a href="/#/">Проверка</a><a href="/#/history">История</a><a href="/#/norms">Нормативная база</a>'
        '<a href="/refdata" aria-current="page">Справочники</a></nav></header>')
 
