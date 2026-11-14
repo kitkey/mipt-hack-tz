@@ -15,11 +15,15 @@ from . import INDEX, CORPUS, Search, _public, mentioned_documents, explicit_unkn
 
 MODELS = ("deepvk/USER-bge-m3", "BAAI/bge-m3", "ai-forever/FRIDA")
 RERANKER = "BAAI/bge-reranker-v2-m3"
-# Выбор по замеру eval/rag/run_eval.py на 177 вопросах (eval/rag/REPORT.md).
-DEFAULT_MODE = "hybrid"
+# По умолчанию BM25: с проверкой кандидатов моделью гибрид с USER-bge-m3 на 77 правках дал верный пункт в 67 случаях
+# против 63 у BM25, а hit@5 кандидатов у правок одинаковый (74), у замечаний правил ниже (208 против 222 из 242),
+# eval/rag/verify_metrics_*.json и retrieval_metrics.json. Прирост в пределах разброса между прогонами, а гибрид требует
+# модель эмбеддингов: без GPU она считается на CPU. Гибрид: TZCHECK_RAG_MODE=hybrid, образ WITH_RAG=1, векторы корпуса.
+DEFAULT_MODE = "bm25"
 DEFAULT_MODEL = "deepvk/USER-bge-m3"
 # Пороги отказа открытого поиска по eval/rag/metrics_v2.json (максимум сбалансированной точности на 421 вопросе).
-# Открытый поиск по умолчанию выключен (TZCHECK_RAG_OPEN=1): оценка лучшего фрагмента почти не отделяет вопросы без ответа.
+# Без проверки моделью открытый поиск по умолчанию не прикладывает пункт (TZCHECK_RAG_OPEN=auto): оценка лучшего фрагмента
+# почти не отделяет вопросы без ответа.
 REFUSE = {"bm25": 42.7, "dense": 0.70, "hybrid": 0.66, "rerank": 0.68}
 MAX_SEQ = int(os.environ.get("TZCHECK_RAG_MAX_SEQ", "512"))
 
@@ -88,13 +92,58 @@ def build(model: str, device: str | None = None, batch: int | None = None, duty:
             time.sleep((time.time() - t) * (1 / duty - 1))
         if (k // batch) % 100 == 0:
             print(model, k + len(ids), "/", len(order), f"{time.time() - t_start:.0f} c", flush=True)
-    name = out / model_key(model)
-    np.save(str(name) + ".npy", vecs)
-    Path(str(name) + ".json").write_text(json.dumps({"fingerprint": fingerprint(), "model": model, "count": len(texts),
-                                                     "max_seq_length": MAX_SEQ, "seconds": round(time.time() - t_start, 1),
-                                                     "device": device}), encoding="utf8")
+    _save(model, vecs, [row_key(model, t) for t in texts], {"seconds": round(time.time() - t_start, 1), "device": device})
     print("saved", model, len(texts), f"{time.time() - t_start:.0f} c", flush=True)
     return len(texts)
+
+
+def row_key(model: str, text: str) -> str:
+    return hashlib.sha1((model + "\n" + text).encode("utf8")).hexdigest()[:20]
+
+
+def _save(model: str, vecs, keys: list[str], extra: dict, index=None):
+    import numpy as np
+    out = vector_dir()
+    out.mkdir(parents=True, exist_ok=True)
+    name = out / model_key(model)
+    np.save(str(name) + ".npy", vecs)
+    Path(str(name) + ".keys.json").write_text(json.dumps(keys), encoding="utf8")
+    Path(str(name) + ".json").write_text(json.dumps({"fingerprint": fingerprint(index), "model": model, "count": len(keys),
+                                                     "max_seq_length": MAX_SEQ, **extra}), encoding="utf8")
+
+
+def vectors_exist(model: str = DEFAULT_MODEL) -> bool:
+    return Path(str(vector_dir() / model_key(model)) + ".npy").exists()
+
+
+def refresh(model: str = DEFAULT_MODEL, enc=None, index=None) -> int:
+    """Векторы после пересборки индекса: фрагменты с тем же текстом берутся из прошлой сборки, кодируются только новые
+    (тексты редакций от обновлятора). Без файла ключей прошлой сборки нужна полная сборка. Возвращает число закодированных."""
+    import numpy as np
+    name = vector_dir() / model_key(model)
+    keys_path = Path(str(name) + ".keys.json")
+    if not keys_path.exists():
+        raise ValueError("у прошлой сборки векторов нет ключей фрагментов: нужна полная сборка tzcheck.rag.models build")
+    old_keys = json.loads(keys_path.read_text(encoding="utf8"))
+    old = np.load(str(name) + ".npy")
+    pos = {k: i for i, k in enumerate(old_keys)}
+    rows = Search(index or INDEX).rows
+    texts = [prefix(model) + doc_text(r) for r in rows]
+    keys = [row_key(model, t) for t in texts]
+    missing = [i for i, k in enumerate(keys) if k not in pos]
+    vecs = np.zeros((len(rows), old.shape[1]), dtype="float32")
+    for i, k in enumerate(keys):
+        if k in pos:
+            vecs[i] = old[pos[k]]
+    t0 = time.time()
+    if missing:
+        enc = enc or encoder(model)
+        batch = int(os.environ.get("TZCHECK_RAG_BATCH", "8"))
+        for s in range(0, len(missing), batch):
+            ids = missing[s:s + batch]
+            vecs[ids] = enc.encode([texts[i] for i in ids], batch_size=batch, normalize_embeddings=True, show_progress_bar=False)
+    _save(model, vecs, keys, {"seconds": round(time.time() - t0, 1), "device": _device(), "refreshed": len(missing)}, index)
+    return len(missing)
 
 
 def load_vectors(model: str, index=None):
@@ -117,15 +166,22 @@ def rrf(lists, k: int = 60) -> list[int]:
 class HybridSearch:
     """mode: dense (только эмбеддинги), hybrid (RRF эмбеддингов и BM25), rerank (hybrid + кросс-энкодер)."""
 
-    def __init__(self, model: str = DEFAULT_MODEL, mode: str = DEFAULT_MODE, rerank: bool = False, index=None):
+    def __init__(self, model: str = DEFAULT_MODEL, mode: str = "hybrid", rerank: bool = False, index=None):
         import numpy as np
         self.np = np
         self.mode = "rerank" if rerank else mode
         self.lex = Search(index or INDEX)
         self.rows = self.lex.rows
         self.model_name = model
-        self.vectors = load_vectors(model, index)
         self.encoder = encoder(model)
+        try:
+            self.vectors = load_vectors(model, index)
+        except ValueError:
+            # индекс пересобран (например, добавлены тексты новых редакций): дополнить векторы новыми фрагментами
+            if os.environ.get("TZCHECK_RAG_VECTORS_UPDATE", "auto") == "0":
+                raise
+            refresh(model, self.encoder, index)
+            self.vectors = load_vectors(model, index)
         self.cross = cross_encoder() if self.mode == "rerank" else None
         self.refuse_threshold = REFUSE.get(self.mode, 0.5)
         self.name = self.mode
@@ -186,7 +242,7 @@ def main():
     b.add_argument("--batch", type=int, default=None)
     q = sub.add_parser("search")
     q.add_argument("query")
-    q.add_argument("--mode", default=DEFAULT_MODE, choices=["dense", "hybrid", "rerank"])
+    q.add_argument("--mode", default="hybrid", choices=["dense", "hybrid", "rerank"])
     q.add_argument("--model", default=DEFAULT_MODEL)
     q.add_argument("--limit", type=int, default=5)
     a = p.parse_args()

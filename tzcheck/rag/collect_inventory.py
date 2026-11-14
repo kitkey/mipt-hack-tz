@@ -32,6 +32,25 @@ def parse_html(raw):
   if value.strip(' |\n'): out.append({'type':'table' if e.tag=='table' else 'text','text':value})
  return out
 
+def parse_pdf(raw):
+ """Текстовый PDF -> (блоки текста и таблиц в порядке страницы, текст страниц)."""
+ doc=pymupdf.open(stream=raw,filetype='pdf'); pages=[p.get_text(sort=True) for p in doc]; blocks=[]
+ for page in doc:
+  try: tables=list(page.find_tables().tables)
+  except Exception: tables=[]
+  regions=[]
+  for table in tables:
+   table_text='\n'.join(' | '.join((cell or '').strip() for cell in row) for row in table.extract())
+   if table_text.strip(' |\n'): regions.append((table.bbox[1],{'type':'table','text':table_text}))
+  for block in page.get_text('blocks',sort=True):
+   rect=pymupdf.Rect(block[:4]); center=(rect.x0+rect.width/2,rect.y0+rect.height/2)
+   if any(pymupdf.Rect(t.bbox).contains(center) for t in tables): continue
+   for line in block[4].splitlines():
+    line=' '.join(line.split())
+    if line: regions.append((rect.y0,{'type':'text','text':line}))
+  blocks.extend(x[1] for x in sorted(regions,key=lambda x:x[0]))
+ return blocks,pages
+
 def fetch(item):
  title=item['query']; candidates=item['results'][:3]; failures=[]
  if title in ('ГОСТ 53782-2010','ГОСТ 53783-2010'): return {'designation':title,'status':'ambiguous','reason':'Р-версия не тождественна указанному ГОСТ'}
@@ -44,22 +63,7 @@ def fetch(item):
     if not links: raise ValueError('карточка без полного текста')
     url=links[0]; r=requests.get(url,timeout=40,headers={'User-Agent':'Mozilla/5.0'}); r.raise_for_status()
    if r.content.startswith(b'%PDF'):
-    doc=pymupdf.open(stream=r.content,filetype='pdf'); pages=[p.get_text(sort=True) for p in doc]
-    text='\n'.join(pages); head=' '.join(pages[:3]); blocks=[]
-    for page in doc:
-     try: tables=list(page.find_tables().tables)
-     except Exception: tables=[]
-     regions=[]
-     for table in tables:
-      table_text='\n'.join(' | '.join((cell or '').strip() for cell in row) for row in table.extract())
-      if table_text.strip(' |\n'): regions.append((table.bbox[1],{'type':'table','text':table_text}))
-     for block in page.get_text('blocks',sort=True):
-      rect=pymupdf.Rect(block[:4]); center=(rect.x0+rect.width/2,rect.y0+rect.height/2)
-      if any(pymupdf.Rect(t.bbox).contains(center) for t in tables): continue
-      for line in block[4].splitlines():
-       line=' '.join(line.split())
-       if line: regions.append((rect.y0,{'type':'text','text':line}))
-     blocks.extend(x[1] for x in sorted(regions,key=lambda x:x[0]))
+    blocks,pages=parse_pdf(r.content); text='\n'.join(pages); head=' '.join(pages[:3])
     kind='pdf'; totalpages=len(pages)
    else:
     blocks=parse_html(r.content); text='\n'.join(b['text'] for b in blocks); head=text[:12000]; kind='html'; totalpages=None
