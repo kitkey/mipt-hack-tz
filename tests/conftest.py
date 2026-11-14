@@ -3,7 +3,10 @@
 Поиск дефектов: на каждую строку [id] проверяемой части длиной от 6 слов замечание с цитатой из первых слов строки,
 категория по очереди из разрешённых в запросе; вторая проверка подтверждает всё."""
 import hashlib
+import json
 import re
+import sys
+from types import SimpleNamespace
 
 import pytest
 
@@ -60,10 +63,20 @@ class ScriptedModel:
         return {"findings": [], "decisions": []}
 
 
+def fake_litellm(answer):
+    """Модуль-заглушка litellm: llm._call идёт целиком (журнал, разбор JSON), ответ даёт answer(prompt) -> dict."""
+    def completion(**kw):
+        prompt = kw["messages"][-1]["content"]
+        text = json.dumps(answer(prompt), ensure_ascii=False)
+        return SimpleNamespace(choices=[SimpleNamespace(finish_reason="stop", message=SimpleNamespace(content=text))],
+                               usage=SimpleNamespace(prompt_tokens=len(prompt) // 4, completion_tokens=len(text) // 4))
+    return SimpleNamespace(completion=completion)
+
+
 @pytest.fixture
 def scripted(monkeypatch):
     s = ScriptedModel()
     monkeypatch.setenv("TZCHECK_LLM_MODEL", "stub/model")
     monkeypatch.setenv("TZCHECK_LLM_WORKERS", "1")
-    monkeypatch.setattr(llm, "_call", s)
+    monkeypatch.setitem(sys.modules, "litellm", fake_litellm(s))
     return s

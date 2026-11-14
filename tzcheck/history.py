@@ -153,6 +153,20 @@ def list_runs(store: str, user: str | None = None, limit: int = 50, offset: int 
     return {"total": len(cards), "items": cards[offset:offset + limit]}
 
 
+def load_trace(store: str, rid: str) -> dict | None:
+    """Журнал вызовов модели запуска (trace.json): те же правила, что у load_run."""
+    if not RID_RE.match(rid or ""):
+        return None
+    folder = os.path.join(store, rid)
+    if report_path(folder) is None:
+        return None
+    path = os.path.join(folder, "trace.json")
+    if not os.path.exists(path):
+        return {"calls": [], "rejected": [], "dropped": []}
+    with open(path, encoding="utf-8") as fh:
+        return json.load(fh)
+
+
 def load_run(store: str, rid: str) -> dict | None:
     """Полный результат запуска (как у /api/check) из report.json плюс карточка и, для сопоставления, сводка требований."""
     if not RID_RE.match(rid or ""):

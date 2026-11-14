@@ -27,6 +27,8 @@ PROMPT = """Задача: разметка шапки таблицы.
 - columns: роль каждого столбца: num (номер позиции), name (наименование позиции), okpd (код ОКПД 2), ktru (код КТРУ), qty (количество),
   unit (единица количества), char_name (наименование характеристики), value (значение характеристики), char_unit (единица значения),
   desc (характеристики или описание сплошным текстом), bidder (заполняет участник), instruction (инструкция по заполнению), price, other;
+  в таблице характеристик столбец с названием характеристики или параметра это char_name, а не name; если у одной роли несколько
+  столбцов (шапка объединена над ними), дай роль каждому;
   label: подпись столбца коротко, как в шапке.
 
 Верни JSON: {{"header_rows": число, "kind": "positions|characteristics|other", "item": "...",
@@ -158,7 +160,9 @@ def _signature(rows) -> tuple:
 def mark(doc, rows, scr, subject: str) -> dict:
     prompt = PROMPT.format(subject=scr.scrub(subject)[:200], caption=scr.scrub(_caption(doc, rows[0]))[:200],
                            rows=wrap(_render_rows(rows, scr)))
-    return ask(doc, prompt, 2000, "разметка шапки таблицы") or {}
+    where = rows[0].location().rsplit(", строка", 1)[0]
+    return ask(doc, prompt, 2000, "разметка шапки таблицы", "tables", f"Разметка шапки: {where}",
+               {"kind": "table", "title": where, "blocks": [b.id for b in rows[:5]]}) or {}
 
 
 def _columns(data: dict, width: int) -> list[Column]:
@@ -224,8 +228,14 @@ def _layout(model: Model, tm: TableModel, rows, header_n: int, doc):
                            if c.index < len(g) and not _flag(b.hmerge, c.index) and not _flag(b.vmerge, c.index)]
         by = {}
         for c in tm.columns:
-            if c.index < len(g) and not _flag(b.hmerge, c.index) and c.role not in by:
-                by[c.role] = (_flat(g[c.index]), _flag(b.vmerge, c.index))
+            if c.index >= len(g) or _flag(b.hmerge, c.index):
+                continue
+            text, merged = _flat(g[c.index]), _flag(b.vmerge, c.index)
+            if c.role not in by:
+                by[c.role] = (text, merged)
+            elif text and text not in by[c.role][0].split("; "):
+                prev = by[c.role][0]
+                by[c.role] = (f"{prev}; {text}" if prev else text, by[c.role][1] and merged)
         for role in ("okpd", "ktru", "qty", "unit", "num"):
             text, merged = by.get(role, ("", False))
             if text and not getattr(cur, role):

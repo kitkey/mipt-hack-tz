@@ -9,7 +9,7 @@ import json
 import re
 
 from . import confidence, passport, search, tables
-from .ask import ask, pmap, wrap
+from .ask import ask, pmap, unit_of, wrap
 from .model import Finding
 from .norms import CATEGORIES, CATEGORY_GROUP, NORMS, norm_list_for_prompt
 
@@ -119,11 +119,7 @@ def _norm(s: str) -> str:
     return " ".join((s or "").split())
 
 
-def locate(quote: str, blocks: list) -> tuple | None:
-    """Цитата модели дословно в тексте блока (пробелы и регистр не важны) -> (блок, точная подстрока текста). Подстановки нет."""
-    q = _norm(quote).strip(" «»\"'“”")
-    if len(q) < 3:
-        return None
+def _exact(q: str, blocks: list) -> tuple | None:
     for b in blocks:
         text = b.text
         flat = _norm(text)
@@ -136,6 +132,48 @@ def locate(quote: str, blocks: list) -> tuple | None:
         m = re.search(pattern, text, re.I)
         return (b, m.group(0)) if m else (b, flat[i:i + len(q)])
     return None
+
+
+def locate(quote: str, blocks: list, labels=()) -> tuple | None:
+    """Цитата модели дословно в тексте блока (пробелы и регистр не важны) -> (блок, точная подстрока текста). Подстановки нет.
+    labels: подписи столбцов, которыми код размечает строки позиции для модели («Значение: …»); если модель процитировала
+    размеченную строку, подписи снимаются и ищутся сами значения ячеек."""
+    q = _norm(quote).strip(" «»\"'“”")
+    if len(q) < 3:
+        return None
+    hit = _exact(q, blocks)
+    if hit or not labels or ("|" not in q and ":" not in q):
+        return hit
+    low = {x.lower() for x in labels if x}
+    segs = []
+    for seg in q.split("|"):
+        seg = seg.strip()
+        head, sep, tail = seg.partition(":")
+        if sep and head.strip().lower() in low:
+            seg = tail.strip()
+        if seg and seg != "(пусто)":
+            segs.append(seg)
+    if not segs:
+        return None
+    for cand in [" | ".join(segs)] + sorted(segs, key=len, reverse=True):
+        if len(cand) >= 3:
+            hit = _exact(cand, blocks)
+            if hit:
+                return hit
+    return None
+
+
+def _labels(doc) -> set:
+    m = tables.of(doc)
+    return {c.label for t in m.tables for c in t.columns} | set(tables.TITLES.values())
+
+
+def _drop(doc, stage: str, item, call: str, why: str):
+    doc.model_dropped.append({"шаг": stage, "цитата": str((item or {}).get("quote") or "")[:120], "почему": why})
+    journal = getattr(doc, "journal", None)
+    if journal is not None:
+        journal.dropped.append({"stage": stage, "reason": why, "category": (item or {}).get("category"), "quote": (item or {}).get("quote"),
+                                 "trace": [{"step": "found", "call": call, "item": item}, {"step": "not_located", "text": why}]})
 
 
 def categories_text(cats: list) -> str:
@@ -238,17 +276,18 @@ def _gost_clauses(doc, unit: Unit) -> str:
     return "Пункты стандартов, применимые к позиции (профили ГОСТ):\n" + "\n".join(f"- {x}" for x in items[:20]) + "\n"
 
 
-def _finding(doc, item: dict, blocks: list, scr, source: str, cats: list) -> Finding | None:
+def _finding(doc, item: dict, blocks: list, scr, source: str, cats: list, call: str = "") -> Finding | None:
     if not isinstance(item, dict):
         return None
     cat = item.get("category")
     if cat not in cats:
+        _drop(doc, source, item, call, f"категории «{cat}» нет среди проверяемых")
         return None
     pref = str(item.get("block_id") or "")
     ordered = sorted(blocks, key=lambda b: b.id != pref)
-    loc = locate(scr.restore(str(item.get("quote") or "")), ordered)
+    loc = locate(scr.restore(str(item.get("quote") or "")), ordered, _labels(doc))
     if loc is None:
-        doc.model_dropped.append({"шаг": source, "цитата": str(item.get("quote") or "")[:120], "почему": "цитаты нет в тексте"})
+        _drop(doc, source, item, call, "цитаты нет в тексте")
         return None
     b, quote = loc
     norms = [n for n in item.get("norm_ids") or [] if n in NORMS]
@@ -260,6 +299,8 @@ def _finding(doc, item: dict, blocks: list, scr, source: str, cats: list) -> Fin
         f.replacement = rep
     f._absent = bool(item.get("absent"))
     f._missing = scr.restore(str(item.get("missing") or ""))
+    f.trace = [{"step": "found", "call": call, "item": item},
+               {"step": "located", "text": f"цитата найдена: {b.location()} (блок {b.id})" + ("" if b.id == pref else f", модель указала блок {pref or 'не указан'}")}]
     return confidence.set_model_score(f, item.get("confidence"), confidence.STAGE_FIND)
 
 
@@ -277,9 +318,11 @@ def find(doc, scr, cats: list) -> list[Finding]:
         prompt = FIND_PROMPT.format(what=scr.scrub(what), passport=pline, practice=practice + "\n" if practice else "",
                                     terms=_terms(doc, scr, u) if u.kind == "position" else "нет", gost=_gost_clauses(doc, u),
                                     categories=ctext, norms=norms, data=wrap(u.text))
-        data = ask(doc, prompt, 6000, "поиск дефектов") or {}
+        title = "Поиск дефектов: " + what
+        data = ask(doc, prompt, 6000, "поиск дефектов", "find", title, unit_of(u.kind, u.title, u.block_ids)) or {}
         blocks = [doc.block(x) for x in u.block_ids if doc.block(x)]
-        out = [f for f in (_finding(doc, i, blocks, scr, "model:find", cats) for i in data.get("findings") or []) if f]
+        call = data.get("_call", "")
+        out = [f for f in (_finding(doc, i, blocks, scr, "model:find", cats, call) for i in data.get("findings") or []) if f]
         for f in out:
             f._unit = u
         u.lookups = [x for x in data.get("lookups") or [] if isinstance(x, dict) and x.get("type") in ("standard", "okpd", "ktru", "si") and x.get("value")]
@@ -363,12 +406,14 @@ def refs(doc, scr, cats: list) -> list[Finding]:
             return []
         prompt = REF_PROMPT.format(passport=pline, data=wrap(u.text), records="\n".join(records), categories="; ".join(ref_cats),
                                    norm_ids=", ".join(k for k in NORMS if k != "INTERNAL"))
-        data = ask(doc, prompt, 4000, "справочники") or {}
+        data = ask(doc, prompt, 4000, "справочники", "refs", f"Справочные записи: {u.title[:100]}", unit_of(u.kind, u.title, u.block_ids)) or {}
         blocks = [doc.block(x) for x in u.block_ids if doc.block(x)]
-        out = [f for f in (_finding(doc, i, blocks, scr, "model:ref", ref_cats) for i in data.get("findings") or []) if f]
+        call = data.get("_call", "")
+        out = [f for f in (_finding(doc, i, blocks, scr, "model:ref", ref_cats, call) for i in data.get("findings") or []) if f]
         for f in out:
             f._unit = u
             f.evidence["справочные записи"] = [r.split(". ", 1)[-1] for r in records][:6]
+            f.trace.insert(0, {"step": "reference", "text": "справочные записи по обозначениям, которые назвала модель", "records": f.evidence["справочные записи"]})
         return out
 
     found = []
@@ -397,9 +442,14 @@ def absent(doc, scr, findings: list[Finding]) -> list[Finding]:
         lines = "\n".join(f"   [{b.id}] ({_role(b)}; {b.location()}) {scr.scrub(b.text[:400])}" for b, _ in hits) or "   кандидатов нет"
         items.append(f"{n}. Утверждение: {scr.scrub(f.explanation[:300])} Чего нет: {scr.scrub(what[:120])}. "
                      f"Где: [{f.block_id}] ({u.title[:80] if u else ''})\n   Кандидаты:\n{lines}")
-    decided = {}
+    decided, calls = {}, {}
     for start in range(0, len(items), 8):
-        data = ask(doc, ABSENT_PROMPT.format(passport=pline, items=wrap("\n".join(items[start:start + 8]))), 3000, "проверка «не указано»") or {}
+        part = claims[start:start + 8]
+        unit = unit_of("finding", f"утверждений «не указано»: {len(part)}", [x.block_id for x in part])
+        data = ask(doc, ABSENT_PROMPT.format(passport=pline, items=wrap("\n".join(items[start:start + 8]))), 3000, "проверка «не указано»",
+                   "absent", "Проверка «не указано» по всему комплекту", unit) or {}
+        for n in range(start + 1, start + len(part) + 1):
+            calls[n] = data.get("_call", "")
         for d in data.get("decisions") or []:
             try:
                 decided[int(d.get("n"))] = d
@@ -414,6 +464,11 @@ def absent(doc, scr, findings: list[Finding]) -> list[Finding]:
         d = decided.get(n)
         hits = cands.get(n) or []
         f.evidence["поиск по комплекту"] = [f"{b.location()}: {b.text[:160]}" for b, _ in hits[:3]] or "кандидатов не найдено"
+        why = scr.restore(str((d or {}).get("reason") or ""))[:300]
+        verdict = {"same": f"снято: указано в той же части или общих условиях; {why}", "other": f"понижено: указано в другом разделе; {why}",
+                   "not_found": f"оставлено: не найдено по комплекту; {why}"}.get(str((d or {}).get("decision")), "решения модели нет: на ручную проверку")
+        f.trace.append({"step": "absent_search", "call": calls.get(n, ""), "item": d,
+                        "text": f"поиск по комплекту: кандидатов {len(hits)} ({', '.join(b.id for b, _ in hits)}); {verdict}"})
         if not d:
             f.evidence["проверка «не указано»"] = "не проведена"
             f.needs_review = True
@@ -466,17 +521,21 @@ def cross(doc, scr, cats: list) -> list[Finding]:
 
     def work(group):
         text = "\n\n".join(f"{n}. {t}" for n, (_, t, _) in enumerate(group, 1))
-        data = ask(doc, CROSS_PROMPT.format(passport=pline, items=wrap(text)), 4000, "сверка частей") or {}
-        res = []
         blocks = [doc.block(x) for u, _, _ in group for x in u.block_ids if doc.block(x)] + [b for _, _, hs in group for b in hs]
+        unit = unit_of("pair", "; ".join(u.title[:60] for u, _, _ in group), [b.id for b in blocks])
+        data = ask(doc, CROSS_PROMPT.format(passport=pline, items=wrap(text)), 4000, "сверка частей", "cross",
+                   f"Сверка частей: {unit['title'][:120]}", unit) or {}
+        res = []
+        call = data.get("_call", "")
         for it in data.get("findings") or []:
-            f = _finding(doc, it, blocks, scr, "model:cross", cross_cats)
+            f = _finding(doc, it, blocks, scr, "model:cross", cross_cats, call)
             if not f:
                 continue
-            other = locate(scr.restore(str(it.get("other_quote") or "")), sorted(blocks, key=lambda b: b.id != str(it.get("other_block_id"))))
+            other = locate(scr.restore(str(it.get("other_quote") or "")), sorted(blocks, key=lambda b: b.id != str(it.get("other_block_id"))), _labels(doc))
             if other is None or other[0].id == f.block_id:
-                doc.model_dropped.append({"шаг": "model:cross", "цитата": str(it.get("other_quote") or "")[:120], "почему": "второй цитаты нет в тексте"})
+                _drop(doc, "model:cross", it, call, "второй цитаты нет в тексте" if other is None else "вторая цитата в том же блоке")
                 continue
+            f.trace.append({"step": "located", "text": f"вторая цитата найдена: {other[0].location()} (блок {other[0].id})"})
             f.also_in.append(other[0].id)
             f.evidence.update({"второе место": other[0].location(), "вторая цитата": other[1], "второй блок": other[0].id})
             f._unit = next((u for u, _, _ in group if f.block_id in u.block_ids), group[0][0])
@@ -541,6 +600,8 @@ def verify(doc, scr, findings: list[Finding]) -> list[Finding]:
     blocks = []
     for n, f in enumerate(findings):
         norm = _norm_fragment(f)
+        if norm:
+            f.trace.append({"step": "norm", "text": f.evidence.get("пункт нормы", ""), "quote": f.evidence.get("цитата нормы", "")})
         blocks.append(f"{n}. [{f.category}; важность {f.severity}] цитата [{f.block_id}]: «{scr.scrub(f.quote[:300])}»\n"
                       f"   Довод: {scr.scrub(f.explanation[:500])}\n   Контекст:\n{_context(doc, f, scr)}"
                       + (f"\n   Пункт нормы (найден поиском): {scr.scrub(norm)}" if norm else ""))
@@ -557,9 +618,13 @@ def verify(doc, scr, findings: list[Finding]) -> list[Finding]:
 
     def work(batch):
         prompt = VERIFY_PROMPT.format(passport=pline, practice=practice + "\n" if practice else "", items=wrap("\n\n".join(blocks[n] for n in batch)))
-        return batch, ask(doc, prompt, 4000, "вторая проверка") or {}
+        unit = unit_of("finding", f"замечаний: {len(batch)}", [findings[n].block_id for n in batch])
+        return batch, ask(doc, prompt, 4000, "вторая проверка", "verify", "Вторая проверка замечаний", unit) or {}
 
+    calls = {}
     for batch, data in pmap(work, batches):
+        for n in batch:
+            calls[n] = data.get("_call", "")
         for d in data.get("decisions") or []:
             try:
                 n = int(d.get("n"))
@@ -573,9 +638,13 @@ def verify(doc, scr, findings: list[Finding]) -> list[Finding]:
         if not d:
             f.evidence["вторая проверка"] = "не проведена"
             f.needs_review = True
+            f.trace.append({"step": "verify", "call": calls.get(n, ""), "item": None, "text": "решения нет: на ручную проверку"})
             out.append(f)
             continue
         dec = str(d.get("decision"))
+        f.trace.append({"step": "verify", "call": calls.get(n, ""), "item": d,
+                        "text": {"keep": "подтверждено", "lower": "понижено", "reject": "снято"}.get(dec, dec)
+                        + (f": {scr.restore(str(d.get('reason') or ''))[:300]}" if d.get("reason") else "")})
         f.evidence["вторая проверка"] = {"keep": "подтверждено", "lower": "понижено: на ручную проверку", "reject": "снято"}.get(dec, dec)
         f.evidence["довод проверки"] = scr.restore(str(d.get("reason") or ""))[:300]
         confidence.set_model_score(f, d.get("confidence"), confidence.STAGE_VERIFY)
@@ -597,7 +666,10 @@ def dedupe(findings: list[Finding]) -> list[Finding]:
         if dup is None:
             out.append(f)
         elif f.severity in SEV and SEV.index(f.severity) > SEV.index(dup.severity) and len(f.explanation) > len(dup.explanation):
+            f.trace.append({"step": "dedupe", "text": f"объединено с дублем того же места: «{dup.quote[:80]}»"})
             out[out.index(dup)] = f
+        else:
+            dup.trace.append({"step": "dedupe", "text": f"объединено с дублем того же места: «{f.quote[:80]}»"})
     return out
 
 

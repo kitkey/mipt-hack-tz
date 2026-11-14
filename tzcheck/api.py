@@ -181,6 +181,9 @@ def feedback_stats():
 
 @app.get("/runs/{rid}/{fname}")
 def download(rid: str, fname: str):
+    if fname == "trace.json":
+        # журнал с промптами отдаётся только через /api/runs/{rid}/trace
+        return JSONResponse({"error": "not found"}, status_code=404)
     path = os.path.realpath(os.path.join(STORE, rid, fname))
     if not path.startswith(os.path.realpath(STORE)) or not os.path.exists(path):
         return JSONResponse({"error": "not found"}, status_code=404)

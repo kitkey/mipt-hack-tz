@@ -1,8 +1,10 @@
 """Ядро проверки на заглушке модели: решения о дефектах принимает модель, код раскладывает таблицы по её разметке,
 привязывает цитату дословно и отдаёт модели кандидатов поиска."""
 import json
+import sys
 
 import pytest
+from conftest import fake_litellm
 
 from tzcheck import core, llm, passport, pipeline, tables
 from tzcheck.parse import Block, ParsedDoc
@@ -63,7 +65,7 @@ class Stub:
 def stub(monkeypatch):
     def make(answers):
         s = Stub(answers)
-        monkeypatch.setattr(llm, "_call", s)
+        monkeypatch.setitem(sys.modules, "litellm", fake_litellm(s))
         monkeypatch.setenv("TZCHECK_LLM_MODEL", "stub/model")
         return s
     return make
@@ -277,3 +279,61 @@ def test_pipeline_with_stub_model(tmp_path, stub, orch):
     assert [(f["quote"], f["section"]) for f in r["findings"]] == [("в разумный срок", "main")]
     assert r["findings"][0]["confidence_pct"] == 88
     assert r["document"]["procurement"]["закон"] == "223-ФЗ"
+
+
+def test_trace_journal_and_finding_chain(tmp_path, scripted):
+    """У каждого замечания цепочка: found с вызовом из журнала, located, verify, final; снятые лежат в журнале отдельно."""
+    from tzcheck import jobs
+    lift = "samples/lift_src.docx"
+    r = pipeline.check(lift, use_llm=True)
+    calls = {c["id"]: c for c in r["_trace"]["calls"]}
+    assert r["trace_calls"] == len(calls) > 0 and r["trace_rejected"] == len(r["_trace"]["rejected"])
+    assert {c["stage"] for c in calls.values()} >= {"passport", "find", "verify"}
+    for f in r["findings"]:
+        steps = [s["step"] for s in f["trace"]]
+        assert steps[0] == "found" and f["trace"][0]["call"] in calls and steps[1] == "located" and steps[-1] == "final"
+        assert "verify" in steps
+    jobs.write_trace(r, str(tmp_path))
+    data = json.load(open(tmp_path / "trace.json", encoding="utf-8"))
+    assert all(set(c) >= {"id", "stage", "title", "unit", "model", "temperature", "seconds", "tokens", "prompt", "response", "parsed", "retry", "error"}
+               for c in data["calls"])
+    assert "_trace" not in json.dumps({k: v for k, v in r.items() if not k.startswith("_")}, ensure_ascii=False, default=str)
+
+
+def test_rejected_by_verify_in_journal(stub):
+    s, doc = _prep(stub, {"найти дефекты": lambda p: {"findings": [_finding()] if "Стол" in p else []},
+                          "независимая вторая проверка": {"decisions": [{"n": 0, "decision": "reject", "reason": "значение есть"}]}})
+    out = core.verify(doc, Scrubber(), core.find(doc, Scrubber(), CATS))
+    assert out == [] and doc.llm_rejected[0].trace[-1]["step"] == "verify"
+    assert doc.llm_rejected[0].trace[-1]["text"] == "снято: значение есть" and doc.llm_rejected[0].trace[-1]["call"].startswith("c")
+
+
+def test_not_located_goes_to_dropped(stub):
+    s, doc = _prep(stub, {"найти дефекты": {"findings": [_finding(quote="такого текста нет")]}})
+    core.find(doc, Scrubber(), CATS)
+    assert doc.journal.dropped and doc.journal.dropped[0]["trace"][-1]["step"] == "not_located"
+
+
+def test_labelled_row_quote_is_located(stub):
+    s, doc = _prep(stub, {"найти дефекты": {"findings": [_finding(block_id="t1r2", quote="Характеристика: Длина | Значение: 1200")]}})
+    out = core.find(doc, Scrubber(), CATS)
+    assert len(out) == 1 and out[0].block_id == "t1r2" and out[0].quote == "Длина | 1200"
+
+
+def test_trace_file_only_via_api(tmp_path, monkeypatch, scripted):
+    pytest.importorskip("httpx")
+    from fastapi.testclient import TestClient
+    from tzcheck import api, feedback
+    monkeypatch.setattr(feedback, "PATH", str(tmp_path / "fb.jsonl"))
+    monkeypatch.setattr(api, "STORE", str(tmp_path / "runs"))
+    import os
+    os.makedirs(api.STORE, exist_ok=True)
+    c = TestClient(api.app)
+    r = c.post("/api/check?use_llm=true", files={"file": ("lift_src.docx", open("samples/lift_src.docx", "rb"), "application/octet-stream")})
+    rid = r.json()["run_id"]
+    t = c.get(f"/api/runs/{rid}/trace").json()
+    assert t["calls"] and t["calls"][0]["prompt"].startswith("Задача: ")
+    assert c.get(f"/runs/{rid}/trace.json").status_code == 404
+    run = c.get(f"/api/runs/{rid}").json()
+    assert run["trace_calls"] == len(t["calls"]) and "calls" not in run and run["findings"][0]["trace"][0]["step"] == "found"
+    assert c.get("/api/runs/nope/trace").status_code == 404

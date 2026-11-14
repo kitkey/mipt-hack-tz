@@ -94,7 +94,8 @@ def _profiles() -> str:
 def detect(doc, scr) -> dict:
     """Паспорт в doc.passport и роль каждого блока в b.role. Без ответа модели паспорт пуст и роли не заданы."""
     segs = segments(doc)
-    data = ask(doc, PROMPT.format(profiles=_profiles(), data=wrap(_outline(doc, segs, scr))), 4000, "паспорт и роли") or {}
+    data = ask(doc, PROMPT.format(profiles=_profiles(), data=wrap(_outline(doc, segs, scr))), 4000, "паспорт и роли", "passport", "Паспорт закупки и роли разделов",
+               {"kind": "document", "title": doc.name, "blocks": [seg[0].id for seg in segs][:200]}) or {}
     p = data.get("passport") if isinstance(data.get("passport"), dict) else {}
     passport = dict(EMPTY)
     passport.update({"закон": str(p.get("law") or ""), "способ": str(p.get("method") or ""),

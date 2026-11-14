@@ -69,6 +69,7 @@ def _collapse_repeats(findings: list[Finding], doc: ParsedDoc) -> list[Finding]:
             out.append(f)
         elif f.block_id != first.block_id and f.block_id not in first.also_in:
             first.also_in.append(f.block_id)
+            first.trace.append({"step": "repeats", "text": f"та же цитата ещё в блоке {f.block_id}: замечания объединены"})
     for f in out:
         if f.also_in and "То же ещё в" not in f.explanation:
             locs = [b.location() for b in (doc.block(x) for x in f.also_in[:5]) if b]
@@ -175,6 +176,7 @@ NO_MODEL = "Модель не настроена: проверено тольк�
 
 def start_core(doc):
     doc.llm_deadline = time.time() + llm.doc_budget()
+    doc.journal = llm.Journal()
     doc.model_calls, doc.model_dropped, doc.llm_rejected = {}, [], []
 
 
@@ -260,6 +262,10 @@ def _finish(doc, paths, findings, scr, use_llm, mode, t0, orchestrator, steps, g
     for i, f in enumerate(unchecked, 1):
         f.id = f"U{i:03d}"
     replacements.apply(findings)
+    sev_ru = {"high": "высокий", "medium": "средний", "low": "низкий"}
+    for f in findings:
+        f.trace.append({"step": "final", "text": f"статус «{f.status}», риск {sev_ru.get(f.severity, f.severity)}"
+                        + (", на ручную проверку" if f.needs_review else "") + (f", правка «{f.replacement}»" if f.replacement else "")})
     # счётчики, вердикт и заключение только по основному списку; у блока модели свои счётчики
     cats, sev = Counter(f.category for f in main), Counter(f.severity for f in main)
     statuses = Counter(f.status for f in main)
@@ -284,12 +290,21 @@ def _finish(doc, paths, findings, scr, use_llm, mode, t0, orchestrator, steps, g
     if extra:
         summary += f" Отдельным блоком {_remarks(len(extra))} модели на ручную проверку, в вердикт они не входят."
     rejected = getattr(doc, "llm_rejected", [])
+    journal = getattr(doc, "journal", None)
+    if journal is not None:
+        # снятые проверкой: в основной список не идут, в журнале лежат с цепочкой «модель предложила, проверка сняла»
+        journal.rejected = []
+        for i, f in enumerate(rejected, 1):
+            f.id = f"R{i:03d}"
+            journal.rejected.append(f.to_dict())
     if rejected:
         doc.warnings.append(f"LLM: вторая проверка сняла находок модели {len(rejected)}; в отчёт они не вошли (stats.model_rejected).")
     if use_llm and main:
         stats = (f"всего {len(main)}: высокий риск {sev.get('high', 0)}, средний {sev.get('medium', 0)}, низкий {sev.get('low', 0)}; "
                  f"требуют ручной проверки {review}. По категориям: " + "; ".join(f"{k} {v}" for k, v in cats.most_common()))
-        note = llm.summarize(doc, main, stats, scr)
+        with llm.journal_scope(getattr(doc, "journal", None), "summary", "Заключение по отчёту",
+                               {"kind": "document", "title": doc.name, "blocks": []}):
+            note = llm.summarize(doc, main, stats, scr)
         if note:
             model_block["note"] = note
     res = {
@@ -300,6 +315,8 @@ def _finish(doc, paths, findings, scr, use_llm, mode, t0, orchestrator, steps, g
                      "roles": dict(Counter(b.role or "не определена" for b in doc.blocks)) if use_llm else {},
                      "tables": tables.of(doc).to_dict() if use_llm else {}},
         "model_calls": getattr(doc, "model_calls", {}), "model_dropped": getattr(doc, "model_dropped", []),
+        "trace_calls": len(journal.calls) if journal else 0, "trace_rejected": len(journal.rejected) if journal else 0,
+        "_trace": journal.to_dict() if journal else {"calls": [], "rejected": [], "dropped": []},
         "warnings": doc.warnings, "pii_masked": scr.summary(),
         "stats": {"by_category": dict(cats), "by_severity": dict(sev), "by_status": dict(statuses), "needs_review": review,
                   "confidence": {"оценено моделью": sum(f.confidence_pct is not None for f in findings),

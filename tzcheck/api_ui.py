@@ -265,3 +265,10 @@ def runs_list(user: str | None = None, limit: int = 50, offset: int = 0):
 def runs_get(rid: str):
     res = history.load_run(store(), rid)
     return res if res is not None else _bad("run not found", 404)
+
+
+@router.get("/api/runs/{rid}/trace")
+def runs_trace(rid: str):
+    """Журнал вызовов модели: промпты (с маской ПД), сырые ответы, снятые кандидаты."""
+    res = history.load_trace(store(), rid)
+    return res if res is not None else _bad("run not found", 404)
