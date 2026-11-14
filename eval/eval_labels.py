@@ -13,6 +13,10 @@ from tzcheck.pipeline import check
 
 DOCS = {"лифт": "samples/lift_src.docx", "метрология": "samples/metro_src.docx"}
 FINAL = {"лифт": "samples/lift_fin.docx", "метрология": "samples/metro_fin.docx"}
+# замер оставь-один-документ: EVAL_DOCS=lift или metro (часть пути файла), EVAL_SKIP_FINAL=1 без прогона итоговых ТЗ
+if os.environ.get("EVAL_DOCS"):
+    DOCS = {k: v for k, v in DOCS.items() if any(x and x in v for x in os.environ["EVAL_DOCS"].split(","))}
+SKIP_FINAL = os.environ.get("EVAL_SKIP_FINAL") == "1"
 
 
 def norm(s):
@@ -98,14 +102,14 @@ def main():
                     continue
             misses.append({"doc": name, "class": cls, "was": lab["было"][:200],
                            "found": [(f["category"], f["source"], f["quote"][:80]) for f in fs]})
-        fin = check(FINAL[name], use_llm=args.llm)
+        fin = None if SKIP_FINAL else check(FINAL[name], use_llm=args.llm)
         report[name] = {"findings_src": len(res["findings"]), "matched_findings": len(matched_findings),
-                        "findings_final": len(fin["findings"]),
-                        "high_final": sum(1 for f in fin["findings"] if f["severity"] == "high"),
-                        "seconds_src": res.get("seconds"), "seconds_final": fin.get("seconds"),
+                        "findings_final": len(fin["findings"]) if fin else None,
+                        "high_final": sum(1 for f in fin["findings"] if f["severity"] == "high") if fin else None,
+                        "seconds_src": res.get("seconds"), "seconds_final": fin.get("seconds") if fin else None,
                         "src": [{k: f.get(k) for k in ("id", "block_id", "quote", "category", "severity", "source", "section")} for f in res["findings"]],
                         "matched_ids": sorted(matched_findings),
-                        "final": [{k: f.get(k) for k in ("id", "block_id", "quote", "category", "severity", "source", "section")} for f in fin["findings"]]}
+                        "final": [{k: f.get(k) for k in ("id", "block_id", "quote", "category", "severity", "source", "section")} for f in (fin or {}).get("findings", [])]}
     allt, allh, allc, alls = sum(total.values()), sum(hit.values()), sum(hit_cat.values()), sum(strict.values())
     print(f"Метки: {allt}, не найдено место в документе: {unlocated}")
     print(f"Полнота по блокам: {allh}/{allt} = {allh / allt:.0%}; с верной категорией: {allc}/{allt} = {allc / allt:.0%}; "
