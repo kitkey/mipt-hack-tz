@@ -413,7 +413,7 @@ def refs(doc, scr, cats: list) -> list[Finding]:
         for f in out:
             f._unit = u
             f.evidence["справочные записи"] = [r.split(". ", 1)[-1] for r in records][:6]
-            f.trace.insert(0, {"step": "reference", "text": "справочные записи по обозначениям, которые назвала модель", "records": f.evidence["справочные записи"]})
+            f.trace.insert(2, {"step": "reference", "text": "справочные записи по обозначениям, которые назвала модель", "records": f.evidence["справочные записи"]})
         return out
 
     found = []
