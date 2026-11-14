@@ -454,7 +454,7 @@ docker compose logs updater                                              # вр�
 | `TZCHECK_ORCHESTRATOR` | linear | `linear` или `graph` (LangGraph, повторная проверка замечаний с низкой уверенностью) |
 | `TZCHECK_CONF_LOW` | 60 | ниже этой уверенности замечание уходит на повторную проверку в режиме `graph` |
 | `TZCHECK_CONF_MIN` | 0 | порог показа в HTML по умолчанию, ползунок меняет его на странице |
-| `TZCHECK_CUSTOMER` | пусто | профиль заказчика из `tzcheck/data/customers.json`; пусто = по признакам в тексте, `none` = без правил внутренней практики |
+| `TZCHECK_CUSTOMER` | пусто | профиль заказчика из `tzcheck/data/customers.json`: пусто = профиль называет модель по тексту ТЗ, id профиля (например `mipt`) = задать явно, `none` = без практики заказчика. Практика идёт в запросы поиска и второй проверки; замеры на чужих ТЗ и на кейсе ведутся с `none` |
 | `TZCHECK_DATA_DIR` | `tzcheck/data`, в Docker `/refdata` | каталог справочников, общий для app и updater |
 | `TZCHECK_STORE` | `/data/runs` | загруженные файлы, отчёты и решения закупщиков |
 | `TZCHECK_UPDATE_AT` | 04:30 | время ночного обновления справочников |

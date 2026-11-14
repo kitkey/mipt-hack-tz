@@ -101,6 +101,23 @@ def test_customer_profile_only_from_list(stub):
     assert passport.practice(doc) == ""
 
 
+def test_customer_profile_forced_or_switched_off_by_setting(stub, monkeypatch):
+    """TZCHECK_CUSTOMER задаёт профиль заказчика, которого модель не узнала, и выключает узнанный; практика идёт в запрос поиска."""
+    s = stub({"паспорт": PASS, "разметка шапки": HEADER, "найти дефекты": {"findings": [], "lookups": []}})
+    monkeypatch.setenv("TZCHECK_CUSTOMER", "mipt")
+    doc = spec_doc()
+    assert passport.detect(doc, Scrubber())["профиль заказчика"] == "mipt"
+    tables.build(doc, Scrubber())
+    core.find(doc, Scrubber(), CATS)
+    assert all("Практика закупщиков заказчика (МФТИ)" in p for p in s.asked("найти дефекты"))
+    stub({"паспорт": dict(PASS, passport=dict(PASS["passport"], customer_profile="mipt"))})
+    monkeypatch.setenv("TZCHECK_CUSTOMER", "none")
+    doc = spec_doc()
+    assert passport.detect(doc, Scrubber())["профиль заказчика"] == "" and passport.practice(doc) == ""
+    monkeypatch.setenv("TZCHECK_CUSTOMER", "unknown")
+    assert passport.detect(spec_doc(), Scrubber())["профиль заказчика"] == ""
+
+
 def test_header_markup_one_call_per_table_and_layout(stub):
     s = stub({"паспорт": PASS, "разметка шапки": HEADER})
     doc = spec_doc()
