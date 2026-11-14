@@ -200,9 +200,9 @@ def run_state() -> dict | None:
 def busy() -> str | None:
     st = run_state()
     if st and st.get("state") == "running":
-        return f"уже идёт обновление ({', '.join(st.get('sources') or ['все'])}), начато {st.get('started_at', '')[11:16]}"
+        return f"уже идёт обновление, начато в {st.get('started_at', '')[11:16]}"
     if lock_active():
-        return "уже идёт обновление (занят data/updates/.lock, например запуск из командной строки)"
+        return "уже идёт обновление, запущенное вне этой страницы"
     return None
 
 

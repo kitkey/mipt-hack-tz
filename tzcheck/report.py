@@ -1,12 +1,18 @@
 import html
 import json
 import os
+import re
 
 import docx
 
 from .confidence import label as conf_label, show_threshold
+from .model import status_title
 
 SEV_RU = {"high": "высокий", "medium": "средний", "low": "низкий"}
+# ключи основания, которые не выводятся (служебные или уже показаны в строке), и подписи остальных
+EV_SKIP = {"найдено", "нормы", "source", "norm_ids", "цитата найдена в тексте", "основание из базы норм", "второй блок", "второе место", "вторая цитата"}
+EV_LABEL = {"блок отчёта": "раздел", "довод проверки": "довод второй проверки", "обратная связь": "решения закупщиков"}
+GOST_STATUS = {"approved": "утверждён", "verified": "сверен", "draft": "черновик"}
 
 
 def to_json(result: dict, path: str):
@@ -49,19 +55,33 @@ document.addEventListener('click', async (e) => {
 </script>"""
 
 
+def ev_label(key: str) -> str:
+    m = re.fullmatch(r"уверенность \(модель (при .+)\)", key)
+    return f"уверенность {m.group(1)}" if m else EV_LABEL.get(key, key)
+
+
+def ev_value(key: str, v) -> str:
+    if key == "пункт ГОСТ" and isinstance(v, dict):
+        head = ", ".join(x for x in (v.get("designation") or "", f"п. {v['clause']}" if v.get("clause") else "",
+                                     GOST_STATUS.get(v.get("status"), v.get("status") or "")) if x)
+        return head + (f": «{v['quote']}»" if v.get("quote") else "")
+    if key == "применимость ГОСТ" and isinstance(v, dict):
+        return "; ".join(x for x in (v.get("why") or "", f"«{v['quote']}»" if v.get("quote") else "") if x)
+    if isinstance(v, bool):
+        return "да" if v else "нет"
+    if isinstance(v, list):
+        return "; ".join(ev_value("", x) for x in v)
+    if isinstance(v, dict):
+        return "; ".join(f"{a}: {ev_value('', b)}" for a, b in v.items())
+    return str(v)
+
+
 def _evidence(f: dict) -> str:
     esc = html.escape
     ev = f.get("evidence") or {}
-    if not ev:
-        return ""
-    items = []
-    for k, v in ev.items():
-        if isinstance(v, list):
-            v = "; ".join(map(str, v))
-        elif isinstance(v, bool):
-            v = "да" if v else "нет"
-        items.append(f"<li>{esc(str(k))}: {esc(str(v))}</li>")
-    return f"<details><summary>Основание вывода</summary><ul>{''.join(items)}</ul></details>"
+    items = [f"<li>{esc(ev_label(k))}: {esc(ev_value(k, v))}</li>" for k, v in ev.items()
+             if k not in EV_SKIP and v not in (None, "", [], {})]
+    return f"<details><summary>Как проверено</summary><ul>{''.join(items)}</ul></details>" if items else ""
 
 
 CONF_JS = """
@@ -99,7 +119,7 @@ def _conf_cell(f: dict) -> str:
     pct = f.get("confidence_pct")
     if pct is None:
         return f'<td class="conf"><span class="conf-none">{esc(conf_label(f))}</span></td>'
-    return f'<td class="conf"><b>{int(pct)} %</b><small>{esc(f.get("confidence_basis", ""))}</small></td>'
+    return f'<td class="conf"><b>{int(pct)} %</b><small>{esc(basis_title(f.get("confidence_basis", "")))}</small></td>'
 
 
 def _conf_controls(total: int) -> str:
@@ -107,28 +127,31 @@ def _conf_controls(total: int) -> str:
     return (f'<div class="ctl"><label>Порядок: <select id="csort"><option value="idx">по риску</option>'
             '<option value="desc">уверенность: сначала высокая</option><option value="asc">уверенность: сначала низкая</option></select></label>'
             f'<label>Показывать от <input type="range" id="cmin" min="0" max="100" step="5" value="{t}"> <span id="cminv">{t} %</span></label>'
-            '<label><input type="checkbox" id="cnone" checked> без оценки модели (правила)</label>'
+            '<label><input type="checkbox" id="cnone" checked> без оценки</label>'
             f'<span>показано <span id="cshown">{total}</span> из {total}</span></div>')
 
 
+def basis_title(basis: str) -> str:
+    """Подпись основания уверенности: «модель при второй проверке» показывается как «при второй проверке»."""
+    return re.sub(r"^модель (при )", r"\1", basis or "")
+
+
+def _model_note(block: dict | None) -> str:
+    note = (block or {}).get("note")
+    return f'<div class="warn"><b>Пояснение модели.</b> {html.escape(note)}</div>' if note else ""
+
+
 def _model_table(rows: list[str], block: dict | None = None) -> str:
-    block = block or {}
-    note = block.get("note")
-    if not rows and not note:
+    if not rows:
         return ""
+    block = block or {}
     esc = html.escape
     sev = block.get("by_severity", {})
     sev_chips = "".join(f"<li>{SEV_RU.get(k, k)} риск: {sev[k]}</li>" for k in ("high", "medium", "low") if sev.get(k))
     cat_chips = "".join(f"<li>{esc(k)}: {v}</li>" for k, v in sorted(block.get("by_category", {}).items(), key=lambda x: -x[1]))
-    note_html = (f'<div class="warn"><b>Пояснение модели к основному списку.</b> {esc(note)}<br>'
-                 'Текст написан моделью и не сверен с цитатами документа, в итоговое заключение не входит.</div>') if note else ""
     table = ('<table><thead><tr><th>№</th><th>Риск и статус</th><th>Уверенность</th><th>Категория</th><th>Где и цитата</th><th>Почему</th>'
-             f'<th>Как исправить</th><th>Основание</th></tr></thead><tbody id="mrows">{"".join(rows)}</tbody></table>') if rows else ""
-    return (f'<h2>На проверку ({len(rows)})</h2>'
-            '<div class="meta">Эти замечания модель не назвала подтверждённой ошибкой с высокой уверенностью второй проверки или они держатся '
-            'на утверждении «не указано». Почему замечание здесь, сказано в его основании. Они не входят в вердикт, итоговое заключение '
-            'и счётчики над основным списком; каждое закупщик принимает или отклоняет сам.</div>'
-            f'<ul class="chips">{sev_chips}</ul><ul class="chips">{cat_chips}</ul>{note_html}{table}')
+             f'<th>Как исправить</th><th>Основание</th></tr></thead><tbody id="mrows">{"".join(rows)}</tbody></table>')
+    return f'<h2>На проверку ({len(rows)})</h2><ul class="chips">{sev_chips}</ul><ul class="chips">{cat_chips}</ul>{table}'
 
 
 def _unchecked_table(rows: list[str], block: dict | None = None) -> str:
@@ -136,10 +159,7 @@ def _unchecked_table(rows: list[str], block: dict | None = None) -> str:
         return ""
     table = ('<table><thead><tr><th>№</th><th>Риск и статус</th><th>Уверенность</th><th>Категория</th><th>Где и цитата</th><th>Что не найдено</th>'
              f'<th>Что сделать</th><th>Основание</th></tr></thead><tbody id="urows">{"".join(rows)}</tbody></table>')
-    return (f'<h2>Не проверено и не найдено в переданных файлах ({len(rows)})</h2>'
-            '<div class="meta">Здесь выводы из отсутствия сведений: кода ОКПД 2, гарантии, приложения, статуса старого стандарта нет в переданных файлах '
-            'или справочниках. Это вопросы к комплекту документов, а не найденные ошибки ТЗ: они не входят в вердикт и счётчики над основным списком.</div>'
-            + table)
+    return f'<h2>Не проверено ({len(rows)})</h2><div class="meta">Сведений нет в переданных файлах.</div>' + table
 
 
 def _passport_html(result: dict) -> str:
@@ -166,7 +186,7 @@ def to_html(result: dict, run_id: str | None = None) -> str:
         if run_id:
             fid = esc(f["id"])
             fbk = (f'<div class="fb" data-rid="{esc(run_id)}" data-fid="{fid}"><button data-d="accept">Принять</button>'
-                   '<button data-d="reject">Отклонить</button><button data-d="review">На ручную проверку</button>'
+                   '<button data-d="reject">Отклонить</button><button data-d="review">На проверку</button>'
                    '<input class="fbc" placeholder="Комментарий закупщика"></div>')
         ev = f.get("evidence") or {}
         second = (f'<br><a href="#src-{esc(str(ev.get("второй блок", "")), quote=True)}">{esc(str(ev.get("второе место", "")))}</a><blockquote>{esc(str(ev["вторая цитата"]))}</blockquote>'
@@ -175,26 +195,27 @@ def to_html(result: dict, run_id: str | None = None) -> str:
         qhtml = f"<blockquote>{esc(f['quote'])}</blockquote>" if f["quote"] else ""
         target.append(
             f'<tr class="sev-{f["severity"]}" data-conf="{"" if conf is None else int(conf)}" data-idx="{len(target)}"><td>{f["id"]}</td><td><span class="sev">{SEV_RU.get(f["severity"], "")}</span><br>'
-            f'<span class="st {STATUS_CLS.get(status, "")}">{esc(status)}</span></td>{_conf_cell(f)}'
+            f'<span class="st {STATUS_CLS.get(status, "")}">{esc(status_title(status))}</span></td>{_conf_cell(f)}'
             f'<td>{esc(f["category"])}</td><td><a href="#src-{esc(f["block_id"], quote=True)}">{esc(f["location"])}</a>{qhtml}{second}</td>'
-            f'<td>{esc(f["explanation"])}{_evidence(f)}</td><td>{esc(f["fix"])}{fbk}</td><td>{norms or "—"}</td></tr>')
+            f'<td>{esc(f["explanation"])}{_evidence(f)}</td><td>{esc(f["fix"])}{fbk}</td><td>{norms}</td></tr>')
     doc = result.get("_doc")
     sources = "".join(f'<p id="src-{esc(b.id, quote=True)}"><b>{esc(b.location())}</b><br>{esc(b.text)}</p>' for b in doc.blocks) if doc else ""
     stats = result.get("stats", {})
     cats = "".join(f"<li>{esc(k)}: {v}</li>" for k, v in sorted(stats.get("by_category", {}).items(), key=lambda x: -x[1]))
     groups = "".join(f"<li><b>{esc(k)}: {v}</b></li>" for k, v in stats.get("by_group", {}).items())
-    sts = "".join(f"<li>{esc(k)}: {v}</li>" for k, v in stats.get("by_status", {}).items())
+    sts = "".join(f"<li>{esc(status_title(k))}: {v}</li>" for k, v in stats.get("by_status", {}).items())
     warn = "".join(f"<li>{esc(w)}</li>" for w in result.get("warnings", []))
-    model = f" · модель {esc(result['model'])}" if result.get("model") else ""
-    mode = {"format": "модель не подключена: только оформление и безопасность", "model": "языковая модель",
-            "rules": "только правила, модель не подключена", "rules+llm": "правила и языковая модель"}.get(result.get("mode", ""), result.get("mode", ""))
+    model = str(result.get("model") or "").removeprefix("openrouter/")
+    mode = f"Модель {model}" if model else {"rules": "Только правила", "rules+llm": "Правила и модель"}.get(result.get("mode", ""), "Без модели")
     pii = result.get("pii_masked") or {}
-    pii_text = ("персональные данные перед отправкой в модель заменены метками: " + ", ".join(f"{k} {v}" for k, v in pii.items())) if pii else "персональных данных для маскирования не найдено"
+    pii_text = ("ПД заменены метками: " + ", ".join(f"{k} {v}" for k, v in pii.items())) if pii else "персональных данных не найдено" if model else ""
+    seconds = str(result.get("seconds", "")).replace(".", ",")
+    meta = ", ".join(x for x in (mode, f"время {seconds} с" if seconds else "", pii_text) if x)
     return f"""<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>Проверка ТЗ: {esc(result.get('file', ''))}</title>
 <style>{CSS}</style></head><body>
 <h1>Проверка ТЗ: {esc(result.get('file', ''))}</h1>
-<div class="meta">Режим: {esc(mode)}{model} · время {result.get('seconds', '')} с · {esc(pii_text)}</div>
-<div class="summary"><b>Итоговое заключение.</b> {esc(result.get('summary', ''))}</div>
+<div class="meta">{esc(meta)}</div>
+<div class="summary">{esc(result.get('summary', ''))}</div>{_model_note(stats.get('model_block'))}
 <ul class="chips">{sts}</ul>{f'<ul class="chips">{groups}</ul>' if groups else ''}<ul class="chips">{cats}</ul>{f'<div class="warn"><b>Предупреждения</b><ul>{warn}</ul></div>' if warn else ''}
 {_conf_controls(len(rows))}
 <table><thead><tr><th>№</th><th>Риск и статус</th><th>Уверенность</th><th>Категория</th><th>Где и цитата</th><th>Почему</th><th>Как исправить</th><th>Основание</th></tr></thead>
@@ -213,10 +234,15 @@ def to_compare_html(cmp: dict) -> str:
 
     return f"""<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>Сравнение версий ТЗ</title>
 <style>{CSS} h2{{font-size:17px;margin:22px 0 8px}} .fixed{{color:#2b8a3e}} .added{{color:var(--hi)}}</style></head><body>
-<h1>Сравнение версий ТЗ</h1><div class="meta">Было: {esc(cmp['old'])} · стало: {esc(cmp['new'])}</div>
+<h1>Сравнение версий ТЗ</h1><div class="meta">Было: {esc(cmp['old'])}, стало: {esc(cmp['new'])}</div>
 <div class="summary">{esc(cmp['summary'])}</div>
 {block("Исправлено", cmp['fixed'], 'fixed')}{block("Осталось", cmp['remained'], '')}{block("Появилось", cmp['added'], 'added')}
 </body></html>"""
+
+
+def _sentence(s: str) -> str:
+    s = (s or "").strip()
+    return s if not s or s[-1] in ".!?…»\"" else s + "."
 
 
 def to_docx_comments(result: dict, src_path: str, out_path: str) -> bool:
@@ -274,16 +300,20 @@ def to_docx_comments(result: dict, src_path: str, out_path: str) -> bool:
                     next((p for p in cell.paragraphs if p.runs), None)
         if target is None or not target.runs:
             continue
-        text = {"llm_review": "На проверку. ", "unchecked": "Не проверено, сведений нет в переданных файлах. "}.get(f.get("section"), "") + f'[{f["id"]}] {f["category"]} ({SEV_RU.get(f["severity"], "")} риск{", ручная проверка" if f["needs_review"] else ""}; ' \
-               f'уверенность: {conf_label(f)}). {f["explanation"]} Исправление: {f["fix"]}'
+        section = f.get("section")
+        text = {"llm_review": "На проверку. ", "unchecked": "Не проверено, сведений нет в переданных файлах. "}.get(section, "")
+        text += f'[{f["id"]}] {f["category"]}, {SEV_RU.get(f["severity"], "")} риск'
+        text += ", на проверку" if f["needs_review"] and section not in ("llm_review", "unchecked") else ""
+        text += f', уверенность {f["confidence_pct"]} %' if f.get("confidence_pct") is not None else ""
+        text += f'. {_sentence(f["explanation"])} Как исправить: {_sentence(f["fix"])}'
         ev = f.get("evidence") or {}
         if ev.get("вторая цитата"):
-            text += f" второе место: {ev.get('второе место', '')}. Цитата: {ev['вторая цитата']}"
+            text += f" Второе место: {ev.get('второе место', '')}, «{ev['вторая цитата']}»."
         norms = [result["norms"][n]["title"] for n in f["norm_ids"] if n in result.get("norms", {})]
         if norms:
             text += " Основание: " + "; ".join(norms) + "."
         if ev.get("пункт нормы") and ev.get("цитата нормы"):
-            text += f" Пункт нормы: {ev['пункт нормы']}: «{ev['цитата нормы']}»."
+            text += f" Пункт нормы {ev['пункт нормы']}: «{ev['цитата нормы']}»."
         try:
             d.add_comment(target.runs, text=text, author="Проверка ТЗ", initials="ТЗ")
             added += 1

@@ -90,7 +90,7 @@ def test_reports_show_confidence(scripted, tmp_path):
     d = docx.Document(paths["docx"])
     for c in d.comments:
         texts.append(c.text)
-    assert any("уверенность: 90 % (модель при второй проверке)" in t for t in texts)
+    assert any("уверенность 90 %" in t for t in texts)
 
 
 def test_html_threshold_default_from_env(monkeypatch):

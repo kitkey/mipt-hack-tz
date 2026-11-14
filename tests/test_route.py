@@ -21,7 +21,7 @@ def test_confirmed_error_with_high_confidence_stays_main():
 
 @pytest.mark.parametrize("kw, why", [
     ({"status": "неясно"}, "статус «неясно»"),
-    ({"status": "ручная проверка"}, "статус «ручная проверка»"),
+    ({"status": "ручная проверка"}, "статус «на проверку»"),
     ({"pct": 89}, "уверенность второй проверки 89 %"),
     ({"pct": None}, "нет оценки"),
     ({"absent": True}, "«не указано»"),

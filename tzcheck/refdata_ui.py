@@ -5,6 +5,7 @@ import gzip
 import html
 import json
 import os
+import re
 import threading
 
 from fastapi import APIRouter, Body
@@ -19,20 +20,20 @@ router = APIRouter()
 _start_lock = threading.Lock()
 
 PURPOSE = {
-    "okpd2": "коды ОКПД 2: проверка кода и подсказка верного кода позиции",
+    "okpd2": "проверка кода ОКПД 2 и подсказка верного кода",
     "laws": "действующие редакции законов для ссылок в основаниях замечаний",
     "eaeu": "перечни стандартов к техрегламентам ЕАЭС, в замечаниях о ГОСТ",
-    "gost": "статус стандарта: действует, заменён, отменён; заменяющий и дата",
+    "gost": "статус стандарта, заменяющий стандарт и дата замены",
     "arshin": "утверждённые типы средств измерений для позиций-приборов",
-    "ktru": "позиции КТРУ и их обязательные характеристики; собирается, в правилах пока не используется",
+    "ktru": "позиции КТРУ и их обязательные характеристики",
 }
 VIA_RU = {"rst_api": "API каталога Росстандарта", "rst_browser": "API Росстандарта через браузер", "protect": "карточка protect.gost.ru",
           "protect_feed": "лента поступлений protect.gost.ru", "rst_full": "полный обход каталога Росстандарта"}
-GROUPS_RU = {"watch": "список наблюдения в коде (gost.WATCH)", "tz_online": "стандарты из ТЗ, проверенных с доступом к сети (кэш запросов)",
-             "tz_offline": "запрошены без сети при проверке ТЗ или сборке корпуса норм (cache/gost_requested.json)",
+GROUPS_RU = {"watch": "постоянный список наблюдения", "tz_online": "стандарты из ТЗ, проверенных с доступом к сети",
+             "tz_offline": "запрошены без сети при проверке ТЗ или сборке корпуса норм",
              "manual": "добавлены вручную на этой вкладке", "watched_before": "уже отмечены как наблюдаемые в копии"}
-RUN_STATE_RU = {"queued": "ждёт сервис updater", "running": "идёт обновление", "done": "завершено", "lost": "прервано"}
-TRIGGER_RU = {"manual": "вручную", "schedule": "по расписанию", "start": "при запуске updater"}
+RUN_STATE_RU = {"queued": "ждёт сервис обновления", "running": "идёт обновление", "done": "завершено", "lost": "прервано"}
+TRIGGER_RU = {"manual": "вручную", "schedule": "по расписанию", "start": "при запуске сервиса"}
 
 
 def _how() -> dict:
@@ -425,7 +426,8 @@ code{background:var(--soft);padding:1px 5px;border-radius:4px;font-size:12.5px}
 .tablewrap{overflow-x:auto}.nw{white-space:nowrap}code,.url{overflow-wrap:anywhere}table.src td.d{white-space:nowrap}table.src td.d .small{white-space:normal;max-width:150px}
 """
 
-NAV = ('<nav class="tabs"><a href="/"{a}>Проверка ТЗ</a><a href="/refdata"{b}>Справочники</a></nav>')
+NAV = ('<nav class="tabs"><a href="/#/"{a}>Проверка</a><a href="/#/history">История</a><a href="/#/norms">Нормативная база</a>'
+       '<a href="/refdata"{b}>Справочники</a></nav>')
 
 
 def nav(active: str) -> str:
@@ -439,30 +441,19 @@ def _status_cls(status: str | None) -> str:
 def _mode_block(m: dict, sch: dict) -> str:
     hb = m["heartbeat"]
     if m["via"] == "updater":
-        upd = (f'<span class="s-ok"><span class="dot"></span></span>сервис <code>updater</code> на связи (пульс {hb["age"]} с назад). '
-               'Кнопка и настройки передаются ему файлами в общем томе: <code>control/request.json</code>, <code>control/schedule.json</code>.')
+        upd = '<span class="s-ok"><span class="dot"></span></span>сервис обновления на связи.'
     elif m["via"] == "updater_down":
-        ago = f", последний пульс {hb['age']} с назад" if hb else ", пульса не было"
-        upd = (f'<span class="s-warn"><span class="dot"></span></span>сервис <code>updater</code> не отвечает{ago}. '
-               'Запрос «Обновить сейчас» сохранится и выполнится после <code>docker compose up -d updater</code>.')
+        ago = f", последний ответ {hb['age']} с назад" if hb else ""
+        upd = (f'<span class="s-warn"><span class="dot"></span></span>сервис обновления не отвечает{ago}. '
+               'Запрос «Обновить сейчас» выполнится после его запуска.')
     else:
-        upd = ('<span class="s-ok"><span class="dot"></span></span>локальный режим: кнопка запускает <code>python -m tzcheck.updater</code> '
-               'в процессе веб-приложения.')
+        upd = '<span class="s-ok"><span class="dot"></span></span>обновление идёт в веб-приложении.'
         if not (hb and hb.get("fresh")):
-            upd += (' Планировщик не запущен: по расписанию справочники обновятся, только если работает '
-                    '<code>python -m tzcheck.updater.nightly</code> (в Docker это сервис <code>updater</code>).')
-    check = ("справочники берутся только из локальных копий, при проверке ТЗ запросов в сеть нет (<code>TZCHECK_REFDATA_OFFLINE=1</code>)"
-             if m["offline"] else
-             "если стандарта или прибора нет в копии, приложение само спрашивает rst.gov.ru и ФГИС «Аршин» (<code>TZCHECK_REFDATA_OFFLINE=0</code>)")
-    extra = ""
-    if hb:
-        extra = (f'<div class="small muted" style="margin-top:6px">У updater: браузерный запасной путь '
-                 f'{"есть (Playwright)" if hb.get("browser") else "нет (образ без WITH_BROWSER=1)"}, прокси '
-                 f'{"задан" if hb.get("proxy") else "не задан"}.</div>')
-    return (f'<div class="grid"><div class="cell"><div class="k">Обновление справочников</div><div class="v small">{upd}{extra}</div></div>'
-            f'<div class="cell"><div class="k">Проверка ТЗ</div><div class="v small">{check}.</div></div>'
-            f'<div class="cell"><div class="k">Где лежат данные</div><div class="v small"><code>{e(m["data_dir"])}</code>, '
-            f'журнал изменений в <code>updates/</code>, управление в <code>control/</code></div></div></div>')
+            upd += ' Планировщик не запущен, обновление по расписанию не сработает.'
+    check = ("справочники берутся только из локальных копий, при проверке ТЗ запросов в сеть нет" if m["offline"] else
+             "если стандарта или прибора нет в копии, приложение само спрашивает rst.gov.ru и ФГИС «Аршин»")
+    return (f'<div class="grid"><div class="cell"><div class="k">Обновление справочников</div><div class="v small">{upd}</div></div>'
+            f'<div class="cell"><div class="k">Проверка ТЗ</div><div class="v small">{check}.</div></div></div>')
 
 
 def _next_text(sch: dict) -> str:
@@ -495,7 +486,7 @@ def _sources_table(rows: list[dict]) -> str:
         via = e(r["via_title"] or "нет данных")
         if r["source_url"]:
             via += f'<div class="small url"><a href="{e(r["source_url"])}" target="_blank" rel="noopener">{e(r["source_url"])}</a></div>'
-        out.append(f'<tr><td><b>{e(r["title"])}</b><div class="small muted">{e(r["purpose"])}</div><div class="small muted"><code>{e(r["file"])}</code></div></td>'
+        out.append(f'<tr><td><b>{e(r["title"])}</b><div class="small muted">{e(r["purpose"])}</div></td>'
                    f'<td class="d">{_msk(r["checked_at"]) or "нет данных"}</td><td class="d">{changed}</td><td>{via}</td>'
                    f'<td class="n">{e(r["records"]) if r["records"] is not None else "0"}</td>'
                    f'<td class="n">{_counts(c)}</td>'
@@ -526,11 +517,10 @@ def plural(n: int, one: str, few: str, many: str) -> str:
 
 def _coverage(g: dict) -> str:
     if g["full_records"]:
-        return (f'<span class="s-ok"><span class="dot"></span></span>Копия собрана полным обходом каталога ({_msk(g["full_at"]) or "дата в журнале не найдена"}), '
-                f'из него {g["full_records"]} записей; API отдаёт не больше 10 000 записей на запрос, поэтому редкие стандарты могли не попасть.')
-    return ('<span class="s-warn"><span class="dot"></span></span>Копия покрывает не весь каталог Росстандарта: в ней только отслеживаемые '
-            'стандарты и новые из лент protect.gost.ru. Если стандарта нет в копии, при проверке ТЗ без сети его действие '
-            '«автоматически не подтверждено», а при следующем обновлении он будет проверен поштучно. Весь каталог собирает полный обход.')
+        return (f'<span class="s-ok"><span class="dot"></span></span>Копия собрана полным обходом каталога '
+                f'{_msk(g["full_at"]) or "(дата в журнале не найдена)"}, записей: {g["full_records"]}.')
+    return ('<span class="s-warn"><span class="dot"></span></span>Копия покрывает не весь каталог: только отслеживаемые '
+            'стандарты и новые из лент protect.gost.ru.')
 
 
 def _gost_block(g: dict) -> str:
@@ -547,19 +537,18 @@ def _gost_block(g: dict) -> str:
     return f"""
 <section id="gost"><h2>Каталог Росстандарта</h2>
 <p>Известно {g["known"]} {plural(g["known"], "стандарт", "стандарта", "стандартов")}.</p><p class="small">{_coverage(g)}</p>
-<p class="small muted">Проверено {_msk(g["checked_at"]) or "нет данных"}. При каждом запуске updater поштучно
-перепроверяет {g["targets"]} {plural(g["targets"], "обозначение", "обозначения", "обозначений")} (группы ниже пересекаются), добавляет новые стандарты из лент protect.gost.ru за текущий и прошлый месяц
-и перепроверяет стандарты из копии, к которым вышли изменения. Полный обход каталога (около часа): {full}.</p>
-<div class="cols"><div><h3>Что отслеживается и почему</h3><table><thead><tr><th>Откуда обозначение</th><th>Обозначений</th></tr></thead><tbody>{groups}
+<p class="small muted">Проверено {_msk(g["checked_at"]) or "нет данных"}. Отслеживается {g["targets"]} {plural(g["targets"], "обозначение", "обозначения", "обозначений")}.
+Полный обход каталога: {full}.</p>
+<div class="cols"><div><h3>Что отслеживается</h3><table><thead><tr><th>Откуда обозначение</th><th>Обозначений</th></tr></thead><tbody>{groups}
 <tr><td>новые стандарты из лент protect.gost.ru ({feed})</td><td class="n">{sum(n for _, n in g["feed"])}</td></tr></tbody></table>
 <p class="small muted">Нет в каталоге при последней проверке: {missing}.</p>
 <h3>Как получены записи</h3><table><tbody>{vias}</tbody></table>
 <ul class="small muted">{notes}</ul></div>
 <div><h3>Статусы</h3><table><thead><tr><th>Статус</th><th>Всего в копии</th><th>Из отслеживаемых</th></tr></thead><tbody>{statuses}</tbody></table></div></div>
-<h3>Поиск по обозначению в локальной копии</h3>
+<h3>Поиск стандарта</h3>
 <form id="gq" class="row" onsubmit="return false"><input type="text" id="gq-q" placeholder="ГОСТ Р 53780-2010 или часть названия" style="min-width:320px">
 <button type="submit" id="gq-go">{ICON["search"]}Найти</button></form><div id="gq-out"></div>
-<h3>Последние изменения из журнала</h3><div class="tablewrap" style="max-height:340px;overflow:auto"><table><tbody>{recent}</tbody></table></div>
+<h3>Последние изменения</h3><div class="tablewrap" style="max-height:340px;overflow:auto"><table><tbody>{recent}</tbody></table></div>
 </section>"""
 
 
@@ -570,23 +559,19 @@ def _how_block(rows: list[dict]) -> str:
         h = how.get(r["name"], {})
         steps = []
         for i, (link_id, title) in enumerate(r["chain"], 1):
-            reqs = "".join(f"<li>{e(x)}</li>" for x in h.get("links", {}).get(link_id, []))
-            steps.append(f'<li><b>{e(title)}</b> <span class="muted small">({e(link_id)})</span><ul>{reqs}</ul></li>')
-        steps.append("<li><b>прежняя копия</b>: если все пути не сработали или данные не прошли проверку (меньше минимума записей или "
-                     "резкое падение числа записей), файл не меняется, в журнал пишется причина</li>")
-        always = "".join(f"<li>{e(x)}</li>" for x in h.get("always", []))
-        always = f'<p class="small">При каждом запуске, на любом пути:</p><ul>{always}</ul>' if always else ""
-        name_base = r["file"].split(".")[0]
+            reqs = "".join(f"<li>{e(_no_env(x))}</li>" for x in h.get("links", {}).get(link_id, []))
+            steps.append(f'<li><b>{e(title)}</b><ul>{reqs}</ul></li>')
+        steps.append("<li><b>прежняя копия</b>, если пути выше не сработали или данные не прошли проверку</li>")
+        always = "".join(f"<li>{e(_no_env(x))}</li>" for x in h.get("always", []))
+        always = f'<p class="small">При каждом запуске:</p><ul>{always}</ul>' if always else ""
         parts.append(f"""<details><summary><b>{e(r["title"])}</b> <span class="chain">{" → ".join(e(t.split(" (")[0]) for _, t in r["chain"])} → прежняя копия</span></summary>
-<p class="small">Пути пробуются по порядку, данные берутся из первого сработавшего:</p><ol>{"".join(steps)}</ol>{always}
-<p class="small"><b>Что уходит наружу:</b> {e(h.get("sends", ""))}. Текст ТЗ и персональные данные updater не видит и не отправляет.</p>
-<p class="small"><b>Где результат:</b> <code>{e(r["file"])}</code>, рядом <code>{e(name_base)}_meta.json</code> (путь, время, число записей, sha256),
-сырые ответы в <code>raw/{e(r["name"])}/</code> (из них пересобирает <code>--offline</code>), разница с прошлой копией в
-<code>updates/ГГГГ-ММ-ДД_{e(r["name"])}.json</code> и <code>updates/LATEST.md</code>.</p></details>""")
-    return ('<section id="how"><h2>Как обновляется</h2><p class="small muted">Обновление делает <code>python -m tzcheck.updater</code>. '
-            'Каждый справочник идёт по своей цепочке путей; адреса ниже взяты из кода модулей <code>tzcheck/updater/</code>. '
-            'Между запросами к одному сайту пауза не меньше 1 с, к zakupki.gov.ru 60 с. Сертификаты НУЦ Минцифры лежат в '
-            '<code>tzcheck/data/certs/</code>, прокси задаётся через <code>HTTPS_PROXY</code>.</p>' + "".join(parts) + "</section>")
+<ol>{"".join(steps)}</ol>{always}
+<p class="small"><b>Что уходит наружу:</b> {e(h.get("sends", ""))}.</p></details>""")
+    return '<section id="how"><h2>Как обновляется</h2>' + "".join(parts) + "</section>"
+
+
+def _no_env(text: str) -> str:
+    return re.sub(r"\s*\((?:[^()]*\s)?TZCHECK_[A-Z0-9_]+\)", "", text)
 
 
 def _schedule_block(sch: dict) -> str:
@@ -596,11 +581,11 @@ def _schedule_block(sch: dict) -> str:
     srcs = "".join(f'<label><input type="checkbox" name="src" value="{n}"{" checked" if n in s["sources"] else ""}> {e(t)}</label>'
                    for n, t in _short_names().items())
     if sch["updater_next"]:
-        seen = ("updater принял эти настройки" if sch["updater_seen"] else "updater ещё не перечитал настройки (несколько секунд)")
+        seen = ("сервис обновления принял настройки" if sch["updater_seen"] else "сервис обновления ещё не перечитал настройки")
         confirm = f'<div class="small muted" id="sch-seen">{seen}; по его часам следующее обновление {_local(sch["updater_next"])}</div>'
     else:
-        confirm = '<div class="small muted" id="sch-seen">планировщик не на связи: настройки сохранены и применятся, когда он запустится</div>'
-    saved = f'Сохранено {_local(s["saved_at"])}' if s.get("saved_at") else "Файла настроек нет, действуют значения из переменных окружения"
+        confirm = '<div class="small muted" id="sch-seen">планировщик не на связи, настройки применятся после его запуска</div>'
+    saved = f'Сохранено {_local(s["saved_at"])}' if s.get("saved_at") else "Настройки по умолчанию"
     return f"""<section id="schedule"><h2>{ICON["clock"]} Расписание</h2>
 <form id="sch" class="row" onsubmit="return false">
 <label><input type="checkbox" id="sch-on"{" checked" if s["enabled"] else ""}> обновлять каждый день</label>
@@ -608,8 +593,7 @@ def _schedule_block(sch: dict) -> str:
 <label>полный обход каталогов <select id="sch-wd">{wd}</select></label></form>
 <div class="row srcs small" id="sch-src">{srcs}</div>
 <div class="row"><button type="button" id="sch-save">{ICON["save"]}Сохранить</button><span class="msg" id="sch-msg"></span></div>
-<div class="small">Следующее обновление: <b id="sch-next">{_next_text(sch)}</b>. <span class="muted">{saved}. Файл <code>control/schedule.json</code>,
-переживает перезапуск; без него действуют <code>TZCHECK_UPDATE_AT</code>, <code>TZCHECK_UPDATE_FULL_WEEKDAY</code>, <code>TZCHECK_UPDATE_ENABLED</code>.</span></div>
+<div class="small">Следующее обновление: <b id="sch-next">{_next_text(sch)}</b>. <span class="muted">{saved}.</span></div>
 {confirm}</section>"""
 
 
@@ -624,30 +608,27 @@ def _run_block(run: dict) -> str:
     opts = '<option value="">все справочники</option>' + "".join(f'<option value="{n}">{e(t)}</option>' for n, t in _short_names().items())
     return f"""<section id="run"><h2>Обновить сейчас</h2>
 <div class="row"><label>Что обновить <select id="run-src">{opts}</select></label>
-<label><input type="checkbox" id="run-full"> полный обход (каталог Росстандарта около часа, весь реестр «Аршин»)</label>
+<label><input type="checkbox" id="run-full"> полный обход, около часа</label>
 <button type="button" id="run-go">{ICON["refresh"]}Обновить сейчас</button></div>
 <div id="run-state" class="msg"></div><pre class="log" id="run-log" hidden></pre></section>"""
 
 
 def _lexicon_block(lx: dict) -> str:
-    head = '<section id="lexicon"><h2>Внутренний словарь фраз и брендов</h2>'
+    head = '<section id="lexicon"><h2>Словарь фраз и брендов</h2>'
     if not lx.get("total"):
-        where = f'<code>{e(lx["path"])}</code> без записей' if lx["path"] else "<code>lexicon.jsonl</code> в каталоге справочников не найден"
-        return (head + f'<p class="small muted">Словарь пуст: {where}. Здесь будут фразы и бренды, которые правила ищут в ТЗ: '
-                'кандидаты (найдены, ждут подтверждения), активные (работают в правилах) и снятые; у каждой записи опоры, '
-                'то есть в каких ТЗ и решениях закупщиков она встречалась.</p></section>')
+        return head + '<p class="small muted">Словарь пуст.</p></section>'
     order = ["кандидаты", "активные", "снятые"]
     counts = ", ".join(f"{k} {lx['counts'].get(k, 0)}" for k in order)
     other = {k: v for k, v in lx["counts"].items() if k not in order}
     if other:
         counts += ", " + ", ".join(f"{e(k)} {v}" for k, v in other.items())
-    rows = "".join(f'<tr><td>{e(r["text"])}</td><td>{e(r["kind"])}</td><td>{e(r["status"])}</td><td><code>{e(r["rule_id"])}</code></td>'
+    rows = "".join(f'<tr><td>{e(r["text"])}</td><td>{e(r["kind"])}</td><td>{e(r["status"])}</td>'
                    f'<td class="n">{e(r["support"] if r["support"] is not None else "")}</td>'
                    f'<td class="small muted">{"<br>".join(e(x) for x in r["support_examples"])}</td></tr>' for r in lx["items"])
     more = f'<p class="small muted">Показаны первые {len(lx["items"])} из {lx["total"]}.</p>' if lx["total"] > len(lx["items"]) else ""
     bad = f'<p class="small s-warn">Строк, которые не удалось прочитать: {lx["bad"]}.</p>' if lx["bad"] else ""
-    return (head + f'<p class="small">Записей {lx["total"]}: {counts}. Файл <code>{e(lx["path"])}</code>.</p>{bad}'
-            '<div class="tablewrap"><table><thead><tr><th>Фраза или бренд</th><th>Вид</th><th>Статус</th><th>Правило</th><th>Опор</th>'
+    return (head + f'<p class="small">Записей {lx["total"]}: {counts}.</p>{bad}'
+            '<div class="tablewrap"><table><thead><tr><th>Фраза или бренд</th><th>Вид</th><th>Статус</th><th>Опор</th>'
             f'<th>Примеры опор</th></tr></thead><tbody>{rows}</tbody></table></div>{more}</section>')
 
 
@@ -659,7 +640,7 @@ def _history_block(hist: list[dict]) -> str:
         cls = "s-ok" if h.get("code") == 0 else ("s-keep" if h.get("code") in (1, 3) else "s-err")
         rows.append(f'<tr><td class="n">{_local(h.get("started_at"))}</td><td>{e(TRIGGER_RU.get(h.get("trigger"), h.get("trigger")))}</td>'
                     f'<td>{e(", ".join(_short_names().get(s, s) for s in h.get("sources") or []))}{", полный обход" if h.get("full") else ""}</td>'
-                    f'<td>{e("updater" if h.get("runner") == "updater" else "веб-приложение")}</td><td class="n">{e(h.get("seconds"))} с</td>'
+                    f'<td>{e("сервис обновления" if h.get("runner") == "updater" else "веб-приложение")}</td><td class="n">{e(h.get("seconds"))} с</td>'
                     f'<td><span class="{cls}"><span class="dot"></span>{e(h.get("outcome"))}</span></td></tr>')
     return ('<section id="history"><h2>Журнал запусков</h2><div class="tablewrap"><table><thead><tr><th>Начало</th><th>Как запущено</th><th>Что</th>'
             '<th>Где выполнялось</th><th>Длилось</th><th>Итог</th></tr></thead><tbody>' + "".join(rows) + "</tbody></table></div></section>")
@@ -667,7 +648,7 @@ def _history_block(hist: list[dict]) -> str:
 
 JS = """<script>
 const SHORT = %SHORT%;
-const TRIGGER = {manual: 'вручную', schedule: 'по расписанию', start: 'при запуске updater'};
+const TRIGGER = {manual: 'вручную', schedule: 'по расписанию', start: 'при запуске сервиса'};
 const ICON_SPIN = '<span class="spin"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.2-8.56"/></svg></span>';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])).replace(/«—»/g, '«нет»');
@@ -681,8 +662,8 @@ function renderRun(info) {
   const what = (st.sources || []).map(s => SHORT[s] || s).join(', ') + (st.full ? ', полный обход' : '');
   let html = '';
   const active = st.state === 'running' || st.state === 'queued';
-  if (st.state === 'running') html = '<span class="s-run">' + ICON_SPIN + '</span> Идёт обновление: ' + esc(what) + ', начато ' + hhmm(st.started_at) + ', ' + secsSince(st.started_at) + ' с' + (st.runner === 'updater' ? ' (выполняет сервис updater)' : ' (выполняет веб-приложение)');
-  else if (st.state === 'queued') html = '<span class="s-run">' + ICON_SPIN + '</span> Запрос передан сервису updater (' + esc(what) + '), ждём, пока он его заберёт, обычно до 5 с.';
+  if (st.state === 'running') html = '<span class="s-run">' + ICON_SPIN + '</span> Идёт обновление: ' + esc(what) + ', начато ' + hhmm(st.started_at) + ', ' + secsSince(st.started_at) + ' с';
+  else if (st.state === 'queued') html = '<span class="s-run">' + ICON_SPIN + '</span> Запрос передан сервису обновления (' + esc(what) + ').';
   else if (st.state === 'lost') html = '<span class="s-err"><span class="dot"></span>' + esc(st.outcome) + '</span>';
   else {
     const cls = st.code === 0 ? 's-ok' : (st.code === 1 || st.code === 3 ? 's-keep' : 's-err');
@@ -722,7 +703,7 @@ $('sch-save').addEventListener('click', async () => {
 async function checkSeen() {
   const j = await (await fetch('/api/refdata/schedule')).json();
   if (j.updater_seen === null) return;
-  $('sch-seen').textContent = (j.updater_seen ? 'updater принял эти настройки' : 'updater ещё не перечитал настройки') + (j.updater_next ? '; по его часам следующее обновление ' + dmy(j.updater_next) : '');
+  $('sch-seen').textContent = (j.updater_seen ? 'сервис обновления принял настройки' : 'сервис обновления ещё не перечитал настройки') + (j.updater_next ? '; по его часам следующее обновление ' + dmy(j.updater_next) : '');
   if (!j.updater_seen) setTimeout(checkSeen, 3000);
 }
 async function search() {
@@ -763,13 +744,10 @@ def page() -> str:
     return f"""<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Справочники</title><style>{CSS}</style></head><body>{nav("refdata")}
 <h1>Справочники</h1>
-<p class="muted small">Правила сверяют ТЗ с локальными копиями справочников. Последняя проверка источников {_msk(last) or "не выполнялась"},
-следующее обновление {_next_text(sch)}.</p>
+<p class="muted small">Последняя проверка источников {_msk(last) or "не выполнялась"}, следующее обновление {_next_text(sch)}.</p>
 {_mode_block(m, sch)}
 {_run_block(st["run"])}
-<section id="sources"><h2>Все справочники</h2>{_sources_table(rows)}
-<p class="small muted">«Проверено»: когда updater последний раз обращался к источнику. «Данные менялись»: последний запуск, в котором копия отличалась от прежней.
-Добавлено, удалено и изменено считаются по последнему запуску.</p></section>
+<section id="sources"><h2>Все справочники</h2>{_sources_table(rows)}</section>
 {_gost_block(g)}
 {_schedule_block(sch)}
 {_how_block(rows)}

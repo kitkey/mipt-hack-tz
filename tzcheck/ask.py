@@ -18,7 +18,7 @@ def ask(doc, prompt: str, max_tokens: int = 4000, step: str = "", stage: str = "
     Вызов пишется в журнал прогона (doc.journal); id записи кладётся в ответ полем "_call"."""
     deadline = getattr(doc, "llm_deadline", None)
     if deadline is not None and time.time() > deadline:
-        note = f"Модель: бюджет {llm.doc_budget():.0f} с на документ исчерпан, оставшиеся вызовы пропущены (TZCHECK_LLM_DOC_TIMEOUT)"
+        note = f"Модель: бюджет {llm.doc_budget():.0f} с на документ исчерпан, оставшиеся вызовы пропущены."
         if note not in doc.warnings:
             doc.warnings.append(note)
         return None

@@ -291,7 +291,7 @@ def test_job_flow_sse_and_history(client, scripted):
     ids = [s["id"] for s in j["steps"]]
     assert ids == ["parse", "security", "passport", "tables", "core_find", "core_verify", "finish", "report"]
     assert all(s["status"] == "done" and s["started_at"] and s["finished_at"] for s in j["steps"])
-    assert "блоков разобрано" in j["steps"][0]["text"]
+    assert "фрагментов" in j["steps"][0]["text"]
     res = j["result"]
     assert res["checks"] == ["standards"] and {f["group"] for f in res["findings"]} == {"Стандарты"}
     assert res["links"]["revisions_docx"].endswith("lift_src.revisions.docx")
@@ -502,7 +502,7 @@ def test_failed_model_step_makes_check_incomplete(scripted, monkeypatch):
     assert st["core_cross"]["state"] == "ошибка" and "сбой модели" in st["core_cross"]["reason"]
     assert st["core_find"]["state"] == "выполнен"
     assert r["status"] == "incomplete" and r["completeness"]["complete"] is False and r["completeness"]["incomplete_steps"] == ["core_cross"]
-    assert r["summary"].startswith("Проверка неполная: «Модель сверяет позиции") and r["verdict"].startswith("Проверка неполная")
+    assert r["summary"].startswith("Проверка неполная: «Сверка частей комплекта»") and r["verdict"].startswith("Проверка неполная")
 
 
 def test_failed_step_never_reads_as_clean(scripted, monkeypatch, tmp_path):

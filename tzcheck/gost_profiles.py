@@ -47,11 +47,11 @@ KINDS = ("order_param", "limit", "docs")
 RULE_IDS = {"order_param": "gost_profile.order_param", "limit": "gost_profile.limit", "docs": "gost_profile.docs",
             "unavailable": "gost_profile.unavailable", "not_built": "gost_profile.not_built"}
 STATUS_DRAFT, STATUS_VERIFIED, STATUS_APPROVED = "draft", "verified", "approved"
-STATUS_TITLES = {STATUS_DRAFT: "черновик модели", STATUS_VERIFIED: "сверен моделью с текстом ГОСТ", STATUS_APPROVED: "утверждён человеком"}
+STATUS_TITLES = {STATUS_DRAFT: "черновик", STATUS_VERIFIED: "сверен с ГОСТ", STATUS_APPROVED: "утверждён"}
 CHECKLIST = (STATUS_VERIFIED, STATUS_APPROVED)
 NATURES = ("требование", "пример", "справочное", "рекомендация")
 OPERATORS = {"min": "не менее", "max": "не более", "range": "от ... до", "eq": "равно", "one_of": "одно из"}
-KIND_TITLES = {"order_param": "параметр заказа", "limit": "предел значения", "docs": "документ или маркировка при поставке"}
+KIND_TITLES = {"order_param": "параметр заказа", "limit": "предел", "docs": "документ или маркировка"}
 # пороги слияния: косинус USER-bge-m3 по тексту «параметр: требование». Первый порог 0,90 на ГОСТ 34441-2018 слил
 # «регистрацию информации с инженерного оборудования» и «управление инженерным оборудованием» (0,905), поэтому
 # без модели сливается только почти дословный повтор, а полоса 0,80-0,95 уходит модели
@@ -376,7 +376,7 @@ def _guard(stop: list, deadline: float | None) -> str:
     if stop:
         return stop[0]
     if deadline is not None and time.time() > deadline:
-        return "бюджет модели на документ исчерпан (TZCHECK_LLM_DOC_TIMEOUT)"
+        return "бюджет модели на документ исчерпан"
     return ""
 
 
@@ -1196,7 +1196,7 @@ def safe_apply(doc, findings: list[Finding], build_missing: bool = False) -> lis
     try:
         return apply(doc, findings, build_missing)
     except Exception as e:
-        doc.warnings.append(f"проверка по профилям ГОСТ упала: {type(e).__name__}: {e}")
+        doc.warnings.append(f"Проверка по чеклистам ГОСТ упала ({type(e).__name__}: {e})")
         return findings
 
 

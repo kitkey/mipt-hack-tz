@@ -72,7 +72,7 @@ function addFiles(list) {
   const incoming = Array.from(list || []);
   const room = maxFiles() - state.files.length;
   if (incoming.length > room) {
-    err.textContent = `Можно загрузить не больше ${maxFiles()} файлов вместе с приложениями. Лишние не добавлены.`;
+    err.textContent = `Не больше ${maxFiles()} файлов, лишние не добавлены.`;
     state.files.push(...incoming.slice(0, Math.max(room, 0)));
     renderFiles();
     err.hidden = false;
@@ -187,7 +187,7 @@ async function submit(e) {
   if (!state.files.length || !state.groups.size) return;
   err.hidden = true;
   btn.disabled = true;
-  btn.textContent = "Отправляем";
+  btn.textContent = "Отправка";
   const fd = new FormData();
   fd.append("file", state.files[0]);
   state.files.slice(1).forEach(f => fd.append("attachments", f));
@@ -297,7 +297,13 @@ function setJobState(text, cls) {
 }
 
 function groupTitles(keys) {
-  return (keys || []).map(k => ((state.meta && state.meta.groups.find(g => g.key === k)) || {}).title || k).join(", ");
+  return (keys || []).map(k => ((state.meta && state.meta.groups.find(g => g.key === k)) || {}).title || k);
+}
+
+function onlyGroups(titles) {
+  const all = state.meta ? state.meta.groups.length : 3;
+  if (!titles || !titles.length || titles.length >= all) return "";
+  return "только " + (titles.length > 1 ? `${titles.slice(0, -1).join(", ")} и ${titles[titles.length - 1]}` : titles[0]);
 }
 
 function applySnapshot(ctl, j) {
@@ -305,12 +311,12 @@ function applySnapshot(ctl, j) {
   ctl.job = j;
   if (j.files && j.files.length) {
     document.getElementById("job-file").textContent = j.files[0];
-    const parts = [];
+    const parts = [j.use_llm ? "с моделью" : "без модели"];
     if (j.files.length > 1) parts.push(`приложений: ${j.files.length - 1}`);
-    if (j.checks && j.checks.length) parts.push(`проверки: ${groupTitles(j.checks)}`);
-    parts.push(j.use_llm ? "с моделью" : "без модели");
+    const only = onlyGroups(groupTitles(j.checks));
+    if (only) parts.push(only);
     if (j.user) parts.push(`проверяет ${j.user}`);
-    document.getElementById("job-meta").textContent = parts.join(" · ");
+    document.getElementById("job-meta").textContent = parts.join(", ");
   }
   const t0 = Date.parse(j.started_at || j.created_at || "");
   if (t0) ctl.t0 = t0;
@@ -331,13 +337,13 @@ function failJob(ctl, error) {
   const foot = document.getElementById("job-foot");
   foot.hidden = false;
   foot.innerHTML = `<p class="err" style="margin:0;flex-basis:100%">${esc(error || "Ошибка проверки")}</p>
-    <a class="btn-secondary" href="#/run/${esc(ctl.id)}">Открыть то, что успели проверить</a>
+    <a class="btn-secondary" href="#/run/${esc(ctl.id)}">Открыть результат</a>
     <a class="btn-secondary" href="#/">Новая проверка</a>`;
 }
 
 function lostJob(ctl) {
   if (!ctl.alive) return;
-  setJobState("Задача потеряна", "fail");
+  setJobState("Проверка прервана", "fail");
   clearInterval(ctl.timer);
   if (ctl.es) ctl.es.close();
   const foot = document.getElementById("job-foot");
@@ -353,7 +359,7 @@ async function finishJob(ctl) {
   clearInterval(ctl.timer);
   if (ctl.es) ctl.es.close();
   document.getElementById("job-bar-fill").style.width = "100%";
-  document.getElementById("job-current").textContent = "Загружаем результат";
+  document.getElementById("job-current").textContent = "Загрузка результата";
   try {
     const r = await fetch(`/api/runs/${encodeURIComponent(ctl.id)}${userQ()}`);
     if (r.ok) state.lastRun = {id: ctl.id, data: await r.json()};
@@ -400,10 +406,11 @@ async function renderJob(id) {
 
 const STATUS_ORDER = ["ошибка", "неясно", "ручная проверка", "рекомендация"];
 const STATUS_CLS = {"ошибка": "s-error", "неясно": "s-unclear", "ручная проверка": "s-manual", "рекомендация": "s-rec"};
+const statusTitle = s => (((state.meta && state.meta.status_titles) || {"ручная проверка": "на проверку"})[s]) || s || "";
 const VERDICT_CLS = {blocked: "s-error", fix: "s-unclear", review_high: "s-manual", review: "s-manual", clean: "s-rec", partial: "s-unclear", incomplete: "s-unclear"};
 const SEV = {high: "высокий риск", medium: "средний риск", low: "низкий риск"};
 const SEV_RANK = {high: 0, medium: 1, low: 2};
-const DECISIONS = [["accept", "Принять"], ["reject", "Отклонить"], ["review", "Нужна проверка"]];
+const DECISIONS = [["accept", "Принять"], ["reject", "Отклонить"], ["review", "На проверку"]];
 const PAGE = 30;
 const ICON_DL = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 19h14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const ICON_COPY = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5 15V6a1 1 0 0 1 1-1h9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
@@ -440,14 +447,35 @@ function normHtml(data, ids) {
   }).join("");
 }
 
+const EV_SKIP = new Set(["найдено", "нормы", "source", "norm_ids", "цитата найдена в тексте", "основание из базы норм", "второй блок"]);
+const EV_LABEL = {"блок отчёта": "раздел", "довод проверки": "довод второй проверки", "обратная связь": "решения закупщиков"};
+const GOST_STATUS = {approved: "утверждён", verified: "сверен", draft: "черновик"};
+
+function evLabel(k) {
+  const m = /^уверенность \(модель (при .+)\)$/.exec(k);
+  const t = m ? `уверенность ${m[1]}` : EV_LABEL[k] || k;
+  return t[0].toUpperCase() + t.slice(1);
+}
+
+function evValue(k, v) {
+  const plain = x => x === true ? "да" : x === false ? "нет" : Array.isArray(x) ? x.map(plain).join("; ") : x && typeof x === "object" ? Object.entries(x).map(([a, b]) => `${a}: ${plain(b)}`).join("; ") : String(x);
+  if (k === "пункт ГОСТ" && v && typeof v === "object") {
+    const head = [v.designation, v.clause && `п. ${v.clause}`, GOST_STATUS[v.status] || v.status].filter(Boolean).join(", ");
+    return head + (v.quote ? `: «${v.quote}»` : "");
+  }
+  if (k === "применимость ГОСТ" && v && typeof v === "object") return [v.why, v.quote && `«${v.quote}»`].filter(Boolean).join("; ");
+  return plain(v);
+}
+
+function basisTitle(b) {
+  return String(b || "").replace(/^модель (при )/, "$1");
+}
+
 function evidenceHtml(ev) {
   if (!ev || typeof ev !== "object") return "";
-  const skip = new Set(["найдено", "нормы", "source", "norm_ids"]);
-  const rows = Object.entries(ev).filter(([k, v]) => !skip.has(k) && v !== null && v !== "" && !(Array.isArray(v) && !v.length));
+  const rows = Object.entries(ev).filter(([k, v]) => !EV_SKIP.has(k) && v !== null && v !== "" && !(Array.isArray(v) && !v.length));
   if (!rows.length) return "";
-  const plain = v => v === true ? "да" : v === false ? "нет" : Array.isArray(v) ? v.map(plain).join("; ") : v && typeof v === "object" ? Object.entries(v).map(([a, b]) => `${a}: ${plain(b)}`).join("; ") : String(v);
-  const val = v => esc(plain(v));
-  return `<dl class="ev">${rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${val(v)}</dd>`).join("")}</dl>`;
+  return `<dl class="ev">${rows.map(([k, v]) => `<dt>${esc(evLabel(k))}</dt><dd>${esc(evValue(k, v))}</dd>`).join("")}</dl>`;
 }
 
 
@@ -458,12 +486,16 @@ const TRACE_STEP = {
   absent_search: "Поиск по комплекту",
   norm: "Пункт нормы",
   verify: "Вторая проверка",
-  dedupe: "Склейка повторов",
+  dedupe: "Объединение повторов",
+  repeats: "Объединение повторов",
+  gost: "Чеклист ГОСТ",
+  route: "Раздел отчёта",
   final: "Итог",
 };
 const STAGE_TITLE = {
-  passport: "Паспорт документа", roles: "Роли фрагментов", tables: "Шапки таблиц", find: "Поиск дефектов",
-  refs: "Сверка со справочниками", absent: "Проверка «не указано»", cross: "Сверка частей", verify: "Вторая проверка", summary: "Заключение",
+  passport: "Паспорт закупки", roles: "Роли фрагментов", tables: "Разметка таблиц", find: "Поиск дефектов",
+  refs: "Сверка со справочниками", gost: "Применимость ГОСТ", gost_check: "Сверка с ГОСТ", absent: "Проверка «не указано»",
+  cross: "Сверка частей", verify: "Вторая проверка", summary: "Заключение",
 };
 
 async function getTrace(rv) {
@@ -487,10 +519,10 @@ function pretty(v) {
 function callMeta(c) {
   if (!c) return "";
   const tok = c.tokens && (c.tokens.in || c.tokens.out) ? `токены ${c.tokens.in || 0} / ${c.tokens.out || 0}` : "";
-  return [c.id, String(c.model || "").replace(/^openrouter\//, ""), c.temperature != null ? `t=${c.temperature}` : "", c.seconds != null ? fmtSec(c.seconds) : "", tok, c.retry ? `повтор: ${c.retry}` : "", c.error ? `ошибка: ${c.error}` : ""].filter(Boolean).join(" · ");
+  return [c.id, c.seconds != null ? fmtSec(c.seconds) : "", tok, c.retry ? `повтор: ${c.retry}` : "", c.error ? `ошибка: ${c.error}` : ""].filter(Boolean).join(", ");
 }
 
-const UNIT_KIND = {document: "документ", table: "таблица", position: "позиции", section: "раздел", pair: "две части документа", finding: "замечания на проверку"};
+const UNIT_KIND = {document: "документ", table: "таблица", position: "позиции", section: "раздел", pair: "две части документа", finding: "замечания"};
 
 function blockTexts(prompt, ids) {
   const text = String(prompt || "");
@@ -536,9 +568,9 @@ function traceStepHtml(rv, s, i) {
       <div class="t-title">${esc(title)}${s.call ? ` <span class="muted small">${esc(callMeta(c) || s.call)}</span>` : ""}</div>
       ${s.text ? `<p class="t-text">${esc(s.text)}</p>` : ""}
       ${s.quote ? `<blockquote class="quote small">${esc(s.quote)}</blockquote>` : ""}
-      ${Array.isArray(s.records) && s.records.length ? `<details class="io"><summary>Справочные записи, которые получила модель: ${s.records.length}</summary><pre>${esc(s.records.join("\n\n"))}</pre></details>` : ""}
+      ${Array.isArray(s.records) && s.records.length ? `<details class="io"><summary>Справочные записи: ${s.records.length}</summary><pre>${esc(s.records.join("\n\n"))}</pre></details>` : ""}
       ${s.call ? callBody(c) : ""}
-      ${s.item != null ? `<details class="io"><summary>${s.step === "verify" ? "Решение верификатора по этому замечанию" : "Элемент ответа, из которого родилось замечание"}</summary><pre>${esc(pretty(s.item))}</pre></details>` : ""}
+      ${s.item != null ? `<details class="io"><summary>${s.step === "verify" ? "Ответ второй проверки" : "Ответ модели по замечанию"}</summary><pre>${esc(pretty(s.item))}</pre></details>` : ""}
     </div>
   </li>`;
 }
@@ -546,7 +578,7 @@ function traceStepHtml(rv, s, i) {
 async function fillTrace(rv, f, box) {
   if (box.dataset.ready) return;
   box.dataset.ready = "1";
-  box.innerHTML = '<p class="muted small">Загружаем журнал</p>';
+  box.innerHTML = '<p class="muted small">Загрузка журнала</p>';
   await getTrace(rv);
   box.innerHTML = `<ol class="trace">${(f.trace || []).map((s, i) => traceStepHtml(rv, s, i)).join("")}</ol>`;
 }
@@ -555,11 +587,10 @@ function rejectedHtml(rv) {
   const list = (rv.trace && rv.trace.rejected) || [];
   if (!list.length) return '<div class="empty">Вторая проверка ничего не сняла.</div>';
   return list.map(f => `<article class="finding rejected">
-    <header class="f-head"><div class="f-meta"><span class="f-id">${esc(f.id || "")}</span><span>${esc(f.category || "")}</span>${f.location ? `<span class="muted">${esc(f.location)}</span>` : ""}</div>
-      <div class="f-tags"><span class="tag plain">снято проверкой</span></div></header>
+    <header class="f-head"><div class="f-meta"><span class="f-id">${esc(f.id || "")}</span><span>${esc(f.category || "")}</span>${f.location ? `<span class="muted">${esc(f.location)}</span>` : ""}</div></header>
     ${f.quote ? `<blockquote class="quote">${esc(f.quote)}</blockquote>` : ""}
-    ${f.explanation ? `<div class="f-block"><h4>Что предлагала модель</h4><p>${esc(f.explanation)}</p></div>` : ""}
-    ${f.trace && f.trace.length ? `<details class="f-more" open><summary>Как нашли и почему сняли</summary><ol class="trace">${f.trace.map((s, i) => traceStepHtml(rv, s, i)).join("")}</ol></details>` : ""}
+    ${f.explanation ? `<div class="f-block"><h4>Довод модели</h4><p>${esc(f.explanation)}</p></div>` : ""}
+    ${f.trace && f.trace.length ? `<details class="f-more" open><summary>Как нашли и сняли</summary><ol class="trace">${f.trace.map((s, i) => traceStepHtml(rv, s, i)).join("")}</ol></details>` : ""}
   </article>`).join("");
 }
 
@@ -571,32 +602,30 @@ function journalHtml(rv) {
   for (const c of calls) { if (!byStage.has(c.stage)) byStage.set(c.stage, []); byStage.get(c.stage).push(c); }
   const groups = [...byStage.entries()].map(([st, cs]) => `<details class="io stage"><summary><b>${esc(STAGE_TITLE[st] || st)}</b> <span class="muted small">вызовов ${cs.length}, ${fmtSec(cs.reduce((a, c) => a + (c.seconds || 0), 0))}</span></summary>
     ${cs.map(c => `<details class="io call"><summary>${esc(c.title || c.id)} <span class="muted small">${esc(callMeta(c))}</span></summary>${callBody(c)}</details>`).join("")}</details>`).join("");
-  return `${stepRows ? `<h4>Шаги конвейера</h4><ul class="j-steps">${stepRows}</ul>` : ""}
+  return `${stepRows ? `<h4>Шаги</h4><ul class="j-steps">${stepRows}</ul>` : ""}
     <h4>Вызовы модели${calls.length ? `: ${calls.length}` : ""}</h4>
-    ${calls.length ? groups : '<p class="muted small">В этом прогоне модель не вызывалась.</p>'}`;
+    ${calls.length ? groups : '<p class="muted small">Модель не вызывалась.</p>'}`;
 }
 
 function findingHtml(rv, f) {
   const dec = (rv.data.decisions || {})[f.id];
-  const fromModel = /llm|model/.test(f.source || "");
   const details = [
-    f.confidence_pct != null ? `<p class="small"><b>Уверенность модели:</b> ${esc(f.confidence_pct)} %${f.confidence_basis ? `, ${esc(f.confidence_basis)}` : ""}</p>` : "",
+    f.confidence_pct != null ? `<p class="small"><b>Уверенность:</b> ${esc(f.confidence_pct)} %${f.confidence_basis ? ` ${esc(basisTitle(f.confidence_basis))}` : ""}</p>` : "",
     evidenceHtml(f.evidence),
     normHtml(rv.data, f.norm_ids),
   ].join("");
   return `<article class="finding ${STATUS_CLS[f.status] || ""}" id="f-${esc(f.id)}">
     <header class="f-head">
       <div class="f-meta"><span class="f-id">${esc(f.id)}</span><span>${esc(f.category || "")}</span>${f.location ? `<span class="muted">${esc(f.location)}${f.also_in && f.also_in.length ? `, ещё мест: ${f.also_in.length}` : ""}</span>` : ""}</div>
-      <div class="f-tags"><span class="tag ${STATUS_CLS[f.status] || ""}"><i></i>${esc(f.status || "")}</span>${f.severity ? `<span class="tag plain">${esc(SEV[f.severity] || f.severity)}</span>` : ""}</div>
+      <div class="f-tags"><span class="tag ${STATUS_CLS[f.status] || ""}"><i></i>${esc(statusTitle(f.status))}</span>${f.severity ? `<span class="tag plain">${esc(SEV[f.severity] || f.severity)}</span>` : ""}</div>
     </header>
     ${f.quote ? `<blockquote class="quote">${esc(f.quote)}</blockquote>` : ""}
     ${f.explanation ? `<div class="f-block"><h4>Почему</h4><p>${esc(f.explanation)}</p></div>` : ""}
     ${f.fix ? `<div class="f-block"><h4>Как исправить</h4><p>${esc(f.fix)}</p><button type="button" class="mini" data-copy="${esc(f.fix)}">${ICON_COPY}Скопировать</button></div>` : ""}
-    ${f.replacement ? `<div class="f-block repl"><h4>Точная замена в файле с правками</h4><p><del>${esc(f.quote)}</del></p><p><ins>${esc(f.replacement)}</ins></p></div>` : ""}
+    ${f.replacement ? `<div class="f-block repl"><h4>Правка в Word</h4><p><del>${esc(f.quote)}</del></p><p><ins>${esc(f.replacement)}</ins></p></div>` : ""}
     ${f.trace && f.trace.length ? `<details class="f-more f-trace" data-trace="${esc(f.id)}"><summary>Как нашли</summary><div class="t-box"></div></details>` : ""}
     ${details ? `<details class="f-more"><summary>Основание</summary>${details}</details>` : ""}
     <footer class="f-foot">
-      <span class="src">${fromModel ? "нашла модель" : "нашло правило"}${f.rule_id ? ` · ${esc(f.rule_id)}` : ""}</span>
       <div class="decide" role="group" aria-label="Решение закупщика">${DECISIONS.map(([k, t]) => `<button type="button" data-dec="${k}" data-fid="${esc(f.id)}" aria-pressed="${dec && dec.decision === k}">${t}</button>`).join("")}</div>
     </footer>
   </article>`;
@@ -606,7 +635,7 @@ function renderList(rv) {
   if (rv.section === "rejected") {
     document.getElementById("r-count").textContent = "";
     const box = document.getElementById("r-list");
-    box.innerHTML = '<p class="muted">Загружаем журнал</p>';
+    box.innerHTML = '<p class="muted">Загрузка журнала</p>';
     getTrace(rv).then(() => { if (rv.section === "rejected") box.innerHTML = rejectedHtml(rv); });
     return;
   }
@@ -630,7 +659,7 @@ function renderTabs(rv) {
   const checked = new Set(d.check_groups || groups);
   document.getElementById("r-tabs").innerHTML = [["all", "Все", inSec.length]].concat(groups.map(g => [g, g, inSec.filter(f => f.group === g).length])).map(([k, t, n]) =>
     `<button type="button" role="tab" data-tab="${esc(k)}" aria-selected="${rv.group === k}" ${k !== "all" && !checked.has(k) ? 'title="группа не проверялась"' : ""}>${esc(t)} <span class="n">${k !== "all" && !checked.has(k) ? "не проверялась" : n}</span></button>`).join("");
-  const secs = (state.meta && state.meta.sections) || {main: "основной список", llm_review: "замечания модели, проверить вручную", unchecked: "не проверено"};
+  const secs = (state.meta && state.meta.sections) || {main: "основной список", llm_review: "на проверку", unchecked: "не проверено"};
   const secCounts = Object.keys(secs).map(k => d.findings.filter(f => sectionOf(f) === k).length);
   const secList = Object.entries(secs).filter(([k], i) => secCounts[i] || k === rv.section).map(([k, t], _, arr) => [k, t, d.findings.filter(f => sectionOf(f) === k).length]);
   const nRej = d.trace_rejected != null ? d.trace_rejected : null;
@@ -641,7 +670,7 @@ function renderTabs(rv) {
   document.querySelector(".tabs-row").hidden = document.querySelector(".filters").hidden = rv.section === "rejected";
   document.getElementById("r-status").innerHTML = STATUS_ORDER.map(s => {
     const n = inSec.filter(f => f.status === s).length;
-    return `<button type="button" class="dot-btn ${STATUS_CLS[s]}" data-st="${esc(s)}" aria-pressed="${rv.statuses.has(s)}"><i></i>${esc(s)} <span class="n">${n}</span></button>`;
+    return `<button type="button" class="dot-btn ${STATUS_CLS[s]}" data-st="${esc(s)}" aria-pressed="${rv.statuses.has(s)}"><i></i>${esc(statusTitle(s))} <span class="n">${n}</span></button>`;
   }).join("");
 }
 
@@ -651,58 +680,59 @@ function renderRunHead(rv) {
   const files = (d.document && d.document.files) || run.files || [d.file].filter(Boolean);
   document.getElementById("r-file").textContent = files[0] || d.file || "Документ";
   const meta = [];
-  if (files.length > 1) meta.push(`приложений: ${files.length - 1}`);
+  if (run.number) meta.push(`проверка № ${run.number}`);
   if (run.created_at) meta.push(fmtDate(run.created_at));
   if (run.user) meta.push(run.user);
-  if (d.seconds != null) meta.push(`проверка ${fmtSec(d.seconds)}`);
-  meta.push(!d.model ? "без модели" : `с моделью ${String(d.model).replace(/^openrouter\//, "")}`);
-  if (run.number) meta.unshift(`проверка № ${run.number}`);
-  document.getElementById("r-meta").textContent = meta.join(" · ");
+  if (files.length > 1) meta.push(`приложений: ${files.length - 1}`);
+  if (d.seconds != null) meta.push(`время ${fmtSec(d.seconds)}`);
+  meta.push(!d.model ? "без модели" : `модель ${String(d.model).replace(/^openrouter\//, "")}`);
+  document.getElementById("r-meta").textContent = meta.join(", ");
 
   const links = d.links || {};
   const btn = (href, text, cls, open) => href ? `<a class="${cls}" href="${esc(href)}" ${open ? 'target="_blank" rel="noopener"' : "download"}>${open ? "" : ICON_DL}${esc(text)}</a>` : "";
   const rev = d.revisions && d.revisions.main;
   document.getElementById("r-actions").innerHTML = [
-    btn(links.revisions_docx, "Внести предлагаемые изменения", "btn-dark"),
+    btn(links.revisions_docx, "Правки в Word", "btn-dark"),
     btn(links.comments_docx, "Комментарии в Word", "btn-secondary"),
     btn(links.report_html, "Отчёт для печати", "btn-secondary", true),
-    ...Object.keys(links).filter(k => /^attachment_\d+_(comments|revisions)_docx$/.test(k)).map(k => btn(links[k], k.includes("revisions") ? `Правки приложения ${k.split("_")[1]}` : `Комментарии к приложению ${k.split("_")[1]}`, "btn-secondary")),
+    ...Object.keys(links).filter(k => /^attachment_\d+_(comments|revisions)_docx$/.test(k)).map(k => btn(links[k], k.includes("revisions") ? `Правки к приложению ${k.split("_")[1]}` : `Комментарии к приложению ${k.split("_")[1]}`, "btn-secondary")),
     `<a class="btn-secondary" href="#/">Новая проверка</a>`,
   ].join("");
-  document.getElementById("r-rev-note").textContent = links.revisions_docx && rev ? `В файле с правками ${rev.applied ? rev.applied.length : 0} точных замен в режиме рецензирования${rev.skipped && Object.keys(rev.skipped).length ? `, пропущено ${Object.keys(rev.skipped).length}` : ""}.` : "";
+  document.getElementById("r-rev-note").textContent = links.revisions_docx && rev ? `Правок в файле: ${rev.applied ? rev.applied.length : 0}${rev.skipped && Object.keys(rev.skipped).length ? `, пропущено: ${Object.keys(rev.skipped).length}` : ""}.` : "";
 
   const v = document.getElementById("r-verdict");
   v.className = `verdict ${VERDICT_CLS[d.verdict_code] || ""}`;
   document.getElementById("r-verdict-text").textContent = d.verdict || "";
   const inc = d.completeness && d.completeness.complete === false;
   const incBox = document.getElementById("r-incomplete");
-  if (inc || d.full_check === false || d.status === "incomplete") {
+  if ((inc || d.full_check === false || d.status === "incomplete") && !/^Проверка неполная/.test(d.verdict || "")) {
     const steps = ((d.completeness && d.completeness.incomplete_steps) || []).map(s => typeof s === "string" ? s : `${s.title || s.id}: ${s.state || ""}${s.reason ? ", " + s.reason : ""}`);
+    const only = d.full_check === false ? onlyGroups(d.check_groups || []) : "";
     incBox.hidden = false;
-    incBox.innerHTML = `<b>Проверка неполная.</b> ${d.full_check === false ? `Проверены только группы: ${esc((d.check_groups || []).join(", "))}. ` : ""}${steps.length ? `Не выполнено: ${esc(steps.join("; "))}.` : ""}`;
+    incBox.innerHTML = `<b>Проверка неполная.</b> ${only ? `Проверены ${esc(only)}. ` : ""}${steps.length ? `Не выполнено: ${esc(steps.join("; "))}.` : ""}`;
   }
   const pii = d.pii_masked && Object.values(d.pii_masked).reduce((a, b) => a + (typeof b === "number" ? b : 0), 0);
   const warn = (d.warnings || []).filter(Boolean);
   document.getElementById("r-mode").innerHTML = [
-    pii ? `замаскировано персональных данных: ${pii}` : "",
-    warn.length ? `<details><summary>Предупреждения: ${warn.length}</summary><ul>${warn.map(w => `<li>${esc(typeof w === "string" ? w : JSON.stringify(w))}</li>`).join("")}</ul></details>` : "",
-  ].filter(Boolean).join(" · ");
+    pii ? `<div>Замаскировано персональных данных: ${pii}</div>` : "",
+    warn.length ? `<div><details><summary>Предупреждения: ${warn.length}</summary><ul>${warn.map(w => `<li>${esc(typeof w === "string" ? w : JSON.stringify(w))}</li>`).join("")}</ul></details></div>` : "",
+  ].join("");
 
   const jr = document.getElementById("r-journal");
   if (jr) {
-    jr.querySelector("summary").innerHTML = `Ход проверки и журнал модели <span class="muted small">${d.trace_calls ? `вызовов модели ${d.trace_calls}` : "модель не вызывалась"}</span>`;
+    jr.querySelector("summary").innerHTML = `Журнал проверки <span class="muted small">${d.trace_calls ? `вызовов модели: ${d.trace_calls}` : "модель не вызывалась"}</span>`;
     jr.addEventListener("toggle", async () => {
       if (!jr.open || jr.dataset.ready) return;
       jr.dataset.ready = "1";
       const body = document.getElementById("r-journal-body");
-      body.innerHTML = '<p class="muted small">Загружаем журнал</p>';
+      body.innerHTML = '<p class="muted small">Загрузка журнала</p>';
       if (d.trace_calls) await getTrace(rv);
       body.innerHTML = journalHtml(rv);
     });
   }
   const main = d.findings.filter(f => sectionOf(f) === "main");
-  document.getElementById("r-stats").innerHTML = `<div class="stat"><span class="stat-n">${main.length}</span><span class="stat-l">замечаний в основном списке</span></div>` +
-    STATUS_ORDER.map(s => `<div class="stat ${STATUS_CLS[s]}"><span class="stat-n">${main.filter(f => f.status === s).length}</span><span class="stat-l"><i></i>${esc(s)}</span></div>`).join("");
+  document.getElementById("r-stats").innerHTML = `<div class="stat"><span class="stat-n">${main.length}</span><span class="stat-l">всего</span></div>` +
+    STATUS_ORDER.map(s => `<div class="stat ${STATUS_CLS[s]}"><span class="stat-n">${main.filter(f => f.status === s).length}</span><span class="stat-l"><i></i>${esc(statusTitle(s))}</span></div>`).join("");
 }
 
 async function postDecision(rv, fid, decision, btn) {
@@ -722,7 +752,7 @@ async function postDecision(rv, fid, decision, btn) {
 
 async function renderRun(id) {
   setNav("check");
-  view.innerHTML = '<div class="page"><p class="muted">Загружаем результат</p></div>';
+  view.innerHTML = '<div class="page"><p class="muted">Загрузка результата</p></div>';
   try { await getMeta(); } catch {}
   let data = state.lastRun && state.lastRun.id === id ? state.lastRun.data : null;
   if (!data) {
@@ -776,20 +806,20 @@ function histCard(it) {
   const c = it.counts || {};
   const dec = it.decisions || {};
   const files = it.files || [];
-  const groups = it.full_check === false ? `только ${(it.check_groups || []).join(", ")}` : "все группы";
-  const mode = !it.model ? "без модели" : String(it.model).replace(/^openrouter\//, "");
+  const groups = it.full_check === false ? onlyGroups(it.check_groups || []) : "";
+  const mode = it.model ? "" : "без модели";
   const decN = dec["всего решений"] || 0;
   return `<a class="h-card ${VERDICT_CLS[it.verdict_code] || ""}" href="#/run/${esc(it.run_id)}">
     <div class="h-main">
       <div class="h-title"><span class="h-num">${it.number ? `№ ${esc(it.number)}` : ""}</span><b>${esc(files[0] || it.run_id)}</b>${files.length > 1 ? `<span class="muted small">+ приложений ${files.length - 1}</span>` : ""}</div>
       <p class="h-verdict">${esc(it.verdict || "")}</p>
-      <p class="muted small">${[fmtDate(it.created_at), it.user || "проверяющий не указан", groups, mode, it.previous_file ? `сопоставлено с ${it.previous_file}` : ""].filter(Boolean).map(esc).join(" · ")}</p>
+      <p class="muted small">${[fmtDate(it.created_at), it.user, groups, mode, it.previous_file ? `сопоставлено с ${it.previous_file}` : ""].filter(Boolean).map(esc).join(", ")}</p>
     </div>
     <div class="h-nums">
       <div><span class="stat-n">${c.total ?? 0}</span><span class="stat-l">замечаний</span></div>
       <div class="s-error"><span class="stat-n">${c.errors ?? 0}</span><span class="stat-l"><i></i>ошибок</span></div>
       <div><span class="stat-n">${c.high ?? 0}</span><span class="stat-l">высокий риск</span></div>
-      <div><span class="stat-n">${decN}</span><span class="stat-l">${decN ? `решений: принято ${dec["принято"] || 0}, отклонено ${dec["отклонено"] || 0}` : "решений нет"}</span></div>
+      <div><span class="stat-n">${decN}</span><span class="stat-l">${decN ? `решений: принято ${dec["принято"] || 0}, отклонено ${dec["отклонено"] || 0}` : "решений"}</span></div>
     </div>
   </a>`;
 }
@@ -815,7 +845,7 @@ function renderHistoryList(hv) {
   const q = hv.q.trim().toLowerCase();
   const list = q ? hv.items.filter(it => [(it.files || []).join(" "), it.user, it.verdict, it.number].join(" ").toLowerCase().includes(q)) : hv.items;
   const box = document.getElementById("h-list");
-  document.getElementById("h-count").textContent = hv.total ? `Проверок: ${hv.total}${q ? `, под поиск на этой странице: ${list.length}` : ""}` : "";
+  document.getElementById("h-count").textContent = hv.total ? `Проверок: ${hv.total}${q ? `, найдено на странице: ${list.length}` : ""}` : "";
   if (!list.length) {
     box.innerHTML = `<div class="empty">${hv.items.length ? "Под поиск ничего не попало." : hv.user.trim() ? "У этого проверяющего проверок нет." : 'Проверок ещё не было. <a href="#/">Проверить ТЗ</a>'}</div>`;
     return;
@@ -828,14 +858,14 @@ async function renderHistory() {
   try { await getMeta(); } catch {}
   const hv = histView = {items: [], total: 0, q: "", user: ""};
   view.innerHTML = `<section class="result history">
-    <div class="r-top"><div><h1>История проверок</h1><p class="muted small">Новые сверху. Нажмите на карточку, чтобы открыть результат и решения по замечаниям.</p></div>
+    <div class="r-top"><div><h1>История проверок</h1></div>
       <a class="btn-dark" href="#/">Новая проверка</a></div>
     <div class="tools h-tools">
       <label class="search">${ICON_SEARCH}<input type="search" id="h-q" placeholder="Файл, проверяющий, вердикт" aria-label="Поиск"></label>
-      <label class="text-field h-user"><input type="text" id="h-user" placeholder="Проверяющий, ФИО" aria-label="Проверяющий" value=""></label>
+      <label class="text-field h-user"><input type="text" id="h-user" placeholder="Проверяющий" aria-label="Проверяющий" value=""></label>
     </div>
     <p class="muted small" id="h-count"></p>
-    <div class="list" id="h-list"><p class="muted">Загружаем</p></div>
+    <div class="list" id="h-list"><p class="muted">Загрузка</p></div>
   </section>`;
   const qIn = document.getElementById("h-q");
   const uIn = document.getElementById("h-user");
@@ -848,21 +878,16 @@ async function renderHistory() {
 
 
 const KIND_TITLE = {internal: "Внутренние стандарты заказчика", customer_practice: "Практика заказчика", corpus: "Законы и стандарты", edition: "Тексты новых редакций ГОСТ"};
-const KIND_NOTE = {
-  internal: "Загружены через интерфейс. Модель видит их пункты наравне с корпусом и помечает заказчика.",
-  customer_practice: "Правки закупщиков в выданных ТЗ, собранные в правила практики.",
-  corpus: "Корпус оснований: 44-ФЗ, 223-ФЗ, постановления, ГОСТ и ТР ЕАЭС.",
-  edition: "Тексты действующих редакций для стандартов, которые в ТЗ указаны в старой редакции.",
-};
 const ICON_TRASH = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 let normsView = null;
 
 function normRow(d) {
-  const meta = [d.edition, (d.status || "").replace(/\s*\([^)]*\.json\)/g, ""), d.customer && `заказчик: ${d.customer}`, d.blocks ? `пунктов ${d.blocks}` : "", d.uploaded_at && `загружен ${fmtDate(d.uploaded_at)}`].filter(Boolean).join(" · ");
-  const src = d.source && /^https?:/.test(d.source) ? `<a href="${esc(d.source)}" target="_blank" rel="noopener">источник</a>` : d.source ? esc(d.source) : "";
+  const meta = [d.edition, (d.status || "").replace(/\s*\([^)]*\.json\)/g, ""), d.customer && `заказчик: ${d.customer}`, d.blocks ? `пунктов ${d.blocks}` : "", d.uploaded_at && `загружен ${fmtDate(d.uploaded_at)}`].filter(Boolean).join(", ");
+  const file = String(d.source || "").replace(/^загружен через интерфейс:\s*/, "файл ");
+  const src = d.source && /^https?:/.test(d.source) ? `<a href="${esc(d.source)}" target="_blank" rel="noopener">источник</a>` : file ? esc(file) : "";
   return `<li class="n-row" data-id="${esc(d.id)}">
     <div class="n-main"><b>${esc(d.document || d.id)}</b>${d.title ? `<span class="muted"> ${esc(d.title)}</span>` : ""}
-      <p class="muted small">${esc(meta)}${src ? ` · ${src}` : ""}</p></div>
+      <p class="muted small">${esc(meta)}${src ? `, ${src}` : ""}</p></div>
     <div class="n-act"><button type="button" class="mini" data-open="${esc(d.id)}">Текст</button>${d.deletable ? `<button type="button" class="mini danger" data-del="${esc(d.id)}" title="Удалить">${ICON_TRASH}Удалить</button>` : ""}</div>
   </li>`;
 }
@@ -875,8 +900,8 @@ function renderNormDocs(nv) {
   document.getElementById("n-docs").innerHTML = order.map(k => {
     const list = docs.filter(x => x.kind === k);
     if (!list.length && k !== "internal") return "";
-    return `<section class="n-group"><div class="n-group-head"><h3>${esc(KIND_TITLE[k])} <span class="n">${list.length}</span></h3><p class="muted small">${esc(KIND_NOTE[k])}</p></div>
-      ${list.length ? `<ul class="n-list">${list.map(normRow).join("")}</ul>` : '<p class="muted small empty-inline">Пока ничего не загружено.</p>'}</section>`;
+    return `<section class="n-group"><div class="n-group-head"><h3>${esc(KIND_TITLE[k])} <span class="n">${list.length}</span></h3></div>
+      ${list.length ? `<ul class="n-list">${list.map(normRow).join("")}</ul>` : '<p class="muted small empty-inline">Ничего не загружено.</p>'}</section>`;
   }).join("");
 }
 
@@ -884,17 +909,13 @@ async function loadNorms(nv) {
   const r = await fetch("/api/norms").catch(() => null);
   if (!r || !r.ok) { document.getElementById("n-docs").innerHTML = '<div class="empty">Список норм не загрузился.</div>'; return; }
   nv.data = await r.json();
-  const c = nv.data.counts || {};
-  document.getElementById("n-stats").innerHTML = [["internal", "внутренних"], ["customer_practice", "практика"], ["corpus", "законов и стандартов"], ["edition", "новых редакций"]]
-    .map(([k, t]) => `<div class="stat"><span class="stat-n">${c[k] || 0}</span><span class="stat-l">${t}</span></div>`).join("") +
-    `<div class="stat"><span class="stat-n">${(nv.data.references || []).length}</span><span class="stat-l">оснований для замечаний</span></div>`;
   renderNormDocs(nv);
 }
 
 async function openNorm(id) {
   const dlg = document.getElementById("n-dialog");
   const body = document.getElementById("n-dialog-body");
-  document.getElementById("n-dialog-title").textContent = "Загружаем";
+  document.getElementById("n-dialog-title").textContent = "Загрузка";
   body.innerHTML = "";
   dlg.showModal();
   const r = await fetch(`/api/norms/${encodeURIComponent(id)}`).catch(() => null);
@@ -902,7 +923,7 @@ async function openNorm(id) {
   const d = await r.json();
   document.getElementById("n-dialog-title").textContent = d.document || id;
   const blocks = d.blocks_list || (d.text ? [{type: "text", text: d.text}] : []);
-  body.innerHTML = `<p class="muted small">${esc([d.title, d.edition, (d.status || "").replace(/\s*\([^)]*\.json\)/g, "")].filter(Boolean).join(" · "))}</p>` +
+  body.innerHTML = `<p class="muted small">${esc([d.title, d.edition, (d.status || "").replace(/\s*\([^)]*\.json\)/g, "")].filter(Boolean).join(", "))}</p>` +
     blocks.slice(0, 600).map(b => `<p class="${b.type === "table" ? "n-table" : ""}">${esc(b.text)}</p>`).join("") +
     (blocks.length > 600 ? `<p class="muted small">Показано 600 пунктов из ${blocks.length}.</p>` : "");
 }
@@ -911,7 +932,7 @@ async function searchNorms(nv) {
   const q = document.getElementById("n-q").value.trim();
   const box = document.getElementById("n-search-res");
   if (!q) { box.innerHTML = ""; return; }
-  box.innerHTML = '<p class="muted small">Ищем</p>';
+  box.innerHTML = '<p class="muted small">Поиск</p>';
   const r = await fetch(`/api/norms/search?${new URLSearchParams({q, limit: "8", internal_only: String(document.getElementById("n-internal").checked)})}`).catch(() => null);
   if (!r || !r.ok) { box.innerHTML = '<p class="err small">Поиск не сработал.</p>'; return; }
   const d = await r.json();
@@ -926,7 +947,7 @@ async function uploadNorm(nv, form) {
   if (!file) { err.textContent = "Выберите файл стандарта."; err.hidden = false; return; }
   const fd = new FormData(form);
   btn.disabled = true;
-  btn.textContent = "Загружаем и индексируем";
+  btn.textContent = "Загрузка";
   try {
     const r = await fetch("/api/norms", {method: "POST", body: fd});
     const d = await r.json().catch(() => ({}));
@@ -962,15 +983,15 @@ async function loadProfiles(nv) {
   const r = await fetch("/api/gost_profiles").catch(() => null);
   nv.profiles = r && r.ok ? await r.json() : [];
   if (!nv.profiles.length) {
-    box.innerHTML = '<div class="empty">Чеклисты ещё не собраны. Они собираются моделью из текстов ГОСТ, на которые ссылаются проверенные ТЗ.</div>';
+    box.innerHTML = '<div class="empty">Чеклисты ещё не собраны.</div>';
     return;
   }
   box.innerHTML = nv.profiles.map(p => {
     const c = profileCounts(p);
     return `<details class="g-card" data-slug="${esc(p.slug)}">
       <summary><div class="g-head"><b>${esc(p.designation)}</b><span class="muted">${esc(p.title || "")}</span></div>
-        <div class="g-counts"><span class="tag plain">пунктов ${c.total}</span><span class="tag s-rec"><i></i>утверждено ${c.approved}</span><span class="tag s-manual"><i></i>сверено моделью ${c.verified}</span><span class="tag plain">черновиков ${c.draft}</span></div></summary>
-      <div class="g-body"><p class="muted small">Загружаем пункты</p></div>
+        <div class="g-counts muted small">пунктов ${c.total}, утверждено ${c.approved}, сверено ${c.verified}, черновиков ${c.draft}</div></summary>
+      <div class="g-body"><p class="muted small">Загрузка</p></div>
     </details>`;
   }).join("");
 }
@@ -993,12 +1014,12 @@ function itemRow(it, canApprove) {
   return `<li class="g-item">
     ${canApprove ? `<label class="g-check"><input type="checkbox" value="${esc(it.id)}" ${it.status === "approved" ? "disabled" : ""}></label>` : ""}
     <div class="g-item-body">
-      <div class="g-item-head"><b>${esc(it.param || it.requirement || it.id)}</b><span class="muted small">${esc([it.kind_title || it.kind, it.clause && `п. ${it.clause}`, it.nature].filter(Boolean).join(" · "))}</span>
+      <div class="g-item-head"><b>${esc(it.param || it.requirement || it.id)}</b><span class="muted small">${esc([it.kind_title || it.kind, it.clause && `п. ${it.clause}`, it.nature].filter(Boolean).join(", "))}</span>
         <span class="tag ${it.status === "approved" ? "s-rec" : it.status === "verified" ? "s-manual" : "plain"}"><i></i>${esc(it.status_title || it.status || "")}</span></div>
       ${lim ? `<p class="small"><b>${esc(lim)}</b>${it.condition ? ` <span class="muted">при условии: ${esc(it.condition)}</span>` : ""}</p>` : it.condition ? `<p class="small muted">При условии: ${esc(it.condition)}</p>` : ""}
       ${it.requirement && it.requirement !== it.param ? `<p class="small">${esc(it.requirement)}</p>` : ""}
       ${it.quote ? `<blockquote class="quote small">${esc(it.quote)}</blockquote>` : ""}
-      ${it.verify_reason ? `<p class="muted small">Сверка моделью: ${esc(it.verify_reason)}</p>` : ""}
+      ${it.verify_reason ? `<p class="muted small">Сверка: ${esc(it.verify_reason)}</p>` : ""}
       ${it.draft_reason ? `<p class="muted small">Почему черновик: ${esc(it.draft_reason)}</p>` : ""}
       ${it.approved_by ? `<p class="muted small">Утвердил ${esc(it.approved_by)}${it.approved_at ? `, ${esc(fmtDate(it.approved_at))}` : ""}</p>` : ""}
     </div></li>`;
@@ -1009,15 +1030,15 @@ async function fillProfile(nv, card) {
   card.dataset.ready = "1";
   const body = card.querySelector(".g-body");
   const r = await fetch(`/api/gost_profiles/${encodeURIComponent(card.dataset.slug)}`).catch(() => null);
-  if (!r || !r.ok) { body.innerHTML = '<p class="muted small">Пункты профиля сервис пока не отдаёт.</p>'; return; }
+  if (!r || !r.ok) { body.innerHTML = '<p class="muted small">Пункты не загрузились.</p>'; return; }
   const p = await r.json();
   const items = p.items || [];
   const check = items.filter(it => it.status !== "draft");
   const drafts = (p.drafts || []).concat(items.filter(it => it.status === "draft"));
-  body.innerHTML = `<p class="muted small">${esc([p.edition && (/^редакц/i.test(p.edition) ? p.edition : `редакция ${p.edition}`), p.model && `собрал ${String(p.model).replace(/^openrouter\//, "")}`, p.built_at && fmtDate(p.built_at), p.prompt_version && `промпт ${p.prompt_version}`].filter(Boolean).join(" · "))}</p>
+  body.innerHTML = `<p class="muted small">${esc([p.edition && (/^редакц/i.test(p.edition) ? p.edition : `редакция ${p.edition}`), p.built_at && `собран ${fmtDate(p.built_at)}`].filter(Boolean).join(", "))}</p>
     <ul class="g-items">${check.map(it => itemRow(it, true)).join("") || '<li class="muted small">Сверенных пунктов нет.</li>'}</ul>
-    <div class="g-approve"><button type="button" class="btn-dark sm" data-approve="${esc(p.slug)}">Утвердить выбранные</button><span class="muted small">Противоречие ТЗ утверждённому пункту даёт статус «ошибка», остальные пункты дают «проверить».</span><p class="err small" hidden></p></div>
-    ${drafts.length ? `<details class="io"><summary>Черновики модели, в проверке не участвуют: ${drafts.length}</summary><ul class="g-items">${drafts.map(it => itemRow(it, false)).join("")}</ul></details>` : ""}`;
+    <div class="g-approve"><button type="button" class="btn-dark sm" data-approve="${esc(p.slug)}">Утвердить выбранные</button><span class="muted small">Замечания по неутверждённым пунктам требуют проверки.</span><p class="err small" hidden></p></div>
+    ${drafts.length ? `<details class="io"><summary>Черновики: ${drafts.length}</summary><ul class="g-items">${drafts.map(it => itemRow(it, false)).join("")}</ul></details>` : ""}`;
 }
 
 async function approveItems(nv, slug, btn) {
@@ -1027,7 +1048,7 @@ async function approveItems(nv, slug, btn) {
   err.hidden = true;
   const user = (state.user || "").trim();
   if (!ids.length) { err.textContent = "Отметьте пункты."; err.hidden = false; return; }
-  if (!user) { err.textContent = "Укажите ФИО в поле «Кто проверяет» на странице проверки: утверждение подписывается."; err.hidden = false; return; }
+  if (!user) { err.textContent = "Укажите ФИО проверяющего на странице проверки."; err.hidden = false; return; }
   btn.disabled = true;
   const r = await fetch(`/api/gost_profiles/${encodeURIComponent(slug)}/approve`, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({item_ids: ids, user})}).catch(() => null);
   btn.disabled = false;
@@ -1043,10 +1064,9 @@ async function renderNorms() {
   try { await getMeta(); } catch {}
   const nv = normsView = {data: null, profiles: [], filter: "", tab: (location.hash.split("/")[2] || "docs")};
   view.innerHTML = `<section class="result norms">
-    <div class="r-top"><div><h1>Нормативная база</h1><p class="muted small">На что опирается проверка: законы, стандарты, практика заказчика и чеклисты ГОСТ. Документы хранятся на сервере, наружу не отправляются.</p></div></div>
+    <div class="r-top"><div><h1>Нормативная база</h1></div></div>
     <div class="segmented" role="tablist"><button type="button" data-ntab="docs" aria-pressed="${nv.tab === "docs"}">Документы</button><button type="button" data-ntab="gost" aria-pressed="${nv.tab === "gost"}">Чеклисты ГОСТ</button></div>
     <div id="n-tab-docs" ${nv.tab === "docs" ? "" : "hidden"}>
-      <div class="stats" id="n-stats"></div>
       <div class="n-tools">
         <form class="card n-upload" id="n-upload">
           <h3>Загрузить внутренний стандарт</h3>
@@ -1064,11 +1084,10 @@ async function renderNorms() {
         </div>
       </div>
       <label class="search n-filter">${ICON_SEARCH}<input type="search" id="n-filter" placeholder="Фильтр по названию, статусу, заказчику"></label>
-      <div id="n-docs"><p class="muted">Загружаем</p></div>
+      <div id="n-docs"><p class="muted">Загрузка</p></div>
     </div>
     <div id="n-tab-gost" ${nv.tab === "gost" ? "" : "hidden"}>
-      <p class="muted">Модель читает текст ГОСТ и выписывает, что ТЗ должно указать: параметры заказа, пределы значений, документы при поставке. Вторым проходом модель сверяет каждый пункт с текстом стандарта. В проверке ТЗ участвуют только сверенные и утверждённые пункты.</p>
-      <div id="g-list"><p class="muted">Загружаем</p></div>
+      <div id="g-list"><p class="muted">Загрузка</p></div>
     </div>
     <dialog id="n-dialog" class="n-dialog"><div class="n-dialog-head"><h3 id="n-dialog-title"></h3><button type="button" class="icon-btn" id="n-dialog-close" aria-label="Закрыть"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div><div id="n-dialog-body" class="n-dialog-body"></div></dialog>
   </section>`;

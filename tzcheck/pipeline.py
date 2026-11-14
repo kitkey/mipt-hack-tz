@@ -7,7 +7,7 @@ from collections import Counter
 from . import confidence, core, customer, feedback, gost_check, llm, passport, replacements, tables
 from . import progress as prog
 from .checks import categories_for, group_names, group_stats, is_full, only_groups, parse_checks, partial_note, steps_note, verdict_code
-from .model import SECTION_LLM, SECTION_MAIN, SECTION_UNCHECKED, STATUS_ERROR, STATUS_REVIEW, Finding, from_model
+from .model import SECTION_LLM, SECTION_MAIN, SECTION_UNCHECKED, STATUS_ERROR, STATUS_REVIEW, Finding, from_model, status_title
 from .norms import NORMS, apply_editions
 from .parse import ParseError, ParsedDoc, parse, parse_many
 from .pii import Scrubber
@@ -43,15 +43,15 @@ def _verdict(findings) -> str:
     high_review = [f.id for f in findings if f.severity == "high" and f.status != "ошибка"]
     errors = [f.id for f in findings if f.status == "ошибка"]
     review = sum(1 for f in findings if f.needs_review)
-    tail = f" Ещё высокого риска на ручную проверку {len(high_review)} ({_ids(high_review)})." if high_review else ""
+    tail = f" Замечаний высокого риска на проверку: {len(high_review)} ({_ids(high_review)})." if high_review else ""
     if high:
-        return f"Публиковать без исправлений нельзя: ошибок высокого риска {len(high)} ({_ids(high)})." + tail
+        return f"Публиковать без исправлений нельзя. Ошибок высокого риска: {len(high)} ({_ids(high)})." + tail
     if high_review:
-        return f"Подтверждённых ошибок высокого риска нет; до публикации проверить вручную замечания высокого риска: {len(high_review)} ({_ids(high_review)})."
+        return f"Подтверждённых ошибок высокого риска нет. До публикации проверить замечания высокого риска: {len(high_review)} ({_ids(high_review)})."
     if errors:
         return f"Перед публикацией исправить замечания со статусом «ошибка»: {len(errors)}."
     if findings:
-        return f"Ошибок не найдено, мест на ручную проверку: {review or len(findings)}."
+        return f"Ошибок не найдено, замечаний на проверку: {review or len(findings)}."
     return ""
 
 
@@ -91,8 +91,8 @@ def _security_scan(doc: ParsedDoc) -> list[str]:
         b.section = HIDDEN_RE.sub("", b.section or "")
     if hidden:
         n = len(hidden)
-        where = "блоке" if n % 10 == 1 and n % 100 != 11 else "блоках"
-        warns.append(f"Скрытые символы Unicode (нулевой ширины или смены направления текста) в {n} {where}: "
+        where = "фрагменте" if n % 10 == 1 and n % 100 != 11 else "фрагментах"
+        warns.append(f"Скрытые символы Unicode в {n} {where}: "
                      + ", ".join(b.location() for b in hidden[:5]) + ". Текст мог быть изменён незаметно для читателя.")
         for b in hidden:
             b.text = HIDDEN_RE.sub("", b.text)
@@ -100,7 +100,7 @@ def _security_scan(doc: ParsedDoc) -> list[str]:
     inj = [b for b in doc.blocks if INJECTION_RE.search(b.text)]
     if inj:
         warns.append("В документе есть фрагменты, похожие на инструкции для ИИ: " + ", ".join(b.location() for b in inj[:5])
-                     + ". Модель обрабатывает текст ТЗ только как данные, но эти места стоит проверить вручную.")
+                     + ". Эти места нужно проверить.")
     for b in doc.blocks:
         b.text = unicodedata.normalize("NFC", b.text)
     return warns
@@ -205,10 +205,9 @@ def check(path: str, use_llm: bool | None = None, orchestrator: str | None = Non
     return _finish(doc, paths, findings, scr, use_llm, mode, t0, "linear", steps, groups=groups, rep=rep)
 
 
-NO_MODEL = "Модель не настроена: проверено только оформление и безопасность (разбор файлов, скрытые символы, инструкции для ИИ). Содержательной проверки требований не было."
-NO_MODEL_BLOCKED = ("Модель не вызывалась: документ не помечен открытым, а маскирование персональных данных моделью (NER) недоступно, "
-                    "поэтому текст во внешнюю модель не ушёл. Проверено только оформление и безопасность (разбор файлов, скрытые символы, "
-                    "инструкции для ИИ). Содержательной проверки требований не было.")
+NO_MODEL = "Модель не настроена. Документ разобран и проверен на скрытые символы и инструкции для ИИ, требования не проверялись."
+NO_MODEL_BLOCKED = ("Модель не вызывалась: документ не помечен открытым и маскирование ПД недоступно. "
+                    "Документ разобран и проверен на скрытые символы и инструкции для ИИ, требования не проверялись.")
 
 
 def model_allowed(doc, use_llm: bool) -> bool:
@@ -237,9 +236,9 @@ def core_find(doc, scr, groups, rep) -> list[Finding]:
     cats = categories_for(groups)
     rep.start("core_find")
     found = core.find(doc, scr, cats)
-    rep.update(stage="справочные записи по обозначениям, которые назвала модель")
+    rep.update(stage="сверка со справочниками")
     found += core.refs(doc, scr, cats)
-    rep.update(stage="сверка позиций с чеклистами ГОСТ")
+    rep.update(stage="сверка с чеклистами ГОСТ")
     found += gost_check.check(doc, scr, cats)
     rep.update(stage="проверка «не указано» по всему комплекту")
     found = core.absent(doc, scr, found)
@@ -289,12 +288,12 @@ def route(f: Finding) -> Finding:
         return f
     why = []
     if f.status != STATUS_ERROR:
-        why.append(f"статус «{f.status}», а не «{STATUS_ERROR}»")
+        why.append(f"статус «{status_title(f.status)}»")
     if f.confidence_pct is None or f.confidence_pct < main_min_confidence():
-        got = "нет оценки" if f.confidence_pct is None else f"{f.confidence_pct} %"
-        why.append(f"уверенность второй проверки {got}, порог основного списка {main_min_confidence()} %")
+        why.append("нет оценки уверенности второй проверки" if f.confidence_pct is None
+                   else f"уверенность второй проверки {f.confidence_pct} % при пороге {main_min_confidence()} %")
     if getattr(f, "_absent", False) or f.evidence.get("проверка «не указано»"):
-        why.append("замечание держится на утверждении «не указано»")
+        why.append("вывод «не указано»")
     if not why:
         f.trace.append({"step": "route", "text": "основной список: ошибка, подтверждена второй проверкой с высокой уверенностью"})
         return f
@@ -327,7 +326,7 @@ def _finish(doc, paths, findings, scr, use_llm, mode, t0, orchestrator, steps, g
         if f.section == SECTION_UNCHECKED:
             # вывод из отсутствия сведений в переданных файлах: вопрос закупщику, в вердикт и счётчики не входит
             f.needs_review, f.status = True, STATUS_REVIEW
-            f.evidence["блок отчёта"] = "не проверено и не найдено в переданных файлах"
+            f.evidence["блок отчёта"] = "не проверено, сведений нет в переданных файлах"
         route(f)
     findings.sort(key=lambda f: ({SECTION_MAIN: 0, SECTION_LLM: 1}.get(f.section, 2), SEV_ORDER.get(f.severity, 1), _order(doc, f.block_id)))
     main = [f for f in findings if f.section == SECTION_MAIN]
@@ -342,8 +341,9 @@ def _finish(doc, paths, findings, scr, use_llm, mode, t0, orchestrator, steps, g
     replacements.apply(findings)
     sev_ru = {"high": "высокий", "medium": "средний", "low": "низкий"}
     for f in findings:
-        f.trace.append({"step": "final", "text": f"статус «{f.status}», риск {sev_ru.get(f.severity, f.severity)}"
-                        + (", на ручную проверку" if f.needs_review else "") + (f", правка «{f.replacement}»" if f.replacement else "")})
+        f.trace.append({"step": "final", "text": f"статус «{status_title(f.status)}», риск {sev_ru.get(f.severity, f.severity)}"
+                        + (", на проверку" if f.needs_review and f.status != STATUS_REVIEW else "")
+                        + (f", правка «{f.replacement}»" if f.replacement else "")})
     # счётчики, вердикт и заключение только по основному списку; у блока модели свои счётчики
     cats, sev = Counter(f.category for f in main), Counter(f.severity for f in main)
     statuses = Counter(f.status for f in main)
@@ -367,10 +367,9 @@ def _finish(doc, paths, findings, scr, use_llm, mode, t0, orchestrator, steps, g
         summary = partial + " " + summary
     if not use_llm:
         summary = NO_MODEL_BLOCKED if getattr(doc, "model_blocked", False) else NO_MODEL
-    if unchecked:
-        summary += f" Отдельным блоком «Не проверено»: {_remarks(len(unchecked))} о сведениях, которых нет в переданных файлах; в вердикт они не входят."
-    if extra:
-        summary += f" Отдельным блоком «На проверку» {_remarks(len(extra))}, в вердикт они не входят."
+    aside = [f"«{t}» ({len(x)})" for t, x in (("На проверку", extra), ("Не проверено", unchecked)) if x]
+    if aside:
+        summary += (" В вердикт не входят разделы " + " и ".join(aside) if len(aside) > 1 else " В вердикт не входит раздел " + aside[0]) + "."
     rejected = getattr(doc, "llm_rejected", [])
     journal = getattr(doc, "journal", None)
     if journal is not None:
@@ -380,7 +379,7 @@ def _finish(doc, paths, findings, scr, use_llm, mode, t0, orchestrator, steps, g
             f.id = f"R{i:03d}"
             journal.rejected.append(f.to_dict())
     if rejected:
-        doc.warnings.append(f"LLM: вторая проверка сняла находок модели {len(rejected)}; в отчёт они не вошли (stats.model_rejected).")
+        doc.warnings.append(f"Вторая проверка сняла замечаний модели: {len(rejected)}, в отчёт они не вошли.")
     if use_llm and main:
         stats = (f"всего {len(main)}: высокий риск {sev.get('high', 0)}, средний {sev.get('medium', 0)}, низкий {sev.get('low', 0)}; "
                  f"требуют ручной проверки {review}. По категориям: " + "; ".join(f"{k} {v}" for k, v in cats.most_common()))
@@ -449,11 +448,10 @@ def _order(doc, bid):
 
 def _template_summary(findings, cats, sev, review) -> str:
     if not findings:
-        return "Явных проблем не найдено. Рекомендуется выборочная ручная проверка характеристик и сроков."
+        return "Явных проблем не найдено."
     top = ", ".join(f"«{k}» ({v})" for k, v in cats.most_common(3))
-    first = "В первую очередь исправить замечания с высоким риском; на" if sev.get("high") else "На"
-    return (f"Найдено {_remarks(len(findings))}, из них с высоким риском {sev.get('high', 0)}. Чаще всего: {top}. "
-            f"{first} ручную проверку по внешним источникам {_remarks(review)} (реестр СИ, действие стандартов, коды ОКПД 2).")
+    return (f"Найдено {_remarks(len(findings))}, из них с высоким риском {sev.get('high', 0)}"
+            + (f", на проверку {review}" if review else "") + f". Чаще всего: {top}.")
 
 
 def _fkey(f: dict) -> tuple:

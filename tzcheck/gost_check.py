@@ -110,7 +110,7 @@ def items(doc, target: Target, gosts: list[str]) -> tuple[list, list]:
         with llm.journal_scope(getattr(doc, "journal", None), "gost", title, unit_of("position", title, target.block_ids)), _scope(doc):
             got = gost_profiles.items_for(target.info, {"gosts": gosts})
     except Exception as e:
-        doc.warnings.append(f"Модель: применимость ГОСТ для {target.title[:80]} не решена ({type(e).__name__}: {str(e)[:120]})")
+        doc.warnings.append(f"Модель: применимость ГОСТ не решена, {target.title[:80]} ({type(e).__name__}: {str(e)[:120]})")
         return [], []
     calls = _applicability_calls(doc, title)
     counter = getattr(doc, "model_calls", None)
@@ -179,7 +179,7 @@ def _attach(f: Finding, it: dict | None, appl: list, t: Target) -> None:
     """Пункт стандарта в замечание и цепочку; сверенный моделью, но не утверждённый пункт и отсутствующий параметр идут
     на проверку человеку (договорённость с владельцем чеклистов)."""
     step = {"step": "gost", "call": appl[0] if appl else "", "calls": appl,
-            "text": f"чеклист ГОСТ для {t.title}: применимость решила модель" + ("" if appl else " (решение из кэша)")}
+            "text": f"{t.title}: применимость решила модель" + ("" if appl else " в одной из прошлых проверок")}
     if it is None:
         f.needs_review = True
         step["text"] += "; модель не указала пункт чеклиста"

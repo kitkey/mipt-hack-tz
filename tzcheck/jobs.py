@@ -30,7 +30,7 @@ def describe(step: str, d: dict) -> str:
     """Строка хода для человека: «фрагмент 3 из 12, найдено 5»."""
     parts = []
     if d.get("blocks") is not None:
-        parts.append(f"блоков разобрано: {d['blocks']}" + (f", файлов: {d['files']}" if d.get("files", 1) > 1 else ""))
+        parts.append(f"фрагментов: {d['blocks']}" + (f", файлов: {d['files']}" if d.get("files", 1) > 1 else ""))
     if d.get("warnings") is not None:
         parts.append(f"предупреждений: {d['warnings']}")
     if d.get("stage"):
@@ -38,9 +38,9 @@ def describe(step: str, d: dict) -> str:
     if d.get("fragment") is not None:
         parts.append(f"фрагмент {d['fragment']} из {d['fragments']}")
     if d.get("batch") is not None:
-        parts.append(f"пакет {d['batch']} из {d['batches']} ({d.get('items', 0)} замечаний на проверке)")
+        parts.append(f"пакет {d['batch']} из {d['batches']}, замечаний: {d.get('items', 0)}")
     if d.get("candidates") is not None:
-        parts.append(f"на проверке: {d['candidates']}")
+        parts.append(f"замечаний: {d['candidates']}")
     if d.get("found") is not None:
         parts.append(f"найдено замечаний: {d['found']}")
     if d.get("confirmed") is not None:
@@ -48,7 +48,7 @@ def describe(step: str, d: dict) -> str:
     if d.get("findings") is not None:
         parts.append(f"замечаний: {d['findings']}")
     if d.get("model"):
-        parts.append(f"замечаний модели: {d['model']}")
+        parts.append(f"на проверку: {d['model']}")
     if d.get("unchecked"):
         parts.append(f"не проверено: {d['unchecked']}")
     if d.get("revisions") is not None:

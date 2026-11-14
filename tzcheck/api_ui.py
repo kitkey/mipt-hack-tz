@@ -11,6 +11,7 @@ from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from . import history, jobs, llm, norms_admin
 from .checks import OK_STATUSES, succeeded
 from .norms import CATEGORIES, CATEGORY_GROUP, CHECK_GROUPS, parse_checks
+from .model import STATUS_TITLES
 from .progress import STEP_TITLES
 
 router = APIRouter()
@@ -56,10 +57,10 @@ def meta():
     """Справочник интерфейса: группы и категории, ключи checks, названия шагов, статусы."""
     return {"groups": [{"key": k, "title": g, "categories": [c for c in CATEGORIES if CATEGORY_GROUP[c] == g]} for k, g in CHECK_GROUPS.items()],
             "category_group": CATEGORY_GROUP, "steps": STEP_TITLES,
-            "statuses": ["ошибка", "неясно", "ручная проверка", "рекомендация"], "severities": ["high", "medium", "low"],
+            "statuses": ["ошибка", "неясно", "ручная проверка", "рекомендация"], "status_titles": STATUS_TITLES, "severities": ["high", "medium", "low"],
             "sections": {"main": "основной список", "llm_review": "на проверку", "unchecked": "не проверено"},
-            "verdict_codes": {"blocked": "публиковать без исправлений нельзя", "review_high": "проверить вручную замечания высокого риска",
-                              "fix": "исправить замечания со статусом «ошибка»", "review": "ошибок нет, есть места на ручную проверку",
+            "verdict_codes": {"blocked": "публиковать без исправлений нельзя", "review_high": "проверить замечания высокого риска",
+                              "fix": "исправить замечания со статусом «ошибка»", "review": "ошибок нет, есть замечания на проверку",
                               "clean": "явных проблем не найдено", "partial": "проверены не все группы, вывод о публикации не делается",
                               "incomplete": "шаг проверки упал или не выполнен, вывод о публикации не делается"},
             "step_states": ["выполнен", "неприменим", "не выполнен", "ошибка"],

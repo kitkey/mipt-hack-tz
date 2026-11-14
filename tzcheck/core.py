@@ -385,7 +385,7 @@ def refs(doc, scr, cats: list) -> list[Finding]:
         for f in out:
             f._unit = u
             f.evidence["справочные записи"] = [r.split(". ", 1)[-1] for r in records][:6]
-            f.trace.insert(2, {"step": "reference", "text": "справочные записи по обозначениям, которые назвала модель", "records": f.evidence["справочные записи"]})
+            f.trace.insert(2, {"step": "reference", "text": "", "records": f.evidence["справочные записи"]})
         return out
 
     found = []
@@ -438,7 +438,7 @@ def absent(doc, scr, findings: list[Finding]) -> list[Finding]:
         f.evidence["поиск по комплекту"] = [f"{b.location()}: {b.text[:160]}" for b, _ in hits[:3]] or "кандидатов не найдено"
         why = scr.restore(str((d or {}).get("reason") or ""))[:300]
         verdict = {"same": f"снято: указано в той же части или общих условиях; {why}", "other": f"понижено: указано в другом разделе; {why}",
-                   "not_found": f"оставлено: не найдено по комплекту; {why}"}.get(str((d or {}).get("decision")), "решения модели нет: на ручную проверку")
+                   "not_found": f"оставлено: не найдено по комплекту; {why}"}.get(str((d or {}).get("decision")), "решения модели нет, на проверку")
         f.trace.append({"step": "absent_search", "call": calls.get(n, ""), "item": d,
                         "text": f"поиск по комплекту: кандидатов {len(hits)} ({', '.join(b.id for b, _ in hits)}); {verdict}"})
         if not d:
@@ -610,14 +610,14 @@ def verify(doc, scr, findings: list[Finding]) -> list[Finding]:
         if not d:
             f.evidence["вторая проверка"] = "не проведена"
             f.needs_review = True
-            f.trace.append({"step": "verify", "call": calls.get(n, ""), "item": None, "text": "решения нет: на ручную проверку"})
+            f.trace.append({"step": "verify", "call": calls.get(n, ""), "item": None, "text": "решения нет, на проверку"})
             out.append(f)
             continue
         dec = str(d.get("decision"))
         f.trace.append({"step": "verify", "call": calls.get(n, ""), "item": d,
                         "text": {"keep": "подтверждено", "lower": "понижено", "reject": "снято"}.get(dec, dec)
                         + (f": {scr.restore(str(d.get('reason') or ''))[:300]}" if d.get("reason") else "")})
-        f.evidence["вторая проверка"] = {"keep": "подтверждено", "lower": "понижено: на ручную проверку", "reject": "снято"}.get(dec, dec)
+        f.evidence["вторая проверка"] = {"keep": "подтверждено", "lower": "понижено, на проверку", "reject": "снято"}.get(dec, dec)
         f.evidence["довод проверки"] = scr.restore(str(d.get("reason") or ""))[:300]
         confidence.set_model_score(f, d.get("confidence"), confidence.STAGE_VERIFY)
         if dec == "reject":

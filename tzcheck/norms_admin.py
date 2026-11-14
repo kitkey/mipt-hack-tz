@@ -125,7 +125,7 @@ def _rebuild() -> int:
 def upload(src_path: str, filename: str, title: str = "", customer_name: str = "") -> dict:
     ext = os.path.splitext(filename)[1].lower()
     if ext not in UPLOAD_EXT:
-        raise ValueError(f"формат {ext or 'без расширения'} не поддерживается: нужен docx или pdf")
+        raise ValueError(f"формат {ext or 'без расширения'} не поддерживается, нужен docx, doc, rtf, odt, pdf или txt")
     try:
         doc = parse(src_path)
     except ParseError as e:
@@ -136,7 +136,7 @@ def upload(src_path: str, filename: str, title: str = "", customer_name: str = "
     name = " ".join((title or os.path.splitext(filename)[0]).split())[:200]
     existing = {rag.norm_document(d.get("document", "")) for _, d in rag.iter_all_docs(rag.MAIN_CORPUS)}
     if rag.norm_document(name) in existing:
-        raise FileExistsError(f"документ «{name}» уже есть в нормативной базе: укажите другое название")
+        raise FileExistsError(f"документ «{name}» уже есть в нормативной базе, укажите другое название")
     with open(src_path, "rb") as fh:
         digest = hashlib.sha256(fh.read()).hexdigest()
     doc_id = "int-" + digest[:12]

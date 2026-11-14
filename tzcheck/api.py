@@ -37,15 +37,13 @@ form{border:1px solid #dcdfe5;border-radius:10px;padding:20px 24px;margin:18px 0
 nav.tabs{display:flex;gap:4px;border-bottom:1px solid #dcdfe5;margin:-28px 0 22px}nav.tabs a{padding:10px 14px;color:#666;text-decoration:none;border-bottom:2px solid transparent;margin-bottom:-1px;font-size:15px}
 nav.tabs a.on{color:#1d1d1f;border-bottom-color:#3b5bdb;font-weight:600}</style></head><body>
 {nav}
-<h1>Проверка технического задания на закупку</h1>
-<p class="muted">223-ФЗ. Загрузите ТЗ (docx, doc, rtf, odt, pdf, сканы pdf и картинки, xlsx, txt) и при необходимости приложения. Система найдёт ограничения конкуренции, неполноту, противоречия, ошибки в кодах ОКПД 2,
-стандартах и гарантии, объяснит каждое замечание, предложит исправление и укажет основание. При подключённой модели персональные данные маскируются до отправки текста в неё.</p>
+<h1>Проверка ТЗ по 223-ФЗ</h1>
 <form action="/check" method="post" enctype="multipart/form-data"><h2>Проверить ТЗ</h2>
 <p>Основное ТЗ: <input type="file" name="file" accept=".docx,.doc,.rtf,.odt,.pdf,.xlsx,.txt,.png,.jpg,.jpeg,.tif,.tiff,.bmp,.webp" required></p>
 <p>Приложения: <input type="file" name="attachments" accept=".docx,.doc,.rtf,.odt,.pdf,.xlsx,.txt,.png,.jpg,.jpeg,.tif,.tiff,.bmp,.webp" multiple></p>
 <p><label><input type="checkbox" name="use_llm" value="1" {checked}> использовать языковую модель {model}</label></p>
 <p><label>Оркестрация: <select name="orchestrator"><option value="linear">линейный конвейер</option>
-<option value="graph">граф LangGraph (повторная проверка при низкой уверенности)</option></select></label></p>
+<option value="graph">граф, повторная проверка при низкой уверенности</option></select></label></p>
 <p>Проверки (ничего не отмечено = полная): <label><input type="checkbox" name="checks" value="logic"> Логика</label>
 <label><input type="checkbox" name="checks" value="standards"> Стандарты</label> <label><input type="checkbox" name="checks" value="risks"> Риски</label></p>
 <p><label>Пользователь: <input type="text" name="user" placeholder="необязательно"></label></p>
@@ -56,7 +54,7 @@ nav.tabs a.on{color:#1d1d1f;border-bottom-color:#3b5bdb;font-weight:600}</style>
 <p>Стало: <input type="file" name="new" accept=".docx,.doc,.pdf,.txt" required></p>
 <p><label><input type="checkbox" name="use_llm" value="1"> использовать языковую модель</label></p>
 <button type="submit">Сравнить</button></form>
-<p class="muted"><a href="/api/feedback/stats">Статистика решений закупщиков по правилам</a></p></body></html>"""
+<p class="muted"><a href="/api/feedback/stats">Решения закупщиков по шагам проверки</a></p></body></html>"""
 
 
 class FeedbackIn(BaseModel):
@@ -127,14 +125,14 @@ def check_form(file: UploadFile = File(...), use_llm: str = Form("0"), attachmen
     base = os.path.splitext(name)[0]
     links = f"<p><a href='/runs/{res['run_id']}/{base}.report.json'>JSON</a>"
     if os.path.exists(os.path.join(folder, base + ".comments.docx")):
-        links += f" · <a href='/runs/{res['run_id']}/{base}.comments.docx'>ТЗ с комментариями (docx)</a>"
+        links += f"&emsp;<a href='/runs/{res['run_id']}/{base}.comments.docx'>ТЗ с комментариями (docx)</a>"
     if os.path.exists(os.path.join(folder, base + ".revisions.docx")):
-        links += f" · <a href='/runs/{res['run_id']}/{base}.revisions.docx'>ТЗ с предлагаемыми правками (docx, режим рецензирования)</a>"
+        links += f"&emsp;<a href='/runs/{res['run_id']}/{base}.revisions.docx'>ТЗ с предлагаемыми правками (docx)</a>"
     for i, _ in enumerate(attachments or [], 1):
         attachment_name = f"attachment_{i}.comments.docx"
         if os.path.exists(os.path.join(folder, attachment_name)):
-            links += f" · <a href='/runs/{res['run_id']}/{attachment_name}'>Приложение {i} с комментариями</a>"
-    links += " · <a href='/classic'>Проверить другой</a></p>"
+            links += f"&emsp;<a href='/runs/{res['run_id']}/{attachment_name}'>Приложение {i} с комментариями</a>"
+    links += "&emsp;<a href='/classic'>Проверить другой</a></p>"
     page = to_html(res, run_id=res["run_id"])
     return page.replace("<body>", "<body>" + links, 1)
 

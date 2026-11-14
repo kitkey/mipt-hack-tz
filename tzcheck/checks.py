@@ -59,10 +59,9 @@ def group_stats(main: list, groups) -> dict:
 def partial_note(groups) -> str:
     if is_full(groups):
         return ""
-    done = ", ".join(f"«{g}»" for g in group_names(groups))
-    skipped = ", ".join(f"«{g}»" for g in CHECK_GROUPS.values() if g not in group_names(groups))
-    return (f"Проверка неполная: проверены только группы {done}, группы {skipped} не проверялись. "
-            "Вывод о готовности ТЗ к публикации по такой проверке не делается, перед публикацией нужна полная проверка.")
+    skipped = [f"«{g}»" for g in CHECK_GROUPS.values() if g not in group_names(groups)]
+    what = "не проверялась группа " if len(skipped) == 1 else "не проверялись группы "
+    return f"Проверка неполная, {what}{' и '.join(skipped)}. Вывод о готовности ТЗ к публикации не делается."
 
 
 def verdict_code(main: list, groups, incomplete_steps=None) -> str:
@@ -96,8 +95,7 @@ def steps_note(bad: list[dict]) -> str:
     if not bad:
         return ""
     parts = [f"«{x['title']}» ({x['state']}" + (f": {x['reason'][:140]}" if x.get("reason") else "") + ")" for x in bad]
-    return ("Проверка неполная: " + "; ".join(parts) + ". Вывод о готовности ТЗ к публикации по такой проверке не делается, "
-            "проверку нужно повторить.")
+    return "Проверка неполная: " + "; ".join(parts) + ". Вывод о готовности ТЗ к публикации не делается, проверку нужно повторить."
 
 
 def unprofiled_positions(doc, limit: int = 8) -> tuple[list[str], int]:

@@ -152,8 +152,8 @@ def enabled() -> bool:
     return bool(os.environ.get("TZCHECK_LLM_MODEL"))
 
 
-BLOCKED = "модель не вызвана: документ не помечен как открытый, а NER недоступен"
-NER_DOWN = "ПД маскируются только регулярками, NER недоступен"
+BLOCKED = "модель не вызвана: документ не помечен открытым и маскирование ПД недоступно"
+NER_DOWN = "ПД маскируются только по шаблонам, ФИО могут остаться открытыми"
 _flags = threading.local()
 
 
@@ -383,7 +383,7 @@ def doc_budget() -> float:
 def _safe(fn, arg, doc: ParsedDoc):
     deadline = getattr(doc, "llm_deadline", None)
     if deadline is not None and time.time() > deadline:
-        note = f"LLM: бюджет {doc_budget():.0f} с на документ исчерпан, оставшиеся вызовы модели пропущены (TZCHECK_LLM_DOC_TIMEOUT)"
+        note = f"Модель: бюджет {doc_budget():.0f} с на документ исчерпан, оставшиеся вызовы пропущены."
         if note not in doc.warnings:
             doc.warnings.append(note)
         return []
@@ -395,7 +395,7 @@ def _safe(fn, arg, doc: ParsedDoc):
             doc.warnings.append(BLOCKED)
         return []
     except Exception as e:
-        doc.warnings.append(f"LLM: фрагмент пропущен ({type(e).__name__}: {str(e)[:120]})")
+        doc.warnings.append(f"Модель: фрагмент пропущен ({type(e).__name__}: {str(e)[:120]})")
         return []
 
 

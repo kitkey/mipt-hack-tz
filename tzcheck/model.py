@@ -7,6 +7,12 @@ STATUS_ADVICE = "рекомендация"
 SECTION_MAIN = "main"
 SECTION_LLM = "llm_review"
 SECTION_UNCHECKED = "unchecked"
+# подпись статуса на экране и в отчётах; значение в данных прежнее
+STATUS_TITLES = {STATUS_REVIEW: "на проверку"}
+
+
+def status_title(status: str) -> str:
+    return STATUS_TITLES.get(status, status)
 
 
 def from_model(source: str) -> bool:
