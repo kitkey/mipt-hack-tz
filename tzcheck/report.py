@@ -185,7 +185,8 @@ def to_html(result: dict, run_id: str | None = None) -> str:
     sts = "".join(f"<li>{esc(k)}: {v}</li>" for k, v in stats.get("by_status", {}).items())
     warn = "".join(f"<li>{esc(w)}</li>" for w in result.get("warnings", []))
     model = f" · модель {esc(result['model'])}" if result.get("model") else ""
-    mode = {"rules": "только правила, модель не подключена", "rules+llm": "правила и языковая модель"}.get(result.get("mode", ""), result.get("mode", ""))
+    mode = {"format": "модель не подключена: только оформление и безопасность", "model": "языковая модель",
+            "rules": "только правила, модель не подключена", "rules+llm": "правила и языковая модель"}.get(result.get("mode", ""), result.get("mode", ""))
     pii = result.get("pii_masked") or {}
     pii_text = ("персональные данные перед отправкой в модель заменены метками: " + ", ".join(f"{k} {v}" for k, v in pii.items())) if pii else "персональных данных для маскирования не найдено"
     return f"""<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>Проверка ТЗ: {esc(result.get('file', ''))}</title>

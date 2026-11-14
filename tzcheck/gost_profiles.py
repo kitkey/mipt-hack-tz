@@ -474,7 +474,7 @@ def _complete(prompt: str, max_tokens: int = 6000) -> dict:
     import litellm
     from .llm import _parse_json
     kwargs = dict(model=os.environ["TZCHECK_LLM_MODEL"], messages=[{"role": "system", "content": SYSTEM}, {"role": "user", "content": prompt}],
-                  temperature=float(os.environ.get("TZCHECK_LLM_TEMPERATURE", "0.1")),
+                  temperature=float(os.environ.get("TZCHECK_LLM_TEMPERATURE", "0")),
                   max_tokens=max(max_tokens, int(os.environ.get("TZCHECK_LLM_MAX_TOKENS", "16000"))),
                   timeout=float(os.environ.get("TZCHECK_LLM_TIMEOUT", "900")))
     if os.environ.get("TZCHECK_LLM_API_BASE"):

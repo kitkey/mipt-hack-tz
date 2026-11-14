@@ -108,7 +108,7 @@ def _call(prompt: str, max_tokens: int = 4000) -> dict:
     kwargs = dict(
         model=os.environ["TZCHECK_LLM_MODEL"],
         messages=[{"role": "system", "content": SYSTEM}, {"role": "user", "content": prompt}],
-        temperature=float(os.environ.get("TZCHECK_LLM_TEMPERATURE", "0.1")),
+        temperature=float(os.environ.get("TZCHECK_LLM_TEMPERATURE", "0")),
         max_tokens=max(max_tokens, int(os.environ.get("TZCHECK_LLM_MAX_TOKENS", "24000"))),
         timeout=float(os.environ.get("TZCHECK_LLM_TIMEOUT", "900")),
     )
