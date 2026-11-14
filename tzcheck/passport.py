@@ -6,7 +6,7 @@ import json
 import os
 
 from . import customer
-from .ask import ask, wrap
+from .ask import ask, rows, wrap
 
 ROLES = {
     "req": "требования к предмету закупки",
@@ -111,8 +111,8 @@ def detect(doc, scr) -> dict:
         prof = "" if forced in ("", "none", "off", "0") else forced
     passport["профиль заказчика"] = prof if any(x["id"] == prof for x in customer.PROFILES) else ""
     roles = {}
-    for r in data.get("roles") or []:
-        if isinstance(r, dict) and r.get("role") in ROLES:
+    for r in rows(data, "roles"):
+        if isinstance(r.get("role"), str) and r.get("role") in ROLES:
             roles[str(r.get("id"))] = r["role"]
     prev: dict = {}
     for seg in segs:

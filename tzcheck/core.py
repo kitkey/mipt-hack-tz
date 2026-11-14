@@ -12,7 +12,7 @@ import os
 import re
 
 from . import chunks, confidence, passport, search, tables
-from .ask import ask, pmap, unit_of, wrap
+from .ask import ask, pmap, rows, unit_of, wrap
 from .model import Finding
 from .norms import CATEGORIES, CATEGORY_GROUP, CATEGORY_NOTES, NORMS, category_notes, norm_list_for_prompt
 
@@ -388,7 +388,7 @@ def _reclassified(doc, scr, pending: list, cats: list) -> list:
         data = ask(doc, CLASSIFY_PROMPT.format(categories=notes, items=wrap(lines)), 1500, "уточнение категории", "find",
                    "Уточнение категории замечаний") or {}
         chosen = {}
-        for x in data.get("items") or []:
+        for x in rows(data, "items"):
             if isinstance(x, dict):
                 try:
                     chosen[int(x.get("n"))] = x.get("category")
@@ -428,7 +428,8 @@ def _finding(doc, item: dict, blocks: list, scr, source: str, cats: list, call: 
         # обязательное поле: без объяснения замечание не выпускается («», «...», «-» тоже пусто)
         _drop(doc, source, item, call, "модель не объяснила замечание")
         return None
-    norms = [n for n in item.get("norm_ids") or [] if n in NORMS]
+    ids = item.get("norm_ids")
+    norms = [n for n in ids if isinstance(n, str) and n in NORMS] if isinstance(ids, list) else []
     sev = item.get("severity") if item.get("severity") in SEV else "medium"
     f = Finding(b.id, quote, cat, explanation, fix,
                 sev, norms, bool(item.get("needs_review")), source, 0.7, b.location(), rule_id=source.replace(":", "."))
@@ -467,7 +468,7 @@ def find(doc, scr, cats: list) -> list[Finding]:
         data = ask(doc, prompt, 6000, "поиск замечаний", "find", title, unit_of(u.kind, u.title, u.block_ids)) or {}
         blocks = [doc.block(x) for x in u.block_ids if doc.block(x)]
         call = data.get("_call", "")
-        items = [i for i in data.get("findings") or [] if isinstance(i, dict)]
+        items = rows(data, "findings")
         for i in items:
             cat, group = _category(i.get("category"), cats)
             if cat is None and group:
@@ -476,7 +477,7 @@ def find(doc, scr, cats: list) -> list[Finding]:
         out = [f for f in (_finding(doc, i, blocks, scr, "model:find", cats, call) for i in items if not i.get("_group")) if f]
         for f in out:
             f._unit = u
-        u.lookups = [x for x in data.get("lookups") or [] if isinstance(x, dict) and x.get("type") in ("standard", "okpd", "ktru", "si") and x.get("value")]
+        u.lookups = [x for x in rows(data, "lookups") if x.get("type") in ("standard", "okpd", "ktru", "si") and x.get("value")]
         return out
 
     found = []
@@ -505,7 +506,7 @@ def complete(doc, scr, cats: list) -> list[Finding]:
         data = ask(doc, prompt, 6000, "полнота описания", "complete", "Полнота описания: " + what, unit_of(u.kind, u.title, u.block_ids)) or {}
         blocks = [doc.block(x) for x in u.block_ids if doc.block(x)]
         call = data.get("_call", "")
-        out = [f for f in (_finding(doc, i, blocks, scr, "model:complete", own, call) for i in data.get("findings") or []) if f]
+        out = [f for f in (_finding(doc, i, blocks, scr, "model:complete", own, call) for i in rows(data, "findings")) if f]
         for f in out:
             f._unit = u
         return out
@@ -580,7 +581,7 @@ def refs(doc, scr, cats: list) -> list[Finding]:
                                        categories="; ".join(ref_cats), norm_ids=", ".join(k for k in NORMS if k != "INTERNAL"))
             data = ask(doc, prompt, 4000, "справочники", "refs", f"Справочные записи: {u.title[:100]}", unit_of(u.kind, u.title, u.block_ids)) or {}
             call = data.get("_call", "")
-            for f in (_finding(doc, i, blocks, scr, "model:ref", ref_cats, call) for i in data.get("findings") or []):
+            for f in (_finding(doc, i, blocks, scr, "model:ref", ref_cats, call) for i in rows(data, "findings")):
                 if not f:
                     continue
                 f._unit, f._records = u, part
@@ -708,7 +709,7 @@ def absent(doc, scr, findings: list[Finding]) -> list[Finding]:
     for batch, data in pmap(work, batches):
         for i in batch:
             calls[i + 1] = data.get("_call", "")
-        for d in data.get("decisions") or []:
+        for d in rows(data, "decisions"):
             try:
                 n = int(d.get("n"))
             except (TypeError, ValueError, AttributeError):
@@ -798,7 +799,7 @@ def cross(doc, scr, cats: list) -> list[Finding]:
                    f"Сверка частей: {unit['title'][:120]}", unit) or {}
         res = []
         call = data.get("_call", "")
-        for it in data.get("findings") or []:
+        for it in rows(data, "findings"):
             f = _finding(doc, it, blocks, scr, "model:cross", cross_cats, call)
             if not f:
                 continue
@@ -1039,14 +1040,14 @@ def verify(doc, scr, findings: list[Finding]) -> list[Finding]:
             for _ in range(2):
                 # ответ без единого годного решения (у части моделей JSON-режим изредка отдаёт мусор) запрашивается ещё раз
                 data = ask(doc, prompt, min(4000, 500 + 300 * len(ns)), step, stage, title, unit) or {}
-                if any(isinstance(d, dict) and str(d.get("decision")) in ("keep", "lower", "reject") for d in data.get("decisions") or []):
+                if any(isinstance(d, dict) and str(d.get("decision")) in ("keep", "lower", "reject") for d in rows(data, "decisions")):
                     break
             return ns, data
 
         for ns, data in pmap(work, batches):
             for n in ns:
                 calls[n] = data.get("_call", "")
-            for d in data.get("decisions") or []:
+            for d in rows(data, "decisions"):
                 try:
                     n = int(d.get("n"))
                 except (TypeError, ValueError, AttributeError):

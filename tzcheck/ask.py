@@ -42,6 +42,13 @@ def ask(doc, prompt: str, max_tokens: int = 4000, step: str = "", stage: str = "
     return data
 
 
+def rows(data, key: str) -> list[dict]:
+    """Список словарей из поля ответа модели. Поле другого типа (число, строка, null, словарь) значит, что модель на этот шаг
+    не ответила; элементы списка, которые не словари, отбрасываются."""
+    v = data.get(key) if isinstance(data, dict) else None
+    return [x for x in v if isinstance(x, dict)] if isinstance(v, list) else []
+
+
 def unit_of(kind: str, title: str, blocks) -> dict:
     return {"kind": kind, "title": title, "blocks": list(blocks)[:200]}
 
