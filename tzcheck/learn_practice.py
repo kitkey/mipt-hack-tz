@@ -26,6 +26,7 @@ BATCH_CHARS = 70000
 MAX_RULES = 15
 MAX_VERIFY = 8
 MAX_TOKENS = 8000
+GENERIC = ("окпд 2", "окпд2", "223-фз", "44-фз")
 
 LEARN_PROMPT = """Задача: практика заказчика по правкам его закупщика.
 Ниже места, где закупщик заказчика исправил свои технические задания (ТЗ) на закупку по 223-ФЗ: что было в исходной
@@ -179,7 +180,11 @@ def batches(texts: list[str], limit: int | None = None) -> list[list[str]]:
 
 
 def _has_digits(text: str) -> bool:
-    return any(c.isdigit() for c in text)
+    """Цифры из документов. Цифры классификатора и закона (ОКПД 2, 223-ФЗ) общие для всех ТЗ и не считаются."""
+    low = text.lower()
+    for name in GENERIC:
+        low = low.replace(name, "")
+    return any(c.isdigit() for c in low)
 
 
 def _key(raw, taken: dict) -> str:
