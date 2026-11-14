@@ -111,9 +111,51 @@ CATEGORIES = [
     "Оформление по внутреннему стандарту",
 ]
 
+# группы проверок интерфейса: категория кейса остаётся у замечания, группа считается по ней
+GROUP_LOGIC, GROUP_STANDARDS, GROUP_RISKS = "Логика", "Стандарты", "Риски"
+CATEGORY_GROUP = {
+    "Противоречие": GROUP_LOGIC,
+    "Неполнота или комплектность": GROUP_LOGIC,
+    "Некорректная характеристика": GROUP_LOGIC,
+    "Лишнее в ТЗ": GROUP_LOGIC,
+    "Предмет закупки или наименование": GROUP_LOGIC,
+    "Стандарты (ГОСТ, поверка)": GROUP_STANDARDS,
+    "Неверный или общий код ОКПД 2": GROUP_STANDARDS,
+    "Оформление по внутреннему стандарту": GROUP_STANDARDS,
+    "Ограничение конкуренции": GROUP_RISKS,
+    "Гарантийные условия": GROUP_RISKS,
+}
+# ключи параметра checks в API и CLI
+CHECK_GROUPS = {"logic": GROUP_LOGIC, "standards": GROUP_STANDARDS, "risks": GROUP_RISKS}
 
-def norm_list_for_prompt() -> str:
-    return "\n".join(f"{k}: {v['title']}. {v['text']}" for k, v in NORMS.items())
+
+def group_of(category: str) -> str:
+    """Группа по категории; незнакомая категория (модель вернула свою) относится к логике, как в llm._to_finding."""
+    return CATEGORY_GROUP.get(category, GROUP_LOGIC)
+
+
+def parse_checks(checks=None) -> list[str]:
+    """checks: None, "all", "logic,risks" или список ключей; возвращает ключи в порядке CHECK_GROUPS."""
+    if checks is None or checks == "" or checks == [] or checks == "all":
+        return list(CHECK_GROUPS)
+    items = checks.replace(";", ",").split(",") if isinstance(checks, str) else [x for c in checks for x in str(c).split(",")]
+    keys = {x.strip().lower() for x in items if x.strip()}
+    if "all" in keys or "full" in keys:
+        return list(CHECK_GROUPS)
+    bad = keys - set(CHECK_GROUPS)
+    if bad:
+        raise ValueError(f"checks: неизвестные группы {sorted(bad)}, допустимы {list(CHECK_GROUPS)} или all")
+    return [k for k in CHECK_GROUPS if k in keys]
+
+
+def categories_for(checks) -> list[str]:
+    groups = {CHECK_GROUPS[k] for k in parse_checks(checks)}
+    return [c for c in CATEGORIES if CATEGORY_GROUP[c] in groups]
+
+
+def norm_list_for_prompt(practice: bool = True) -> str:
+    """practice=False: без практики закупщиков МФТИ (INTERNAL), для ТЗ других заказчиков."""
+    return "\n".join(f"{k}: {v['title']}. {v['text']}" for k, v in NORMS.items() if practice or k != "INTERNAL")
 
 
 LAW_OF_NORM = {"223-FZ-": "223-ФЗ", "102-FZ-": "102-ФЗ", "GK-": "ГК ч.2"}
