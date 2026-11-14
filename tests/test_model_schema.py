@@ -67,3 +67,4 @@ def test_wrong_decisions_mean_no_answer(check, orch, decisions):
 @pytest.mark.parametrize("data", [{"decisions": 17}, {"decisions": ["x"]}, {"decisions": {"n": 1}}, None, 17])
 def test_verify_decisions_wrong_types(data):
     assert verify._decisions(data) == []
+

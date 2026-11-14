@@ -341,19 +341,34 @@ def to_docx_comments(result: dict, src_path: str, out_path: str) -> bool:
     return added > 0
 
 
+def export_failed(result: dict, what: str, e: Exception):
+    """Сбой выгрузки в Word не теряет результат проверки: причина идёт в предупреждения отчёта."""
+    result.setdefault("warnings", []).append(f"Выгрузка {what} не выполнена ({type(e).__name__}: {str(e)[:120]}), "
+                                             "результат проверки сохранён в отчёте JSON и HTML")
+
+
+def _comments(result: dict, src_path: str, out: str) -> bool:
+    try:
+        return to_docx_comments(result, src_path, out)
+    except Exception as e:
+        export_failed(result, f"комментариев Word ({os.path.basename(out)})", e)
+        return False
+
+
 def write_all(result: dict, src_path: str, out_dir: str) -> dict:
+    """Отчёты JSON и HTML и файлы Word с комментариями. Word выгружается первым: его сбой попадает в предупреждения отчёта."""
     os.makedirs(out_dir, exist_ok=True)
     base = os.path.splitext(os.path.basename(src_path))[0]
     paths = {"json": os.path.join(out_dir, base + ".report.json"), "html": os.path.join(out_dir, base + ".report.html")}
-    to_json(result, paths["json"])
-    with open(paths["html"], "w", encoding="utf-8") as f:
-        f.write(to_html(result))
     docx_out = os.path.join(out_dir, base + ".comments.docx")
-    if to_docx_comments(result, src_path, docx_out):
+    if _comments(result, src_path, docx_out):
         paths["docx"] = docx_out
     for i, attachment in enumerate(result.get("_paths", [])[1:], 1):
         if attachment.lower().endswith(".docx"):
             attachment_out = os.path.join(out_dir, f"attachment_{i}.comments.docx")
-            if to_docx_comments(result, attachment, attachment_out):
+            if _comments(result, attachment, attachment_out):
                 paths[f"docx_attachment_{i}"] = attachment_out
+    to_json(result, paths["json"])
+    with open(paths["html"], "w", encoding="utf-8") as f:
+        f.write(to_html(result))
     return paths

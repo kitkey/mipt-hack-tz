@@ -13,7 +13,7 @@ from . import history, revisions
 from .checks import succeeded
 from .pipeline import check
 from .progress import STATE_RU, STEP_TITLES, now_iso, reporter
-from .report import write_all
+from .report import export_failed, write_all
 
 TAIL_STEPS = ("report", "check_old", "req_pairing")  # шаги задачи после конвейера, в порядке выполнения
 _JOBS: dict[str, "Job"] = {}
@@ -167,7 +167,13 @@ def _write_outputs(res: dict, src: str, folder: str, rep) -> dict:
     rep.start("report")
     paths = write_all(res, src, folder)
     write_trace(res, folder)
-    rev = revisions.write(res, src, folder)
+    try:
+        rev = revisions.write(res, src, folder)
+    except Exception as e:
+        # сбой файла правок Word не теряет результат: предупреждение попадает в report.json и html, история пишется дальше
+        rev = {}
+        export_failed(res, "правок Word", e)
+        paths = write_all(res, src, folder)
     res["revisions"] = {k: {"applied": v["applied"], "skipped": v["skipped"], "file": os.path.basename(v["path"]) if v.get("path") else None}
                         for k, v in rev.items()}
     rep.done("report", revisions=len((rev.get("main") or {}).get("applied", [])))
