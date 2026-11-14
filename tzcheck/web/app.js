@@ -655,7 +655,7 @@ function renderRunHead(rv) {
   if (run.created_at) meta.push(fmtDate(run.created_at));
   if (run.user) meta.push(run.user);
   if (d.seconds != null) meta.push(`проверка ${fmtSec(d.seconds)}`);
-  meta.push(d.mode === "rules" || !d.model ? "правила" : `с моделью ${String(d.model).replace(/^openrouter\//, "")}`);
+  meta.push(!d.model ? "без модели" : `с моделью ${String(d.model).replace(/^openrouter\//, "")}`);
   if (run.number) meta.unshift(`проверка № ${run.number}`);
   document.getElementById("r-meta").textContent = meta.join(" · ");
 
@@ -777,7 +777,7 @@ function histCard(it) {
   const dec = it.decisions || {};
   const files = it.files || [];
   const groups = it.full_check === false ? `только ${(it.check_groups || []).join(", ")}` : "все группы";
-  const mode = it.mode === "rules" || !it.model ? "без модели" : String(it.model).replace(/^openrouter\//, "");
+  const mode = !it.model ? "без модели" : String(it.model).replace(/^openrouter\//, "");
   const decN = dec["всего решений"] || 0;
   return `<a class="h-card ${VERDICT_CLS[it.verdict_code] || ""}" href="#/run/${esc(it.run_id)}">
     <div class="h-main">

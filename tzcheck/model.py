@@ -39,6 +39,8 @@ class Finding:
     group: str = ""
     # точный текст, которым заменяется цитата (правка в режиме рецензирования); пусто, если замена не детерминирована
     replacement: str = ""
+    # как найдено: шаги от ответа модели до итога [{"step", "call", "item", "text"}], полные промпты в журнале прогона (trace.json)
+    trace: list = field(default_factory=list)
 
     def finalize(self):
         from .norms import group_of

@@ -153,9 +153,20 @@ def new_run(store: str) -> tuple[str, str]:
     return rid, folder
 
 
+TRACE = "trace.json"
+
+
+def write_trace(res: dict, folder: str):
+    """Журнал вызовов модели прогона: промпты и ответы как ушли наружу (с маской ПД) и снятые кандидаты. Отдаётся только /api/runs/{id}/trace."""
+    import json
+    with open(os.path.join(folder, TRACE), "w", encoding="utf-8") as fh:
+        json.dump(res.get("_trace") or {"calls": [], "rejected": [], "dropped": []}, fh, ensure_ascii=False, indent=1)
+
+
 def _write_outputs(res: dict, src: str, folder: str, rep) -> dict:
     rep.start("report")
     paths = write_all(res, src, folder)
+    write_trace(res, folder)
     rev = revisions.write(res, src, folder)
     res["revisions"] = {k: {"applied": v["applied"], "skipped": v["skipped"], "file": os.path.basename(v["path"]) if v.get("path") else None}
                         for k, v in rev.items()}

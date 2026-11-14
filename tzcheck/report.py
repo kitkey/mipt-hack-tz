@@ -124,8 +124,9 @@ def _model_table(rows: list[str], block: dict | None = None) -> str:
                  'Текст написан моделью и не сверен с цитатами документа, в итоговое заключение не входит.</div>') if note else ""
     table = ('<table><thead><tr><th>№</th><th>Риск и статус</th><th>Уверенность</th><th>Категория</th><th>Где и цитата</th><th>Почему</th>'
              f'<th>Как исправить</th><th>Основание</th></tr></thead><tbody id="mrows">{"".join(rows)}</tbody></table>') if rows else ""
-    return (f'<h2>Замечания модели: проверить вручную ({len(rows)})</h2>'
-            '<div class="meta">Эти замечания нашла языковая модель, правила их не подтверждают. Они не входят в вердикт, итоговое заключение '
+    return (f'<h2>На проверку ({len(rows)})</h2>'
+            '<div class="meta">Эти замечания модель не назвала подтверждённой ошибкой с высокой уверенностью второй проверки или они держатся '
+            'на утверждении «не указано». Почему замечание здесь, сказано в его основании. Они не входят в вердикт, итоговое заключение '
             'и счётчики над основным списком; каждое закупщик принимает или отклоняет сам.</div>'
             f'<ul class="chips">{sev_chips}</ul><ul class="chips">{cat_chips}</ul>{note_html}{table}')
 
@@ -185,7 +186,8 @@ def to_html(result: dict, run_id: str | None = None) -> str:
     sts = "".join(f"<li>{esc(k)}: {v}</li>" for k, v in stats.get("by_status", {}).items())
     warn = "".join(f"<li>{esc(w)}</li>" for w in result.get("warnings", []))
     model = f" · модель {esc(result['model'])}" if result.get("model") else ""
-    mode = {"rules": "только правила, модель не подключена", "rules+llm": "правила и языковая модель"}.get(result.get("mode", ""), result.get("mode", ""))
+    mode = {"format": "модель не подключена: только оформление и безопасность", "model": "языковая модель",
+            "rules": "только правила, модель не подключена", "rules+llm": "правила и языковая модель"}.get(result.get("mode", ""), result.get("mode", ""))
     pii = result.get("pii_masked") or {}
     pii_text = ("персональные данные перед отправкой в модель заменены метками: " + ", ".join(f"{k} {v}" for k, v in pii.items())) if pii else "персональных данных для маскирования не найдено"
     return f"""<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>Проверка ТЗ: {esc(result.get('file', ''))}</title>
@@ -272,7 +274,7 @@ def to_docx_comments(result: dict, src_path: str, out_path: str) -> bool:
                     next((p for p in cell.paragraphs if p.runs), None)
         if target is None or not target.runs:
             continue
-        text = {"llm_review": "Модель, проверить вручную. ", "unchecked": "Не проверено, сведений нет в переданных файлах. "}.get(f.get("section"), "") + f'[{f["id"]}] {f["category"]} ({SEV_RU.get(f["severity"], "")} риск{", ручная проверка" if f["needs_review"] else ""}; ' \
+        text = {"llm_review": "На проверку. ", "unchecked": "Не проверено, сведений нет в переданных файлах. "}.get(f.get("section"), "") + f'[{f["id"]}] {f["category"]} ({SEV_RU.get(f["severity"], "")} риск{", ручная проверка" if f["needs_review"] else ""}; ' \
                f'уверенность: {conf_label(f)}). {f["explanation"]} Исправление: {f["fix"]}'
         ev = f.get("evidence") or {}
         if ev.get("вторая цитата"):

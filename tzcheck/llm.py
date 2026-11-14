@@ -1,3 +1,5 @@
+import contextvars
+import copy
 import json
 import os
 import re
@@ -92,6 +94,60 @@ SUMMARY_PROMPT = """По результатам проверки ТЗ «{title}�
 Верни JSON: {{"summary": "..."}}"""
 
 
+class Journal:
+    """Журнал вызовов модели одного прогона: ровно тот текст, что ушёл в модель (уже с маской ПД), и сырой ответ."""
+
+    def __init__(self):
+        self.calls: list[dict] = []
+        # снятые проверкой замечания (поля Finding и trace) и ответы модели, цитату которых не нашли в тексте
+        self.rejected: list[dict] = []
+        self.dropped: list[dict] = []
+        self._lock = threading.Lock()
+
+    def add(self, rec: dict) -> str:
+        with self._lock:
+            rec["id"] = f"c{len(self.calls) + 1:03d}"
+            self.calls.append(rec)
+            return rec["id"]
+
+    def to_dict(self) -> dict:
+        return {"calls": self.calls, "rejected": self.rejected, "dropped": self.dropped}
+
+
+_JOURNAL = contextvars.ContextVar("tzcheck_journal", default=None)
+_META = contextvars.ContextVar("tzcheck_call_meta", default=None)
+_LAST = threading.local()
+
+
+@contextmanager
+def journal_scope(journal, stage: str, title: str = "", unit: dict | None = None):
+    """Вызовы модели внутри блока пишутся в journal с этапом, подписью и частью документа; id последнего в last_call_id()."""
+    t1, t2 = _JOURNAL.set(journal), _META.set({"stage": stage, "title": title, "unit": unit or {}})
+    _LAST.id = ""
+    try:
+        yield
+    finally:
+        _JOURNAL.reset(t1)
+        _META.reset(t2)
+
+
+def last_call_id() -> str:
+    return getattr(_LAST, "id", "")
+
+
+def _journal(prompt: str, model: str, temperature: float, seconds: float, usage, response: str, parsed, error: str = "", retry: str = ""):
+    journal = _JOURNAL.get()
+    if journal is None:
+        return
+    meta = _META.get() or {}
+    tokens = {}
+    if usage is not None:
+        tokens = {"in": getattr(usage, "prompt_tokens", None), "out": getattr(usage, "completion_tokens", None)}
+    _LAST.id = journal.add({"stage": meta.get("stage", ""), "title": meta.get("title", ""), "unit": meta.get("unit", {}), "model": model,
+                            "temperature": temperature, "seconds": round(seconds, 2), "tokens": tokens, "system": SYSTEM, "prompt": prompt,
+                            "response": response, "parsed": copy.deepcopy(parsed), "retry": retry, "error": error})
+
+
 def enabled() -> bool:
     return bool(os.environ.get("TZCHECK_LLM_MODEL"))
 
@@ -159,8 +215,10 @@ def _reasoning_body(model: str, custom_base: bool) -> dict:
 
 
 def _call(prompt: str, max_tokens: int = 4000, doc_flags: dict | None = None) -> dict:
-    """Все вызовы модели по тексту ТЗ идут сюда. doc_flags: явно или из _safe текущего потока."""
+    """Все вызовы модели по тексту ТЗ идут сюда. doc_flags: явно или из _safe текущего потока.
+    Каждый вызов пишется в журнал прогона (journal_scope): промпт с маской ПД, сырой ответ, разбор, ошибка."""
     if not allow_external(doc_flags if doc_flags is not None else getattr(_flags, "value", None)):
+        _journal(prompt, os.environ.get("TZCHECK_LLM_MODEL", ""), 0.0, 0.0, None, "", None, f"внешняя отправка запрещена: {BLOCKED}")
         raise ExternalBlocked(BLOCKED)
     import litellm
     kwargs = dict(
@@ -179,15 +237,30 @@ def _call(prompt: str, max_tokens: int = 4000, doc_flags: dict | None = None) ->
     extra = _reasoning_body(kwargs["model"], bool(kwargs.get("api_base")))
     if extra:
         kwargs["extra_body"] = extra
-    resp = litellm.completion(**kwargs)
+    t0 = time.time()
+    try:
+        resp = litellm.completion(**kwargs)
+    except Exception as e:
+        _journal(prompt, kwargs["model"], kwargs["temperature"], time.time() - t0, None, "", None, f"{type(e).__name__}: {str(e)[:300]}")
+        raise
     choice = resp.choices[0]
+    retry = ""
     if choice.finish_reason == "length" and kwargs["model"].startswith("openrouter/") and extra != {"reasoning": {"enabled": False}}:
         kwargs["extra_body"] = {"reasoning": {"enabled": False}}
-        resp = litellm.completion(**kwargs)
+        retry = "без рассуждений"
+        try:
+            resp = litellm.completion(**kwargs)
+        except Exception as e:
+            _journal(prompt, kwargs["model"], kwargs["temperature"], time.time() - t0, None, "", None, f"{type(e).__name__}: {str(e)[:300]}", retry)
+            raise
         choice = resp.choices[0]
+    text = choice.message.content or ""
+    usage = getattr(resp, "usage", None)
     if choice.finish_reason == "length":
+        _journal(prompt, kwargs["model"], kwargs["temperature"], time.time() - t0, usage, text, None, "ответ обрезан по лимиту токенов", retry)
         raise RuntimeError("ответ модели обрезан по лимиту токенов, увеличьте TZCHECK_LLM_MAX_TOKENS")
-    data = _parse_json(choice.message.content or "")
+    data = _parse_json(text)
+    _journal(prompt, kwargs["model"], kwargs["temperature"], time.time() - t0, usage, text, data or None, "" if data else "модель вернула не JSON", retry)
     if not data:
         raise ValueError("модель вернула не JSON")
     return data

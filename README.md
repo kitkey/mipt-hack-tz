@@ -545,6 +545,7 @@ docker compose logs updater                                              # вр�
 | `TZCHECK_LLM_JSON_MODE` | 1 | просить у модели JSON-режим |
 | `TZCHECK_LLM_MAX_TOKENS` | 24000 | нижняя граница лимита ответа: каждый шаг берёт большее из своего лимита (2500, 2000, 800) и этого значения, поэтому при 24000 лимиты шагов не действуют |
 | `TZCHECK_LLM_TEMPERATURE` | 0 | температура модели, 0 для воспроизводимости |
+| `TZCHECK_MAIN_MIN_CONFIDENCE` | 90 | порог основного списка: туда идёт замечание ядра со статусом «ошибка», уверенностью второй проверки не ниже порога и не на утверждении «не указано»; остальное в раздел «На проверку» |
 | `TZCHECK_LLM_REASONING` | off | рассуждения модели: `off` выключает (OpenRouter `reasoning.enabled=false`, локальный vLLM/llama.cpp `enable_thinking=false`); число задаёт бюджет токенов на рассуждение (OpenRouter `reasoning.max_tokens`); `low`/`medium`/`high` задают усилие; `on` оставляет поведение модели по умолчанию |
 | `TZCHECK_REFDATA_OFFLINE` | 1 | 1 = справочники только из локальных копий и кэша (CLI, uvicorn и Docker); 0 = при пропуске в копии спросить rst.gov.ru и «Аршин» |
 | `TZCHECK_OCR` | auto | распознавание сканов: `auto` если PaddleOCR установлен, `1` обязательно, `0` выключено; в Docker задан `auto` в docker-compose.yml |

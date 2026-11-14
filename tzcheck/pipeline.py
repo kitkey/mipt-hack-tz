@@ -4,45 +4,20 @@ import time
 import unicodedata
 from collections import Counter
 
-from . import confidence, customer, feedback, llm, replacements
+from . import confidence, core, customer, feedback, gost_check, llm, passport, replacements, tables
 from . import progress as prog
-from .checks import categories_for, group_names, group_stats, is_full, only_groups, parse_checks, partial_note, rules_for, verdict_code
-from .checks import steps_note, unprofiled_note
-from .model import SECTION_LLM, SECTION_MAIN, SECTION_UNCHECKED, STATUS_REVIEW, Finding, from_model
+from .checks import categories_for, group_names, group_stats, is_full, only_groups, parse_checks, partial_note, steps_note, verdict_code
+from .model import SECTION_LLM, SECTION_MAIN, SECTION_UNCHECKED, STATUS_ERROR, STATUS_REVIEW, Finding, from_model
 from .norms import NORMS, apply_editions
 from .parse import ParseError, ParsedDoc, parse, parse_many
-from .reconcile import build_graph, reconcile, reconcile_semantic
 from .pii import Scrubber
-from .rules import _item_name, run_rules
+from .rules import _item_name
 
 SEV_ORDER = {"high": 0, "medium": 1, "low": 2}
 HIDDEN_RE = re.compile("[​-‏‪-‮⁠-⁤⁦-⁩﻿\U000e0000-\U000e007f]")
 INJECTION_RE = re.compile(
     r"(?:ignore|disregard)\s+(?:all\s+|the\s+)?(?:previous|above)\s+instructions|игнорируй\w*\s+(?:все\s+)?(?:предыдущ|инструкц)|"
     r"ты\s+(?:теперь|должен)\s+(?:ответить|написать|считать)|system\s*prompt|не\s+сообщай\s+об\s+ошибк|ответь,?\s+что\s+ошибок\s+нет", re.I)
-
-
-def _overlap(a: Finding, b: Finding) -> bool:
-    if a.block_id != b.block_id or not a.quote.strip() or not b.quote.strip():
-        return False
-    qa, qb = a.quote.lower(), b.quote.lower()
-    return qa in qb or qb in qa or (a.category == b.category and len(set(qa.split()) & set(qb.split())) >= 3)
-
-
-def _merge(rule: list[Finding], extra: list[Finding]) -> list[Finding]:
-    out = list(rule)
-    for f in extra:
-        dup = next((x for x in out if _overlap(x, f)), None)
-        if dup is None:
-            out.append(f)
-        elif "llm" in f.source and dup.source.startswith("rule") and dup.category == f.category:
-            dup.evidence["подтверждено моделью"] = f.explanation[:300]
-            if f.confidence_pct is not None and dup.confidence_pct is None:
-                dup.confidence_pct, dup.confidence_basis = f.confidence_pct, f.confidence_basis
-            # исправление правила остаётся, модельное кладётся рядом, если говорит другое
-            if f.fix.strip() and f.fix.strip().lower() not in dup.fix.lower():
-                dup.evidence["исправление по модели"] = f.fix[:300]
-    return out
 
 
 def _places(n: int) -> str:
@@ -101,6 +76,7 @@ def _collapse_repeats(findings: list[Finding], doc: ParsedDoc) -> list[Finding]:
             first.severity = f.severity  # при слиянии остаётся максимальный риск
         if f.block_id != first.block_id and f.block_id not in first.also_in:
             first.also_in.append(f.block_id)
+            first.trace.append({"step": "repeats", "text": f"та же цитата ещё в блоке {f.block_id}: замечания объединены"})
     for f in out:
         if f.also_in and "То же ещё в" not in f.explanation:
             locs = [b.location() for b in (doc.block(x) for x in f.also_in[:5]) if b]
@@ -219,62 +195,119 @@ def check(path: str, use_llm: bool | None = None, orchestrator: str | None = Non
     doc.warnings.extend(security)
     rep.done("security", warnings=len(security))
     scr = Scrubber()
-    rep.start("rules")
-    findings = _collapse_repeats(only_groups(run_rules(doc, rules_for(groups)), groups), doc)
-    doc.candidates = only_groups(getattr(doc, "candidates", []) or [], groups)
-    rep.done("rules", findings=len(findings))
-    mode = "rules"
-    logic = "logic" in groups
-    use_llm = use_llm and llm.gate(doc)  # внешняя модель без NER и без пометки «открытый» не вызывается
+    use_llm = model_allowed(doc, use_llm)
     if use_llm:
-        mode = "rules+llm"
-        doc.llm_deadline = time.time() + llm.doc_budget()
-        rep.start("llm_verify_rules", candidates=sum(1 for f in findings if f.needs_review))
-        findings = llm.verify_rules(doc, findings, scr)
-        rep.done("llm_verify_rules", findings=len(findings))
-        rep.start("llm_find")
-        found = llm.analyze(doc, findings, scr)
-        if logic:
-            rep.update(stage="сверка частей документа между собой")
-            found += llm.cross_check(doc, scr)
-        found = only_groups(found + candidates(doc), groups)
-        rep.done("llm_find", found=len(found))
-        rep.start("llm_verify_new", candidates=len(found))
-        kept = llm.verify_new(doc, found, scr)
-        findings = _merge(findings, kept)
-        findings = _collapse_repeats(findings, doc)
-        rep.done("llm_verify_new", confirmed=len(kept), findings=len(findings))
-    rep.start("reconcile")
-    rec = only_groups(reconcile(doc), groups)
-    findings.extend(rec)
-    rep.done("reconcile", found=len(rec))
-    if use_llm and logic:
-        rep.start("reconcile_llm")
-        sem = reconcile_semantic(doc, scr)
-        findings.extend(sem)
-        rep.done("reconcile_llm", found=len(sem))
-    steps = ["parse", "security", "rules"] + (["llm_verify_rules", "llm_find", "llm_verify_new", "reconcile"] + (["reconcile_llm"] if logic else []) if use_llm else ["reconcile"])
+        findings, steps = run_core(doc, scr, groups, rep)
+        mode = "model"
+    else:
+        findings, steps, mode = [], [], "format"
+    steps = ["parse", "security"] + steps
     return _finish(doc, paths, findings, scr, use_llm, mode, t0, "linear", steps, groups=groups, rep=rep)
 
 
-def candidates(doc: ParsedDoc) -> list[Finding]:
-    """Кандидаты правил, которые в основной список не идут (латиница с цифрой как модель): с моделью они проходят ту же
-    вторую проверку, что находки модели, и подтверждённые попадают в блок модели."""
-    out = []
-    for f in getattr(doc, "candidates", []) or []:
-        f.source = "llm:rule_candidate"
-        f.evidence["кандидат правила"] = f"{f.rule_id}: в основной список не входит, выводится только после подтверждения моделью"
-        out.append(f)
-    return out
+NO_MODEL = "Модель не настроена: проверено только оформление и безопасность (разбор файлов, скрытые символы, инструкции для ИИ). Содержательной проверки требований не было."
+NO_MODEL_BLOCKED = ("Модель не вызывалась: документ не помечен открытым, а маскирование персональных данных моделью (NER) недоступно, "
+                    "поэтому текст во внешнюю модель не ушёл. Проверено только оформление и безопасность (разбор файлов, скрытые символы, "
+                    "инструкции для ИИ). Содержательной проверки требований не было.")
+
+
+def model_allowed(doc, use_llm: bool) -> bool:
+    """Модель запрошена и документ допущен к внешней модели (llm.gate: NER или пометка «открытый»); отказ помечается в doc.model_blocked."""
+    allowed = bool(use_llm) and llm.gate(doc)
+    doc.model_blocked = bool(use_llm) and not allowed
+    return allowed
+
+
+def start_core(doc):
+    doc.llm_deadline = time.time() + llm.doc_budget()
+    doc.journal = llm.Journal()
+    doc.model_calls, doc.model_dropped, doc.llm_rejected = {}, [], []
+
+
+def core_passport(doc, scr, rep):
+    rep.start("passport")
+    p = passport.detect(doc, scr)
+    rep.done("passport", law=p.get("закон"), customer=p.get("заказчик"))
+    rep.start("tables")
+    m = tables.build(doc, scr)
+    rep.done("tables", tables=sum(t.marked for t in m.tables), positions=len(m.positions))
+
+
+def core_find(doc, scr, groups, rep) -> list[Finding]:
+    cats = categories_for(groups)
+    rep.start("core_find")
+    found = core.find(doc, scr, cats)
+    rep.update(stage="справочные записи по обозначениям, которые назвала модель")
+    found += core.refs(doc, scr, cats)
+    rep.update(stage="сверка позиций с чеклистами ГОСТ")
+    found += gost_check.check(doc, scr, cats)
+    rep.update(stage="проверка «не указано» по всему комплекту")
+    found = core.absent(doc, scr, found)
+    rep.done("core_find", found=len(found))
+    return found
+
+
+def core_cross(doc, scr, groups, rep) -> list[Finding]:
+    rep.start("core_cross")
+    found = core.cross(doc, scr, categories_for(groups))
+    rep.done("core_cross", found=len(found))
+    return found
+
+
+def core_verify(doc, scr, groups, found, rep) -> list[Finding]:
+    found = only_groups(core.dedupe(found), groups)
+    rep.start("core_verify", candidates=len(found))
+    kept = core.verify(doc, scr, found)
+    rep.done("core_verify", confirmed=len(kept))
+    return _collapse_repeats(kept, doc)
+
+
+def run_core(doc, scr, groups, rep) -> tuple[list[Finding], list[str]]:
+    """Ядро проверки: паспорт и роли, разметка таблиц, поиск дефектов, сверка частей, вторая проверка. Решения принимает модель."""
+    start_core(doc)
+    core_passport(doc, scr, rep)
+    found = core_find(doc, scr, groups, rep)
+    steps = ["passport", "tables", "core_find"]
+    if "logic" in groups:
+        found += core_cross(doc, scr, groups, rep)
+        steps.append("core_cross")
+    return core_verify(doc, scr, groups, found, rep), steps + ["core_verify"]
+
+
+def main_min_confidence() -> int:
+    try:
+        return int(os.environ.get("TZCHECK_MAIN_MIN_CONFIDENCE", "90"))
+    except ValueError:
+        return 90
+
+
+def route(f: Finding) -> Finding:
+    """Раздел отчёта для замечания ядра по его собственным полям, без проверки текста кодом. В основной список идёт только то,
+    что модель назвала ошибкой (статус «ошибка»), вторая проверка подтвердила с уверенностью от TZCHECK_MAIN_MIN_CONFIDENCE
+    (по умолчанию 90) и что не держится на утверждении «не указано». Остальное идёт в раздел «на проверку», ничего не снимается."""
+    if f.section != SECTION_MAIN or not f.source.startswith("model:"):
+        return f
+    why = []
+    if f.status != STATUS_ERROR:
+        why.append(f"статус «{f.status}», а не «{STATUS_ERROR}»")
+    if f.confidence_pct is None or f.confidence_pct < main_min_confidence():
+        got = "нет оценки" if f.confidence_pct is None else f"{f.confidence_pct} %"
+        why.append(f"уверенность второй проверки {got}, порог основного списка {main_min_confidence()} %")
+    if getattr(f, "_absent", False) or f.evidence.get("проверка «не указано»"):
+        why.append("замечание держится на утверждении «не указано»")
+    if not why:
+        f.trace.append({"step": "route", "text": "основной список: ошибка, подтверждена второй проверкой с высокой уверенностью"})
+        return f
+    f.section, f.needs_review = SECTION_LLM, True
+    f.evidence["блок отчёта"] = "на проверку: " + "; ".join(why)
+    f.trace.append({"step": "route", "text": "на проверку: " + "; ".join(why)})
+    return f
 
 
 def _finish(doc, paths, findings, scr, use_llm, mode, t0, orchestrator, steps, groups=None, rep=None) -> dict:
-    from .gost_profiles import safe_apply
     groups = parse_checks(groups)
     rep = prog.reporter(rep)
     rep.start("finish")
-    # проверка по профилям ГОСТ из ТЗ: профиль из кэша, с моделью собирается при первой встрече стандарта
-    findings = safe_apply(doc, findings, build_missing=use_llm and "standards" in groups)
     findings = only_groups(findings, groups)
     cust = (customer.detect(doc.text()) or {}).get("id", "")
     findings = feedback.apply(findings, cust)  # решения закупщиков только того же заказчика
@@ -287,7 +320,7 @@ def _finish(doc, paths, findings, scr, use_llm, mode, t0, orchestrator, steps, g
         if from_model(f.source):
             # замечания модели не смешиваются с правилами: отдельный блок, всегда ручная проверка, в вердикт не входят
             f.section, f.needs_review, f.status = SECTION_LLM, True, STATUS_REVIEW
-            f.evidence["блок отчёта"] = "замечание модели, проверить вручную"
+            f.evidence["блок отчёта"] = "на проверку: замечание модели"
         f.finalize()
         if f.norm_ids:
             f.evidence["нормы"] = [f"{NORMS[n]['title']} (редакция: {NORMS[n].get('edition', 'см. источник')})" for n in f.norm_ids if n in NORMS]
@@ -295,6 +328,7 @@ def _finish(doc, paths, findings, scr, use_llm, mode, t0, orchestrator, steps, g
             # вывод из отсутствия сведений в переданных файлах: вопрос закупщику, в вердикт и счётчики не входит
             f.needs_review, f.status = True, STATUS_REVIEW
             f.evidence["блок отчёта"] = "не проверено и не найдено в переданных файлах"
+        route(f)
     findings.sort(key=lambda f: ({SECTION_MAIN: 0, SECTION_LLM: 1}.get(f.section, 2), SEV_ORDER.get(f.severity, 1), _order(doc, f.block_id)))
     main = [f for f in findings if f.section == SECTION_MAIN]
     extra = [f for f in findings if f.section == SECTION_LLM]
@@ -306,6 +340,10 @@ def _finish(doc, paths, findings, scr, use_llm, mode, t0, orchestrator, steps, g
     for i, f in enumerate(unchecked, 1):
         f.id = f"U{i:03d}"
     replacements.apply(findings)
+    sev_ru = {"high": "высокий", "medium": "средний", "low": "низкий"}
+    for f in findings:
+        f.trace.append({"step": "final", "text": f"статус «{f.status}», риск {sev_ru.get(f.severity, f.severity)}"
+                        + (", на ручную проверку" if f.needs_review else "") + (f", правка «{f.replacement}»" if f.replacement else "")})
     # счётчики, вердикт и заключение только по основному списку; у блока модели свои счётчики
     cats, sev = Counter(f.category for f in main), Counter(f.severity for f in main)
     statuses = Counter(f.status for f in main)
@@ -315,11 +353,9 @@ def _finish(doc, paths, findings, scr, use_llm, mode, t0, orchestrator, steps, g
     # заключение всегда собирает код из основного списка, текст модели идёт подписанной строкой в блок модели
     summary = _template_summary(main, cats, sev, review)
     bad = prog.incomplete(prog.steps_status(rep, use_llm, groups)) if rep is not None else []
-    if not main:
-        # пустой список не значит «всё проверено»: называются позиции, свойства которых правилами не сверялись
-        if bad or not is_full(groups):
-            summary = summary.replace("Явных проблем не найдено.", "По выполненным проверкам замечаний нет.")
-        summary += unprofiled_note(doc)
+    if not main and (bad or not is_full(groups)):
+        # пустой список при неполной проверке не значит «всё проверено»
+        summary = summary.replace("Явных проблем не найдено.", "По выполненным проверкам замечаний нет.")
     by_group = Counter(f.group for f in main)
     if main:
         summary += " По группам: " + ", ".join(f"{g} {by_group.get(g, 0)}" for g in group_names(groups)) + "."
@@ -329,24 +365,41 @@ def _finish(doc, paths, findings, scr, use_llm, mode, t0, orchestrator, steps, g
     partial = " ".join(x for x in (steps_note(bad), partial_note(groups)) if x)
     if partial:
         summary = partial + " " + summary
+    if not use_llm:
+        summary = NO_MODEL_BLOCKED if getattr(doc, "model_blocked", False) else NO_MODEL
     if unchecked:
         summary += f" Отдельным блоком «Не проверено»: {_remarks(len(unchecked))} о сведениях, которых нет в переданных файлах; в вердикт они не входят."
     if extra:
-        summary += f" Отдельным блоком {_remarks(len(extra))} модели на ручную проверку, в вердикт они не входят."
+        summary += f" Отдельным блоком «На проверку» {_remarks(len(extra))}, в вердикт они не входят."
     rejected = getattr(doc, "llm_rejected", [])
+    journal = getattr(doc, "journal", None)
+    if journal is not None:
+        # снятые проверкой: в основной список не идут, в журнале лежат с цепочкой «модель предложила, проверка сняла»
+        journal.rejected = []
+        for i, f in enumerate(rejected, 1):
+            f.id = f"R{i:03d}"
+            journal.rejected.append(f.to_dict())
     if rejected:
         doc.warnings.append(f"LLM: вторая проверка сняла находок модели {len(rejected)}; в отчёт они не вошли (stats.model_rejected).")
     if use_llm and main:
         stats = (f"всего {len(main)}: высокий риск {sev.get('high', 0)}, средний {sev.get('medium', 0)}, низкий {sev.get('low', 0)}; "
                  f"требуют ручной проверки {review}. По категориям: " + "; ".join(f"{k} {v}" for k, v in cats.most_common()))
-        note = llm.summarize(doc, main, stats, scr)
+        with llm.journal_scope(getattr(doc, "journal", None), "summary", "Заключение по отчёту",
+                               {"kind": "document", "title": doc.name, "blocks": []}):
+            note = llm.summarize(doc, main, stats, scr)
         if note:
             model_block["note"] = note
     res = {
         "file": doc.name, "status": "ok", "mode": mode, "orchestrator": orchestrator, "steps": steps, "seconds": round(time.time() - t0, 1),
         "customer": cust,
         "model": os.environ.get("TZCHECK_LLM_MODEL", "") if use_llm else "",
-        "document": {"format": doc.source_format, "files": [os.path.basename(os.fspath(p)) for p in paths], "blocks": len(doc.blocks), "fields": doc.fields, "requirement_graph": build_graph(doc).to_dict()},
+        "document": {"format": doc.source_format, "files": [os.path.basename(os.fspath(p)) for p in paths], "blocks": len(doc.blocks), "fields": doc.fields,
+                     "procurement": getattr(doc, "passport", None) or {}, "passport_source": getattr(doc, "passport_source", ""),
+                     "roles": dict(Counter(b.role or "не определена" for b in doc.blocks)) if use_llm else {},
+                     "tables": tables.of(doc).to_dict() if use_llm else {}},
+        "model_calls": getattr(doc, "model_calls", {}), "model_dropped": getattr(doc, "model_dropped", []),
+        "trace_calls": len(journal.calls) if journal else 0, "trace_rejected": len(journal.rejected) if journal else 0,
+        "_trace": journal.to_dict() if journal else {"calls": [], "rejected": [], "dropped": []},
         "warnings": doc.warnings, "pii_masked": scr.summary(),
         "stats": {"by_category": dict(cats), "by_severity": dict(sev), "by_status": dict(statuses), "needs_review": review,
                   "confidence": {"оценено моделью": sum(f.confidence_pct is not None for f in findings),

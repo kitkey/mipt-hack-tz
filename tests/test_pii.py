@@ -128,12 +128,12 @@ def test_gate_warns_and_falls_back_to_rules(external_no_ner):
 
 
 @pytest.mark.parametrize("orchestrator", ["linear", "graph"])
-def test_pipeline_external_without_ner_uses_rules(external_no_ner, monkeypatch, orchestrator):
+def test_pipeline_external_without_ner_skips_model(external_no_ner, monkeypatch, orchestrator):
     from tzcheck.pipeline import check
     monkeypatch.setenv("TZCHECK_REFDATA_OFFLINE", "1")
     monkeypatch.setattr(llm, "_call", lambda *a, **k: pytest.fail("модель вызвана"))
     res = check("samples/lift_fin.docx", orchestrator=orchestrator)
-    assert res["mode"] == "rules"
+    assert res["mode"] == "format" and res["summary"].startswith("Модель не вызывалась")
     assert llm.BLOCKED in res["warnings"] and llm.NER_DOWN in res["warnings"]
     assert external_no_ner == []
 

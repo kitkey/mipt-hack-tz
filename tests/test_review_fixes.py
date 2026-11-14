@@ -4,9 +4,9 @@ import threading
 import pytest
 
 from tzcheck import feedback, llm, pii
-from tzcheck.model import STATUS_REVIEW, Finding
+from tzcheck.model import Finding
 from tzcheck.parse import Block
-from tzcheck.pipeline import _merge, check
+from tzcheck.pipeline import check
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LIFT = os.path.join(ROOT, "samples", "lift_src.docx")
@@ -19,37 +19,6 @@ def isolated(tmp_path, monkeypatch):
     monkeypatch.delenv("TZCHECK_ORCHESTRATOR", raising=False)
     monkeypatch.delenv("TZCHECK_RAG", raising=False)
     monkeypatch.setenv("TZCHECK_PII_NER", "0")
-
-
-def _confirm_all(prompt, max_tokens=4000):
-    if prompt.startswith("Кандидаты в ошибки"):
-        import re
-        return {"decisions": [{"n": int(n), "decision": "confirm", "reason": "заглушка", "confidence": 95}
-                              for n in re.findall(r"^(\d+)\. ", prompt, re.M)]}
-    if "Верни JSON: {\"summary\"" in prompt:
-        return {"summary": "Заключение заглушки."}
-    return {"findings": [], "pairs": [], "decisions": []}
-
-
-def test_model_confirm_keeps_manual_review(monkeypatch):
-    base = {(f["rule_id"], f["block_id"]): f for f in check(LIFT, use_llm=False)["findings"]}
-    monkeypatch.setenv("TZCHECK_LLM_MODEL", "stub/model")
-    monkeypatch.setenv("TZCHECK_LLM_WORKERS", "1")
-    monkeypatch.setattr(llm, "_call", _confirm_all)
-    got = {(f["rule_id"], f["block_id"]): f for f in check(LIFT, use_llm=True)["findings"]}
-    review = [k for k, f in base.items() if f["status"] == STATUS_REVIEW]
-    assert review
-    for k in review:
-        if k in got:
-            assert got[k]["status"] == STATUS_REVIEW and got[k]["needs_review"], k
-
-
-def test_merge_keeps_rule_fix():
-    rule = Finding("p1", "ГОСТ 1-2000", "Стандарты (ГОСТ, поверка)", "x", "Указать ГОСТ 1-2020.", source="rule:gost")
-    model = Finding("p1", "ГОСТ 1-2000", "Стандарты (ГОСТ, поверка)", "y", "Заменить ссылку на действующий стандарт и проверить все пункты раздела.",
-                    source="llm")
-    out = _merge([rule], [model])
-    assert len(out) == 1 and out[0].fix == "Указать ГОСТ 1-2020." and out[0].evidence["исправление по модели"].startswith("Заменить")
 
 
 def test_locate_does_not_invent_quote():

@@ -57,7 +57,7 @@ def meta():
     return {"groups": [{"key": k, "title": g, "categories": [c for c in CATEGORIES if CATEGORY_GROUP[c] == g]} for k, g in CHECK_GROUPS.items()],
             "category_group": CATEGORY_GROUP, "steps": STEP_TITLES,
             "statuses": ["ошибка", "неясно", "ручная проверка", "рекомендация"], "severities": ["high", "medium", "low"],
-            "sections": {"main": "основной список", "llm_review": "замечания модели, проверить вручную", "unchecked": "не проверено"},
+            "sections": {"main": "основной список", "llm_review": "на проверку", "unchecked": "не проверено"},
             "verdict_codes": {"blocked": "публиковать без исправлений нельзя", "review_high": "проверить вручную замечания высокого риска",
                               "fix": "исправить замечания со статусом «ошибка»", "review": "ошибок нет, есть места на ручную проверку",
                               "clean": "явных проблем не найдено", "partial": "проверены не все группы, вывод о публикации не делается",
@@ -281,3 +281,13 @@ def runs_get(rid: str, user: str | None = None):
     if res is None or not history.visible((res.get("run") or {}).get("user", ""), user):
         return _bad("run not found", 404)
     return res
+
+
+@router.get("/api/runs/{rid}/trace")
+def runs_trace(rid: str, user: str | None = None):
+    """Журнал вызовов модели: промпты (с маской ПД), сырые ответы, снятые кандидаты. Видимость та же, что у /api/runs/{rid}."""
+    run = history.load_run(store(), rid)
+    if run is None or not history.visible((run.get("run") or {}).get("user", ""), user):
+        return _bad("run not found", 404)
+    res = history.load_trace(store(), rid)
+    return res if res is not None else _bad("run not found", 404)
