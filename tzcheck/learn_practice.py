@@ -271,8 +271,9 @@ def learn(pairs: list[tuple[str, str]], doc_flags: dict | None = None, log=None)
     return result, {"pairs": per_pair, "places": len(texts), "calls": len(groups) + (len(parts) > 1), "dropped": dropped}
 
 
-def profile_file(base_path: str, cid: str, learned: dict) -> dict:
-    """Файл профилей: текущие профили как есть, у профиля cid только id, name, markers и выученные verify_practice и rules."""
+def profile_file(base_path: str, cid: str, learned: dict, source: str = "") -> dict:
+    """Файл профилей: текущие профили как есть, у профиля cid только id, name, markers, откуда выучен (source)
+    и выученные verify_practice и rules."""
     try:
         with open(base_path, encoding="utf-8") as f:
             data = json.load(f)
@@ -281,7 +282,7 @@ def profile_file(base_path: str, cid: str, learned: dict) -> dict:
     profiles = [p for p in data.get("profiles") or [] if isinstance(p, dict)]
     cur = next((p for p in profiles if p.get("id") == cid), None) or {"id": cid, "name": cid, "markers": []}
     prof = {"id": cid, "name": cur.get("name") or cid, "markers": list(cur.get("markers") or []),
-            "verify_practice": learned["verify_practice"], "rules": learned["rules"]}
+            "source": source, "verify_practice": learned["verify_practice"], "rules": learned["rules"]}
     out = dict(data)
     out["profiles"] = [prof if p.get("id") == cid else p for p in profiles] + ([] if any(p.get("id") == cid for p in profiles) else [prof])
     return out
@@ -313,7 +314,8 @@ def main(argv=None) -> int:
         log("Модель не задана (TZCHECK_LLM_MODEL): практику выводит только модель.")
         return 2
     learned, info = learn([tuple(p) for p in args.pair], {"public": args.public}, log)
-    data = profile_file(args.profiles, args.customer, learned)
+    pairs = ", ".join(f"{os.path.basename(a)} -> {os.path.basename(b)}" for a, b in args.pair)
+    data = profile_file(args.profiles, args.customer, learned, f"learn_practice: правки закупщика ({pairs})")
     os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
     with open(args.out, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=1)

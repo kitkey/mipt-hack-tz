@@ -98,7 +98,8 @@ def test_cli_learns_profile_with_stub_model(pair, tmp_path, monkeypatch):
     assert "СТАРОЕ" not in p and "Акме" not in p
     data = json.loads(out.read_text(encoding="utf-8"))
     acme = next(x for x in data["profiles"] if x["id"] == "acme")
-    assert set(acme) == {"id", "name", "markers", "verify_practice", "rules"}
+    assert set(acme) == {"id", "name", "markers", "source", "verify_practice", "rules"}
+    assert acme["source"] == "learn_practice: правки закупщика (src.docx -> fin.docx)"
     assert acme["name"] == "АО Акме" and acme["markers"] == ["Акме"]
     assert acme["rules"] == {"brand_name": "Не указывать марку товара: заменять марку требованиями к характеристикам. "
                                            "Категория замечания: «Ограничение конкуренции».",
