@@ -499,6 +499,24 @@ def test_two_models_second_check(monkeypatch):
     assert core._two_checks("keep", "") == "split" and core._two_checks("lower", "reject") == "lower" and core._two_checks("", "") == "lower"
 
 
+def test_verify_sees_kit_head_and_procurement_method(stub):
+    """Вторая проверка получает начало комплекта (вид документа, стороны) и правило о способе закупки: у единственного или уже
+    определённого поставщика конкретная марка не дефект; опечатка остаётся только если меняет требование."""
+    seen = []
+
+    def verify(prompt):
+        seen.append(prompt)
+        return {"decisions": [{"n": 0, "decision": "keep", "reason": "x", "confidence": 90}]}
+    s, doc = _prep(stub, {"найти дефекты": lambda p: {"findings": [_finding()] if "Стол" in p else []}, "независимая вторая проверка": verify})
+    core.verify(doc, Scrubber(), core.find(doc, Scrubber(), CATS))
+    p = seen[0]
+    head = p.split("Начало комплекта (вид документа, стороны, способ закупки):")[1].split("Ниже части комплекта")[0]
+    assert "[h1] Техническое задание на поставку" in head and "способ: запрос котировок (конкурентная)" in p
+    assert "поставщик уже определён (договор с названным поставщиком)" in p
+    assert "только если она меняет" in p and "остаётся и тогда, когда смысл угадывается" not in p
+    assert len(core._kit_head(doc, Scrubber())) <= core.HEAD_CHARS + 420
+
+
 def test_verify_can_reject_or_lower_but_not_raise(stub):
     items = [_finding(), _finding(block_id="t1r4", quote="Высота сиденья", severity="medium", category="Противоречие"),
              _finding(block_id="t1r2", quote="Длина", severity="low", category="Стандарты (ГОСТ, поверка)")]
