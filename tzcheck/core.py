@@ -8,7 +8,7 @@ find — дефекты по позиции или разделу; ref — об�
 import json
 import re
 
-from . import confidence, passport, search, tables
+from . import chunks, confidence, passport, search, tables
 from .ask import ask, pmap, unit_of, wrap
 from .model import Finding
 from .norms import CATEGORIES, CATEGORY_GROUP, NORMS, norm_list_for_prompt
@@ -16,6 +16,7 @@ from .norms import CATEGORIES, CATEGORY_GROUP, NORMS, norm_list_for_prompt
 SEV = ("low", "medium", "high")
 UNIT_CHARS = 5000
 TERMS_CHARS = 2500
+CROSS_PLACE_CHARS = 800
 
 FIND_PROMPT = """Задача: найти дефекты технического задания в одной части: {what}.
 Паспорт закупки: {passport}
@@ -195,6 +196,15 @@ def _section_units(doc, scr, model) -> list[Unit]:
         if not passport.checked(b) or (info is not None and info.position is not None) or (info is not None and info.header and info.table.kind != "other"):
             continue
         k = (b.source, b.section)
+        if len(b.text) > UNIT_CHARS:
+            # один блок длиннее предела: куски по границам строк и фраз, каждый своей частью, хвост не теряется
+            flush()
+            cur, size, key = [], 0, k
+            for piece in chunks.split(scr.scrub(b.text), UNIT_CHARS):
+                if piece.strip():
+                    out.append(Unit("section", b.section or chunks.clip(b.text, 80), [b.id],
+                                    f"[{b.id}] ({scr.scrub(b.section[:60])}) {piece.strip()}", section=b.section))
+            continue
         if cur and (k != key or size + len(b.text) > UNIT_CHARS):
             flush()
             cur, size = [], 0
@@ -223,14 +233,18 @@ def _position_units(doc, scr, model) -> list[Unit]:
         if len(text) > UNIT_CHARS * 1.4:
             flush()
             batch, size = [], 0
-            lines, part = text.split("\n")[1:], []
-            for ln in lines:
-                part.append(ln)
-                if sum(len(x) for x in part) > UNIT_CHARS:
-                    out.append(Unit("position", p.name[:80], p.block_ids, header + "\n" + "\n".join(part), p))
-                    part = []
+            part, ids = [], []
+            for ln in text.split("\n")[1:]:
+                bid = ln[1:ln.index("]")] if ln.startswith("[") and "]" in ln else ""
+                for piece in chunks.lines(ln, UNIT_CHARS):
+                    if part and sum(len(x) for x in part) + len(piece) > UNIT_CHARS:
+                        out.append(Unit("position", p.name[:80], ids, header + "\n" + "\n".join(part), p))
+                        part, ids = [], []
+                    part.append(piece)
+                    if bid and bid not in ids:
+                        ids.append(bid)
             if part:
-                out.append(Unit("position", p.name[:80], p.block_ids, header + "\n" + "\n".join(part), p))
+                out.append(Unit("position", p.name[:80], ids, header + "\n" + "\n".join(part), p))
             continue
         if batch and (size + len(text) > UNIT_CHARS or batch[0][0].table != p.table):
             flush()
@@ -245,14 +259,14 @@ def _terms(doc, scr, unit: Unit) -> str:
     blocks = [b for b in doc.blocks if b.role in ("terms", "warranty") and b.id not in set(unit.block_ids)]
     if not blocks:
         return "нет"
+    query = unit.title + " " + " ".join(c.name for c in (unit.position.chars if unit.position else [])[:20])
     if sum(len(b.text) for b in blocks) > TERMS_CHARS:
         idx = search.of(doc)
-        query = unit.title + " " + " ".join(c.name for c in (unit.position.chars if unit.position else [])[:20])
         picked = [b for b, _ in idx.top(query, 10, exclude=unit.block_ids, only=lambda x: x.role in ("terms", "warranty"))]
         blocks = picked or blocks[:8]
     out, used = [], 0
     for b in blocks:
-        t = f"[{b.id}] {scr.scrub(b.text[:700])}"
+        t = f"[{b.id}] {scr.scrub(chunks.window(b.text, query, 700))}"
         if used + len(t) > TERMS_CHARS:
             break
         out.append(t)
@@ -411,8 +425,8 @@ def absent(doc, scr, findings: list[Finding]) -> list[Finding]:
         query = what + " " + (u.title if u else "")
         hits = idx.top(query, 6, exclude=u.block_ids if u else [f.block_id])
         cands[n] = hits
-        lines = "\n".join(f"   [{b.id}] ({_role(b)}; {b.location()}) {scr.scrub(b.text[:400])}" for b, _ in hits) or "   кандидатов нет"
-        items.append(f"{n}. Утверждение: {scr.scrub(f.explanation[:300])} Чего нет: {scr.scrub(what[:120])}. "
+        lines = "\n".join(f"   [{b.id}] ({_role(b)}; {b.location()}) {scr.scrub(chunks.window(b.text, what, 400))}" for b, _ in hits) or "   кандидатов нет"
+        items.append(f"{n}. Утверждение: {scr.scrub(chunks.clip(f.explanation, 400))} Чего нет: {scr.scrub(chunks.clip(what, 200))}. "
                      f"Где: [{f.block_id}] ({u.title[:80] if u else ''})\n   Кандидаты:\n{lines}")
     decided, calls = {}, {}
     for start in range(0, len(items), 8):
@@ -484,11 +498,12 @@ def cross(doc, scr, cats: list) -> list[Finding]:
             hits = idx.top(query, 5, exclude=mine | same_table)
         else:
             src = doc.block(u.block_ids[0]).source
-            hits = idx.top(u.text[:1500], 4, exclude=mine, only=lambda b, s=src: b.source != s or b.role in ("contract", "spec"))
+            query = u.text
+            hits = idx.top(query, 4, exclude=mine, only=lambda b, s=src: b.source != s or b.role in ("contract", "spec"))
         if not hits:
             continue
-        lines = "\n".join(f"   [{b.id}] ({_role(b)}; {b.location()}) {scr.scrub(b.text[:500])}" for b, _ in hits)
-        items.append((u, f"{u.text[:3500]}\n   Места из других частей:\n{lines}", [b for b, _ in hits]))
+        lines = "\n".join(f"   [{b.id}] ({_role(b)}; {b.location()}) {scr.scrub(chunks.window(b.text, query, CROSS_PLACE_CHARS))}" for b, _ in hits)
+        items.append((u, f"{u.text}\n   Места из других частей:\n{lines}", [b for b, _ in hits]))
     out = []
 
     def work(group):

@@ -7,6 +7,7 @@
 from dataclasses import dataclass, field
 
 from .ask import ask, pmap, wrap
+from .chunks import clip
 
 ROLES = ("num", "name", "okpd", "ktru", "qty", "unit", "char_name", "value", "char_unit", "desc", "bidder", "instruction", "price", "other")
 TITLES = {"num": "№", "name": "Наименование", "okpd": "ОКПД 2", "ktru": "КТРУ", "qty": "Количество", "unit": "Ед. изм.",
@@ -148,7 +149,7 @@ def _render_rows(rows, scr, limit: int = 5) -> str:
         cells = []
         for i, t in enumerate(g):
             mark = "→" if _flag(b.hmerge, i) else "↓" if _flag(b.vmerge, i) else ""
-            cells.append(f"[{i}] {mark}{scr.scrub(_flat(t)[:120]) if not mark else ''}")
+            cells.append(f"[{i}] {mark}{scr.scrub(clip(_flat(t), 120)) if not mark else ''}")
         out.append(f"строка {n}: " + " | ".join(cells))
     return "\n".join(out)
 
