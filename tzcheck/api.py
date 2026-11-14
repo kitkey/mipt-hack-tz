@@ -16,6 +16,7 @@ from .report import to_compare_html, to_html, write_all
 app = FastAPI(title="Проверка ТЗ на закупку", version="0.2.0")
 app.include_router(refdata_ui.router)
 app.include_router(api_ui.router)
+app.include_router(__import__("tzcheck.gost_profiles", fromlist=["router"]).router)  # чеклисты ГОСТ: список и утверждение
 STORE = os.environ.get("TZCHECK_STORE", os.path.join(tempfile.gettempdir(), "tzcheck_runs"))
 os.makedirs(STORE, exist_ok=True)
 

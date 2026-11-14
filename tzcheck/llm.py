@@ -161,7 +161,8 @@ def _reasoning_body(model: str, custom_base: bool) -> dict:
     return {}
 
 
-def _call(prompt: str, max_tokens: int = 4000) -> dict:
+def _call(prompt: str, max_tokens: int = 4000, doc_flags: dict | None = None) -> dict:
+    """doc_flags: флаги документа для запрета внешней отправки (в основной копии); в этой ветке принимаются для совместимости."""
     import litellm
     kwargs = dict(
         model=os.environ["TZCHECK_LLM_MODEL"],

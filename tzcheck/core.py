@@ -22,7 +22,6 @@ FIND_PROMPT = """Задача: найти дефекты техническог�
 {practice}
 Общие условия из других разделов, которые могут относиться к этой части:
 {terms}
-{gost}
 Категории (только эти), по группам:
 {categories}
 
@@ -261,21 +260,6 @@ def _terms(doc, scr, unit: Unit) -> str:
     return "\n".join(out) or "нет"
 
 
-def _gost_clauses(doc, unit: Unit) -> str:
-    """Пункты профилей ГОСТ, применимые к позиции (tzcheck.gost_profiles.clauses_for_position, если модуль её даёт)."""
-    if unit.position is None:
-        return ""
-    try:
-        from . import gost_profiles
-        fn = getattr(gost_profiles, "clauses_for_position", None)
-        items = fn(doc, unit.position) if fn is not None else []
-    except Exception:
-        items = []
-    if not items:
-        return ""
-    return "Пункты стандартов, применимые к позиции (профили ГОСТ):\n" + "\n".join(f"- {x}" for x in items[:20]) + "\n"
-
-
 def _finding(doc, item: dict, blocks: list, scr, source: str, cats: list, call: str = "") -> Finding | None:
     if not isinstance(item, dict):
         return None
@@ -316,7 +300,7 @@ def find(doc, scr, cats: list) -> list[Finding]:
     def work(u: Unit):
         what = (f"позиция спецификации «{u.title[:120]}»" if u.kind == "position" else f"раздел «{u.title[:120]}»")
         prompt = FIND_PROMPT.format(what=scr.scrub(what), passport=pline, practice=practice + "\n" if practice else "",
-                                    terms=_terms(doc, scr, u) if u.kind == "position" else "нет", gost=_gost_clauses(doc, u),
+                                    terms=_terms(doc, scr, u) if u.kind == "position" else "нет",
                                     categories=ctext, norms=norms, data=wrap(u.text))
         title = "Поиск дефектов: " + what
         data = ask(doc, prompt, 6000, "поиск дефектов", "find", title, unit_of(u.kind, u.title, u.block_ids)) or {}
@@ -334,18 +318,6 @@ def find(doc, scr, cats: list) -> list[Finding]:
     return found
 
 
-def _profile_items(designation: str, limit: int = 12) -> str:
-    """Пункты профиля стандарта (tzcheck.gost_profiles), если профиль по названному моделью обозначению собран."""
-    try:
-        from . import gost_profiles
-        prof = gost_profiles.load(designation)
-        items = (prof or {}).get("items") or []
-        lines = [f"п. {it.get('clause', '?')}: {gost_profiles._item_text(it)}" for it in items[:limit]]
-    except Exception:
-        return ""
-    return ("; требования стандарта из профиля: " + " / ".join(lines)) if lines else ""
-
-
 def _record(doc, lk: dict, scr) -> str:
     from . import okpd, refdata
     kind, value = lk["type"], scr.restore(str(lk["value"]))[:120]
@@ -358,7 +330,7 @@ def _record(doc, lk: dict, scr) -> str:
                 return f"Стандарт «{value}»{where}: не найдено в копии каталога Росстандарта"
             tail = "".join(f", {k} {st[x]}" for k, x in (("заменён на", "replaced_by"), ("действие прекращено", "date_end")) if st.get(x))
             return (f"Стандарт «{value}»{where}: в каталоге {st.get('designation')} «{(st.get('title') or '')[:120]}», статус «{st.get('status') or '?'}»{tail}"
-                    + _profile_items(value))
+                    )
         if kind == "okpd":
             code = value.split()[0].strip(" .,;")
             nm = okpd.name(code)

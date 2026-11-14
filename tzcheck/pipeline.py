@@ -4,7 +4,7 @@ import time
 import unicodedata
 from collections import Counter
 
-from . import confidence, core, feedback, llm, passport, replacements, tables
+from . import confidence, core, feedback, gost_check, llm, passport, replacements, tables
 from . import progress as prog
 from .checks import categories_for, group_names, group_stats, is_full, only_groups, parse_checks, partial_note, verdict_code
 from .model import SECTION_LLM, SECTION_MAIN, SECTION_UNCHECKED, STATUS_REVIEW, Finding, from_model
@@ -195,6 +195,8 @@ def core_find(doc, scr, groups, rep) -> list[Finding]:
     found = core.find(doc, scr, cats)
     rep.update(stage="справочные записи по обозначениям, которые назвала модель")
     found += core.refs(doc, scr, cats)
+    rep.update(stage="сверка позиций с чеклистами ГОСТ")
+    found += gost_check.check(doc, scr, cats)
     rep.update(stage="проверка «не указано» по всему комплекту")
     found = core.absent(doc, scr, found)
     rep.done("core_find", found=len(found))
