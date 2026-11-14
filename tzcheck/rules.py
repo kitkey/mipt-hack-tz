@@ -1,10 +1,11 @@
 import json
 import os
 import re
+import sys
 from collections import defaultdict
 from datetime import datetime
 
-from .model import Finding
+from .model import SECTION_UNCHECKED, Finding
 from . import okpd as okpd_dict
 from . import customer
 from . import refdata
@@ -28,8 +29,8 @@ STD_DESIGNATION_RE = re.compile(r"\d+(?:\.\d+)*-(?:19|20)\d\d\b")
 SOFTWARE_SUBJECT_RE = re.compile(r"неисключительн\w+\s+прав|прав\w*\s+(?:на\s+)?использовани\w*\s+(?:программ|ПО\b)|программн\w+\s+обеспечени", re.I)
 SI_ATTR_RE = re.compile(r"(?:тип|вид|наличие|количество|материал|марка|модель|способ\w*)\s+$", re.I)
 # Срок годности как требование к товару (не упоминание в маркировке или приёмке) заменяет гарантийный срок у расходуемых товаров.
-SHELF_LIFE_RE = re.compile(r"остаточн\w+\s+срок\w*\s+годности|срок\w*\s+годности\s*(?:[:—–-]|не менее|должен|составляет)", re.I)
-WARRANTY_TERM_RE = re.compile(r"в течение (?:всего )?срока (?:действия|исполнения) (?:договора|контракта)|остаточн\w+\s+срок\w*\s+годности|срок\w*\s+годности\s*(?:[:—–-]|не менее|должен|составляет)", re.I)
+SHELF_LIFE_RE = re.compile(r"остаточн\w+\s+срок\w*\s+годности|срок\w*\s+годности(?:[\s,]+[а-яё]+){0,6}?\s*(?:[:—–-]|не менее|не ранее|должен|составляет|≥|>=)", re.I)
+WARRANTY_TERM_RE = re.compile(r"в течение (?:всего )?срока (?:действия|исполнения) (?:договора|контракта)|" + SHELF_LIFE_RE.pattern, re.I)
 NOT_WARRANTY_RE = re.compile(r"банковск\w*\s+гаранти|независим\w*\s+гаранти|гаранти\w*\s+(?:исполнения|возврата\s+аванса)|обеспечени\w*\s+исполнени", re.I)
 KNOWN_BRANDS = {
     "rigol", "fluke", "hioki", "keysight", "agilent", "tektronix", "binder", "mitutoyo", "optitrack", "hikrobot", "basler",
@@ -38,6 +39,17 @@ KNOWN_BRANDS = {
     "mettler", "toledo", "testo", "megeon", "owon", "uni-t", "aktakom", "zeiss", "olympus", "leica", "nikon", "hitachi",
     "panasonic", "philips", "honeywell", "omron", "festo", "kuka", "fanuc", "abb", "dji", "nvidia", "cisco", "huawei", "hp",
 }
+# Измеримый параметр в описании позиции: граница («не менее 5») или число с единицей. Два и больше рядом с маркой значат,
+# что эквивалент есть с чем сравнить. Порог задан заранее, по отложенным ТЗ не подбирался.
+PARAM_RE = re.compile(r"(?i:(?<![а-яё])(?:не менее|не более|от|до|min|max)\s*[-+]?\d)|[≥≤]\s*\d|"
+                      r"(?<![\d.,])(?!(?:19|20)\d\d\s*г)\d+(?:[.,]\d+)?\s*(?:мм|см|м|кг|г|л|шт|%|°|В|Вт|кВт|А|Гц|МПа|км|ч)(?![А-ЯЁа-яёA-Za-z])")
+OPEN_LIST_RE = re.compile(r"и т\.\s?п\.|и т\.\s?д\.|и др\.|и друг\w+|например|такие как|таких как", re.I)
+# совместимость обоснована в самом тексте: марка относится к оборудованию, которое уже есть у заказчика (223-ФЗ, ст. 3, ч. 6.1, п. 3)
+COMPAT_OK_RE = re.compile(r"(?:имеющ\w*|находящ\w*|эксплуатируем\w*)\s+(?:в\s+наличии\s+)?(?:у\s+)?(?:Заказчика|Покупателя)|"
+                          r"в\s+наличии\s+у\s+(?:Заказчика|Покупателя)|"
+                          r"совместимост\w*\s+с\s+(?:имеющ\w+\s+)?оборудовани\w*\s+(?:Заказчика|Покупателя)", re.I)
+EQUIV_RE = re.compile(r"эквивалент|(?:или|либо)\s+(?:его\s+)?аналог|аналогичн\w*\s+(?:набор|товар|модел|издели|продукт)\w*", re.I)
+PLATFORM_RE = re.compile(r"совместим\w*\s+с\s+(?:платформ|прибор|систем|оборудовани)\w*\s+[A-Z]", re.I)
 MODEL_RE = re.compile(r"\b([A-Z][A-Za-z]{2,}|[A-Z]{2,})(?:[\s-]+([A-Z]{0,4}[\s-]?\d[\w-]*))")
 LATIN_WORD_RE = re.compile(r"\b[A-Za-z][A-Za-z-]{1,}\b")
 SI_WORDS = re.compile(
@@ -46,10 +58,10 @@ SI_WORDS = re.compile(
     r"динамометр|твердомер|толщиномер|профилометр|частотомер|измерител(?!ьн)|датчик)", re.I)
 VAGUE_RE = re.compile(
     r"по возможности|при необходимости|высокого качества|современн\w+|(?<![а-яё])надлежащ\w+ качеств|и т\.\s?п\.|и т\.\s?д\.|"
-    r"иное по согласованию|в согласованные с Заказчиком сроки|по согласованию с Заказчиком", re.I)
+    r"иное по согласованию|в согласованные с Заказчиком сроки|по согласованию с Заказчиком|на усмотрение (?:исполнителя|поставщика|подрядчика)", re.I)
 NOTE_RE = re.compile(
     r"\(\s*вместо\s+[\wА-ЯЁа-яё]|в пределах плановой суммы|не требуются;|поставляется лабораторией|"
-    r"конфигурацией не предусмотрен|на усмотрение исполнителя|устранены разночтения|исправлено по замечани|по замечаниям закупщик|"
+    r"конфигурацией не предусмотрен|устранены разночтения|исправлено по замечани|по замечаниям закупщик|"
     r"было:|стало:|\bTODO\b|уточнить у|проверить у", re.I)
 DAYS_RE = re.compile(r"(?<![\d(])(\d{1,4})\s+(календарн\w+|рабоч\w+)\s+(дн\w+|недел\w+)", re.I)
 GOST_RE = re.compile(r"\b(ГОСТ|СНиП|СП|ГОСТ Р|ГОСТ IEC|ГОСТ ISO|ГОСТ Р ИСО|ГОСТ Р МЭК)\s*№?\s*(\d[\d.]*)\s*[-–]\s*(\d{2,4})", re.I)
@@ -58,6 +70,8 @@ PROC_RE = re.compile(r"в составе заявки|в заявке (?:уча�
                      r"национальн\w+ режим|в реестр\w* российской (?:промышленной|радиоэлектронной) продукции", re.I)
 INSTRUCTION_RE = re.compile(r"(?:участник\w*|поставщик\w*)\s+(?:закупки\s+)?указыва|в\s+столбц\w*\s*\(?\d|следует\s+указывать|"
                             r"значени\w*\s+показател\w*|инструкци\w*\s+по\s+заполнени", re.I)
+# столбец «Инструкция по заполнению характеристик в заявке» описания по КТРУ: обязательная часть описания, а не дубль документации
+KTRU_INSTRUCTION_RE = re.compile(r"указывает\s+в\s+заявке\s+(?:конкретное|одно|значени)|значение\s+характеристики\s+не\s+может\s+изменяться|инструкци\w+\s+по\s+заполнению\s+характеристик", re.I)
 REF_RE = re.compile(r"референс\w*\s*[:—–-]\s*(.{2,160}?)\s+или\s+эквивалент\w*", re.I)
 REF_NOTE_RE = re.compile(r"(?:приведен\w*|указан\w*|даны)\s+(?:как|в качестве)\s+референс\w*|референс\w*\s+допускают", re.I)
 MONTHS_RE = re.compile(r"\d+\s*(?:\([а-яё ]+\)\s*)?(?:месяц|мес\.|год|лет)", re.I)
@@ -114,14 +128,28 @@ def _locate(text: str, quote: str) -> str | None:
 
 
 def _f(block: Block, quote: str, category: str, explanation: str, fix: str, severity="medium", norms=None,
-       review=False, source="rule", confidence=0.75) -> Finding:
+       review=False, source="rule", confidence=0.75, rule_id: str = "") -> Finding:
     quote = _locate(block.text, quote) or block.text[:200]
     return Finding(block.id, quote, category, explanation, fix, severity, norms or [], review, source, confidence,
-                   block.location())
+                   block.location(), rule_id=rule_id)
+
+
+def _doc_f(doc: ParsedDoc, category: str, explanation: str, fix: str, severity="medium", norms=None,
+           review=True, source="rule", confidence=0.5, rule_id: str = "") -> Finding:
+    """Замечание на документ в целом: без цитаты (первый блок обычно «УТВЕРЖДАЮ … ФИО»), место «документ в целом»."""
+    b = doc.blocks[0]
+    return Finding(b.id, "", category, explanation, fix, severity, norms or [], review, source, confidence,
+                   "документ в целом", rule_id=rule_id, evidence={"цитата найдена в тексте": False, "место": "документ в целом"})
 
 
 def _practice(f: Finding, key: str) -> Finding:
     f._practice = key
+    return f
+
+
+def _unchecked(f: Finding) -> Finding:
+    """Блок отчёта «Не проверено и не найдено в переданных файлах»: вывод из отсутствия сведений, а не найденная ошибка."""
+    f.section = SECTION_UNCHECKED
     return f
 
 
@@ -135,12 +163,12 @@ def check_brands(doc: ParsedDoc) -> list[Finding]:
                           f"В описании позиции назван товар-образец ({m.group(1).strip()[:80]}). Даже с «или эквивалент» это ориентирует "
                           "участников на одного производителя, а эквивалентность приходится доказывать относительно чужой модели, а не требований ТЗ.",
                           "Удалить «Референс: …». Параметры, ради которых выбран образец, перечислить характеристиками с числовыми границами.",
-                          "medium", ["223-FZ-3-6.1-2", "223-FZ-3-6.1-3", "223-FZ-3-1-2"], False, "rule:brand", 0.75))
+                          "medium", ["223-FZ-3-6.1-2", "223-FZ-3-6.1-3", "223-FZ-3-1-2"], False, "rule:brand", 0.75, "brand.reference"))
         for m in REF_NOTE_RE.finditer(b.text):
             out.append(_f(b, _sentence_around(b.text, m.start(), m.end()), "Ограничение конкуренции",
                           "Оговорка, что модели приведены как референсы, не снимает ограничения: конкретные товарные знаки остаются в описании предмета закупки.",
                           "Убрать модели-референсы из ТЗ вместе с этой оговоркой, требования оставить характеристиками.",
-                          "medium", ["223-FZ-3-6.1-2", "223-FZ-3-6.1-3"], False, "rule:brand", 0.7))
+                          "medium", ["223-FZ-3-6.1-2", "223-FZ-3-6.1-3"], False, "rule:brand", 0.7, "brand.ref_note"))
         hits = []
         for m in MODEL_RE.finditer(b.text):
             word = m.group(1)
@@ -156,7 +184,10 @@ def check_brands(doc: ParsedDoc) -> list[Finding]:
         if not hits:
             continue
         names = ", ".join(sorted({h[2] for h in hits}))[:160]
-        equiv = re.search(r"эквивалент|аналог", b.text, re.I)
+        if COMPAT_OK_RE.search(b.text) and not covered:
+            # марка названа как оборудование заказчика, с которым нужна совместимость: это допускается и не ограничивает поставщиков расходников
+            continue
+        equiv = EQUIV_RE.search(b.text)
         start, end = min(h[0] for h in hits), max(h[1] for h in hits)
         quote = _sentence_around(b.text, start, end)
         compat = re.search(r"совместим|взаимодейств\w* с|подключени\w* к|поддерживать\s+(?:следующ\w+\s+)?(?:браузер|операционн)", b.text, re.I)
@@ -167,24 +198,100 @@ def check_brands(doc: ParsedDoc) -> list[Finding]:
                           f"Марка ({names}) названа в требовании совместимости. Без «или эквивалент» это допустимо, только если нужна совместимость "
                           "с уже имеющимся у заказчика оборудованием (223-ФЗ, ст. 3, ч. 6.1, п. 3), и это должно быть написано в ТЗ.",
                           "Указать, с каким имеющимся оборудованием нужна совместимость, или описать интерфейс и параметры вместо марки.",
-                          "medium", ["223-FZ-3-6.1-3"], True, "rule:brand", 0.6))
+                          "medium", ["223-FZ-3-6.1-3"], True, "rule:brand", 0.6, "brand.compat"))
         elif equiv:
-            out.append(_f(b, quote, "Ограничение конкуренции",
-                          f"Требование привязано к конкретной модели ({names}). Слова «или эквивалент» по 223-ФЗ допустимы, "
-                          "но без измеримых параметров эквивалентность не проверить, и участник с другим товаром рискует отклонением.",
-                          "Убрать марку и модель, перечислить характеристики с числовыми границами («не менее», «не более»), по которым сравнивается эквивалент.",
-                          "medium", ["223-FZ-3-6.1-2", "223-FZ-3-6.1-3", "223-FZ-3-1-2"], True, "rule:brand", 0.7))
+            scope = b.text + " " + " ".join(o.text for o in _neighbours(doc, b, 3))
+            name_cell = _item_name(b) if b.kind == "row" else ""
+            in_name = any(h[2] in name_cell for h in hits)
+            platform = PLATFORM_RE.search(b.text)
+            if in_name or platform:
+                # марка или каталожный номер в наименовании позиции, либо совместимость с платформой, про которую не сказано, что она у заказчика
+                out.append(_f(b, quote, "Ограничение конкуренции",
+                              f"Наименование позиции задано маркой и номером ({names})" + (" и требуется совместимость с платформой конкретного производителя" if platform else "")
+                              + "; что это оборудование уже есть у заказчика, не сказано. Слова «или эквивалент» не помогают: участник сравнивает себя с чужим товаром, а не с требованиями ТЗ.",
+                              "Назвать позицию по виду товара, марку и каталожный номер убрать; если нужна совместимость с имеющимся оборудованием, прямо написать это и назвать оборудование заказчика.",
+                              "medium", ["223-FZ-3-6.1-2", "223-FZ-3-6.1-3", "223-FZ-3-1-2"], True, "rule:brand", 0.65, "brand.with_equiv"))
+            elif len(PARAM_RE.findall(scope)) >= 2:
+                # параметры для сравнения эквивалента есть: по 223-ФЗ это допустимо, замечание только по практике заказчика
+                out.append(_practice(_f(b, quote, "Ограничение конкуренции",
+                                        f"Требование привязано к конкретной модели ({names}) со словами «или эквивалент»; характеристики для сравнения в позиции есть. "
+                                        "По практике заказчика марку и модель в описании товара не оставляют даже с «или эквивалент».",
+                                        "Убрать марку и модель, оставить характеристики с числовыми границами, по которым сравнивается эквивалент.",
+                                        "medium", ["223-FZ-3-6.1-2", "223-FZ-3-6.1-3", "223-FZ-3-1-2"], True, "rule:brand", 0.6, "brand.with_equiv"), "brand.with_equiv"))
+            else:
+                out.append(_f(b, quote, "Ограничение конкуренции",
+                              f"Требование привязано к конкретной модели ({names}). Слова «или эквивалент» по 223-ФЗ допустимы, "
+                              "но без измеримых параметров эквивалентность не проверить, и участник с другим товаром рискует отклонением.",
+                              "Убрать марку и модель, перечислить характеристики с числовыми границами («не менее», «не более»), по которым сравнивается эквивалент.",
+                              "medium", ["223-FZ-3-6.1-2", "223-FZ-3-6.1-3", "223-FZ-3-1-2"], True, "rule:brand", 0.7, "brand.with_equiv"))
         elif not any(w.lower() in KNOWN_BRANDS for h in hits for w in LATIN_WORD_RE.findall(h[2])) and not re.search(r"марк|модел|производств|фирм|товарн\w+ знак", b.text, re.I):
-            out.append(_f(b, quote, "Ограничение конкуренции",
-                          f"Латинское обозначение с номером ({names}) похоже на модель конкретного производителя. Если это стандарт интерфейса или типоразмер, замечание снять.",
-                          "Если это модель, заменить её характеристиками или добавить «(или эквивалент)».",
-                          "medium", ["223-FZ-3-6.1-2", "223-FZ-3-6.1-3"], True, "rule:brand", 0.5))
+            # на чужих ТЗ ветка дала 0 верных из 21: в основной список не идёт, кандидата проверяет модель (pipeline.candidates)
+            f = _f(b, quote, "Ограничение конкуренции",
+                   f"Латинское обозначение с номером ({names}) похоже на модель конкретного производителя. Если это стандарт интерфейса или типоразмер, замечание снять.",
+                   "Если это модель, заменить её характеристиками или добавить «(или эквивалент)».",
+                   "medium", ["223-FZ-3-6.1-2", "223-FZ-3-6.1-3"], True, "rule:brand", 0.5, "brand.latin_model")
+            f._candidate = True
+            out.append(f)
         else:
+            # высокий риск только при положительном признаке ограничения: строка спецификации или слова «марка, модель, производства»;
+            # открытый перечень («и т.п.», «например») называет примеры, а не требование
+            open_list = OPEN_LIST_RE.search(quote)
+            strong = bool(b.kind == "row" or re.search(r"марк|модел|производств|фирм|товарн\w+ знак|артикул", b.text, re.I)) and not open_list
             out.append(_f(b, quote, "Ограничение конкуренции",
-                          f"Указана конкретная марка или модель ({names}) без слов «или эквивалент»: это прямо запрещено для описания предмета закупки и сужает круг участников.",
+                          f"Указана конкретная марка или модель ({names}) без слов «или эквивалент»: это прямо запрещено для описания предмета закупки и сужает круг участников."
+                          + ("" if strong else " Марка названа вне описания позиции или в открытом перечне примеров: проверить, требование ли это к товару."),
                           "Заменить марку и модель на функциональные и технические характеристики; если без модели нельзя (совместимость), добавить «(или эквивалент)» и обосновать.",
-                          "high", ["223-FZ-3-6.1-2", "223-FZ-3-6.1-3"], False, "rule:brand", 0.8))
+                          "high" if strong else "medium", ["223-FZ-3-6.1-2", "223-FZ-3-6.1-3"], not strong, "rule:brand", 0.8 if strong else 0.55, "brand.no_equiv_high"))
     return out
+
+
+MAKER_ATTR_RE = re.compile(r"^\s*(?:производитель|изготовитель|марка|маркировка|торгов\w+\s+(?:наименовани|марк)\w*|модель|бренд)\s*$", re.I)
+COUNTRY_RE = re.compile(r"^\s*(?:росси\w*|рф|российск\w+\s+федераци\w*|отечественн\w*|импортн\w*|любой|не установлен\w*|-|—)\s*$", re.I)
+QUOTED_NAME_RE = re.compile(r"[«\"]([А-ЯЁA-Z][^»\"]{2,40})[»\"]")
+TRADE_NAME_RE = re.compile(r"[А-ЯЁA-Z0-9][А-ЯЁA-Z0-9-]{3,}(?:[- ][А-ЯЁA-Z0-9-]+)*|[A-Z][a-z]{3,}(?:[- ][A-Z0-9][\w-]*)?")
+DASH_NAME_RE = re.compile(r"\s[-–—]\s*([A-Z][a-z]{3,}|[А-ЯЁ]{4,}(?:[-–][А-ЯЁ\d]+)*)\s*$")
+
+
+def check_trade_names(doc: ParsedDoc) -> list[Finding]:
+    """Марка без латиницы с цифрой: значение строки «Производитель», «Маркировка», «Торговое наименование» без «или эквивалент»,
+    торговое название в кавычках или через тире в конце наименования позиции."""
+    hits, spec_tables = [], set()
+    for b in doc.blocks:
+        if b.kind == "row" and any(re.match(r"\s*наименовани\w*\s+(?:товар|позици|продукци)", c, re.I) or c.strip().lower() == "наименование" for c in b.cells):
+            spec_tables.add((b.source, b.table))
+            continue
+        if b.kind != "row" or len(b.cells) < 2 or EQUIV_RE.search(b.text) or COMPAT_OK_RE.search(b.text):
+            continue
+        cells = [c.strip() for c in b.cells]
+        for i, c in enumerate(cells[:-1]):
+            if MAKER_ATTR_RE.match(c):
+                val = cells[i + 1]
+                if val and not COUNTRY_RE.match(val) and re.search(r"[А-ЯЁA-Z]", val) and len(val) < 120 \
+                        and not re.search(r"лента\b|участник|указыва|наличи|соответстви|требовани", val, re.I):
+                    hits.append((b, val, c.lower()))
+                break
+        else:
+            # торговое название в наименовании ищется только в таблице спецификации (есть столбец «Наименование товара»)
+            name = _item_name(b) if (b.source, b.table) in spec_tables else ""
+            m = QUOTED_NAME_RE.search(name) or DASH_NAME_RE.search(name)
+            # торговое название пишут прописными или латиницей («САМАРОВКА», «МФАС-ОС-2», Turbidos); «Голландский», «Личный кабинет» это вид товара
+            if m and TRADE_NAME_RE.fullmatch(m.group(1).strip()) and not re.search(r"\d{2}\.\d{2}|ГОСТ|ТУ\b", m.group(1)):
+                hits.append((b, m.group(1), "наименование"))
+    seen, uniq = set(), []
+    for b, val, attr in hits:
+        if val.lower() not in seen:
+            seen.add(val.lower())
+            uniq.append((b, val, attr))
+    return _grouped(uniq,
+                    lambda b, val, attr: _f(b, val, "Ограничение конкуренции",
+                                            f"В строке «{attr}» назван конкретный производитель или торговое название («{val[:60]}») без «или эквивалент»: поставить можно только этот товар.",
+                                            "Убрать производителя и торговое название, требования задать характеристиками; если без них нельзя, добавить «или эквивалент» и параметры эквивалентности.",
+                                            "medium", ["223-FZ-3-6.1-2", "223-FZ-3-6.1-3"], True, "rule:brand", 0.6, "brand.trade_name"),
+                    lambda items: _f(items[0][0], items[0][1], "Ограничение конкуренции",
+                                     f"Производитель или торговое название без «или эквивалент» в {len(items)} позициях: "
+                                     + "; ".join(f"«{v[:40]}»" for _, v, _ in items[:10]) + ("…" if len(items) > 10 else "") + ". Поставить можно только эти товары.",
+                                     "Убрать производителей и торговые названия, требования задать характеристиками; если без них нельзя, добавить «или эквивалент» и параметры эквивалентности.",
+                                     "medium", ["223-FZ-3-6.1-2", "223-FZ-3-6.1-3"], True, "rule:brand", 0.6, "brand.trade_name"))
 
 
 def check_notes(doc: ParsedDoc) -> list[Finding]:
@@ -203,15 +310,15 @@ def check_notes(doc: ParsedDoc) -> list[Finding]:
                           "Фрагмент похож на рабочую пометку автора ТЗ (референс, замена «вместо», ссылка на бюджет), а не на требование к товару. "
                           "Такие пометки раскрывают ориентир на конкретный товар и не проверяются при приёмке.",
                           "Удалить пометку; если за ней стоит требование, переписать его как измеримую характеристику.",
-                          "medium", ["223-FZ-3-6.1-1"], False, "rule:note", 0.75))
+                          "medium", ["223-FZ-3-6.1-1"], False, "rule:note", 0.75, "note.work_mark"))
         standalone = doc.fields.get("заголовок", "").lower().lstrip().startswith("техническое задание")
-        p = PROC_RE.search(b.text) if standalone else None
+        p = PROC_RE.search(b.text) if standalone and not KTRU_INSTRUCTION_RE.search(b.text) else None
         if p:
             out.append(_f(b, _sentence_around(b.text, p.start(), p.end()), "Лишнее в ТЗ",
                           "Порядок подачи заявки и меры национального режима устанавливаются документацией о закупке, а не техническим заданием. "
                           "Дубль в ТЗ расходится с документацией при первой же правке одного из документов.",
                           "Удалить фрагмент из ТЗ, требование оставить только в документации о закупке.",
-                          "low", ["223-FZ-4-10-1"], True, "rule:note", 0.6))
+                          "low", ["223-FZ-4-10-1"], True, "rule:note", 0.6, "note.procedure"))
         procedural = re.search(r"заявк|аукцион|конкурс|обеспечени|порядок оплат|форма, сроки|информационн\w+ карт|участник\w* закупки", b.section + " " + b.text[:120], re.I)
         v = None if procedural else next((x for x in VAGUE_RE.finditer(b.text) if not _template_context(b.text, x)
                                           and not (x.group(0).lower().startswith("и т") and b.kind != "row")
@@ -222,7 +329,7 @@ def check_notes(doc: ParsedDoc) -> list[Finding]:
                           "Гарантийные условия" if guarantee else "Некорректная характеристика",
                           f"Формулировка «{v.group(0)}» не задаёт проверяемого значения: участник не поймёт, что именно поставить, а заказчик не сможет принять или отклонить результат.",
                           "Заменить на конкретное значение или срок (например, «не более 30 календарных дней с даты уведомления»).",
-                          "medium", ["223-FZ-4-10-1"], True, "rule:vague", 0.6))
+                          "medium", ["223-FZ-4-10-1"], True, "rule:vague", 0.6, "vague"))
     return out
 
 
@@ -240,7 +347,7 @@ def check_days(doc: ParsedDoc) -> list[Finding]:
         for m in DAYS_RE.finditer(b.text):
             out.append(_practice(_f(b, m.group(0), "Оформление по внутреннему стандарту",
                           "Срок указан только цифрами; по практике закупщиков заказчика сроки дублируются прописью, чтобы исключить опечатку в цифре.",
-                          f"{m.group(1)} ({num_words(int(m.group(1)), m.group(3).lower().startswith('недел'))}) {m.group(2)} {m.group(3)}", "low", ["INTERNAL"], False, "rule:days", 0.8), "days.in_words"))
+                          f"{m.group(1)} ({num_words(int(m.group(1)), m.group(3).lower().startswith('недел'))}) {m.group(2)} {m.group(3)}", "low", ["INTERNAL"], False, "rule:days", 0.8, "days.in_words"), "days.in_words"))
         for m in re.finditer(r"с (момента|даты|дня) (заключения|подписания)", b.text, re.I):
             starts[m.group(1).lower()].append((b, m))
     if len(starts) > 1:
@@ -251,7 +358,7 @@ def check_days(doc: ParsedDoc) -> list[Finding]:
             for b, m in items:
                 out.append(_practice(_f(b, m.group(0), "Оформление по внутреннему стандарту",
                               f"Начало сроков в документе сформулировано по-разному («с {main}» и «с {key}»). Разные формулировки дают разные даты отсчёта и повод для спора.",
-                              f"Заменить «{m.group(0)}» на «с {main} {m.group(2).lower()}», как в остальных сроках документа.", "low", ["INTERNAL"], False, "rule:start", 0.7), "days.start_wording"))
+                              f"Заменить «{m.group(0)}» на «с {main} {m.group(2).lower()}», как в остальных сроках документа.", "low", ["INTERNAL"], False, "rule:start", 0.7, "days.start_wording"), "days.start_wording"))
     return out
 
 
@@ -283,7 +390,20 @@ def _gost_inactive(b: Block, ref: str, st: dict, missing_r: bool = False, extra_
            else "Удалить ссылку или указать действующий стандарт на тот же предмет.")
     f = _f(b, ref, "Стандарты (ГОСТ, поверка)", expl, fix, "high", ["ROSSTANDART"], False, "rule:gost", 0.9)
     f.evidence.update(_gost_evidence(st))
+    f._replaced = st
     return f
+
+
+def _editions(doc: ParsedDoc, out: list[Finding]) -> list[Finding]:
+    """Сверка требований ТЗ с текстом новой редакции заменённого стандарта (tzcheck.rag.editions). TZCHECK_EDITIONS=0 выключает."""
+    if os.environ.get("TZCHECK_EDITIONS", "1") == "0" or not any(getattr(f, "_replaced", None) for f in out):
+        return []
+    try:
+        from .rag import editions
+        return editions.annotate(doc, out)
+    except Exception as e:  # сверка редакций не должна ронять проверку ТЗ
+        print("editions:", type(e).__name__, e, file=sys.stderr)
+        return []
 
 
 def _grouped(items: list, single, many) -> list[Finding]:
@@ -383,7 +503,27 @@ def check_gost(doc: ParsedDoc) -> list[Finding]:
                                      f"Действие стандартов, принятых до 2012 г. ({len(items)}), автоматически не подтверждено (их нет в локальной копии каталога): "
                                      + ", ".join(dict.fromkeys(r for _, r, _ in items)) + ". Часть из них могла быть отменена или заменена.",
                                      "Проверить действие каждого стандарта по сведениям Росстандарта и при замене указать действующую редакцию.", "low", ["ROSSTANDART"], True, "rule:gost", 0.5))
+    out += _editions(doc, out)
     return out
+
+
+def _not_si(doc: ParsedDoc, b: Block, word: str) -> bool:
+    """Позиция не средство измерений по структуре строки, а не по словам отрасли:
+    - строка привязана к оборудованию, которое уже есть у заказчика («на анализаторе …, имеющемся у Заказчика»): это расходник к нему;
+    - код ОКПД 2 в строке вне разделов 25-33 (изделия, приборы, машины): химия, материалы, продукты средствами измерений не бывают."""
+    if COMPAT_OK_RE.search(b.text):
+        return True
+    codes = OKPD_RE.findall(b.text)
+    return bool(codes) and all(not 25 <= int(c[:2]) <= 33 for c in codes)
+
+
+def _long_description(b: Block, name: str) -> bool:
+    """В строке позиции есть описание характеристиками (ячейка от 150 знаков кроме наименования): товар описан, это не «комплект без перечня»."""
+    return b.kind == "row" and any(len(c.strip()) >= 150 and c.strip() != name.strip() for c in b.cells)
+
+
+def _si_match(doc: ParsedDoc, b: Block, text: str | None = None):
+    return next((x for x in SI_WORDS.finditer(b.text if text is None else text) if not _not_si(doc, b, x.group(0))), None)
 
 
 def check_si(doc: ParsedDoc) -> list[Finding]:
@@ -396,7 +536,7 @@ def check_si(doc: ParsedDoc) -> list[Finding]:
     for b in doc.blocks:
         if b.kind not in ("row", "para"):
             continue
-        m = SI_WORDS.search(b.text)
+        m = _si_match(doc, b)
         if not m:
             continue
         if not re.search(r"при отнесении к СИ", b.text, re.I) and not _si_names_item(b, m):
@@ -407,7 +547,7 @@ def check_si(doc: ParsedDoc) -> list[Finding]:
                    "Условие «при отнесении к СИ» перекладывает на поставщика решение, нужна ли поверка: одни участники учтут её в цене, другие нет, а приёмка станет спорной."
                    + _si_note(types, True),
                    "Определить заранее по ФГИС «Аршин»: «Товар является средством измерений утверждённого типа, с действующей первичной поверкой» или «Товар не является СИ, поверка не требуется».",
-                   "medium", ["102-FZ-9-1", "102-FZ-13-1", "ARSHIN"], False, "rule:si", 0.8)
+                   "medium", ["102-FZ-9-1", "102-FZ-13-1", "ARSHIN"], False, "rule:si", 0.8, "si.conditional")
             f.evidence.update(_si_evidence(types))
             out.append(f)
             continue
@@ -424,7 +564,7 @@ def check_si(doc: ParsedDoc) -> list[Finding]:
                f"Позиция похожа на средство измерений («{m.group(0)}»), но не сказано, является ли она СИ утверждённого типа и нужна ли поверка."
                + ("" if doc_has_si_rule else " Во всём документе требований к поверке нет.") + _si_note(types),
                "Проверить тип в ФГИС «Аршин» и прямо указать: СИ утверждённого типа с действующей поверкой либо не СИ, поверка не требуется.",
-               "medium", ["102-FZ-9-1", "102-FZ-13-1", "ARSHIN"], True, "rule:si", 0.6 if types else 0.55)
+               "medium", ["102-FZ-9-1", "102-FZ-13-1", "ARSHIN"], True, "rule:si", 0.6 if types else 0.55, "si.no_verification")
         f.evidence.update(_si_evidence(types))
         out.append(f)
     return out
@@ -493,6 +633,8 @@ def _si_evidence(types: list[dict]) -> dict:
     return ev
 
 
+
+
 def _item_name(b: Block) -> str:
     cell = next((c for c in b.cells if c.strip() and not re.fullmatch(r"[\d.,\s]+", c) and len(c) < 200), "")
     return re.split(r"\s+(?:Референс|Страна происхождения|Изготовитель)", cell, maxsplit=1, flags=re.I)[0].strip()
@@ -503,21 +645,36 @@ def check_okpd(doc: ParsedDoc) -> list[Finding]:
     title = doc.fields.get("заголовок", "").lower()
     is_goods = "поставк" in title
     is_works = "работ" in title and not is_goods
-    generic_seen = {}
+    prochie, skip_cols = [], {}
+    # код ОКПД 2 позиции, подтверждённый кодом позиции КТРУ той же позиции: сравнение с названием не нужно
+    by_ktru = defaultdict(set)
     for b in doc.blocks:
-        codes_here = OKPD_RE.findall(b.text)
+        if b.kind == "row":
+            for m in KTRU_CODE_RE.finditer(b.text):
+                by_ktru[_item_name(b)].add(m.group(1))
+    for b in doc.blocks:
+        if b.kind == "row":
+            cols = [i for i, c in enumerate(b.cells) if re.match(r"\s*(?:ОКВЭД|КОЗ\b|код\s+КОЗ)", c, re.I)]
+            if cols:
+                skip_cols[(b.source, b.table)] = set(cols)
+                continue
+        skip = skip_cols.get((b.source, b.table), set())
+        text = " | ".join(c for i, c in enumerate(b.cells) if i not in skip) if b.kind == "row" and skip else b.text
+        codes_here = OKPD_RE.findall(text)
         if len(codes_here) >= 3:
             continue
-        for m in OKPD_RE.finditer(b.text):
+        for m in OKPD_RE.finditer(text):
             code = m.group(0)
+            if re.match(r"-\d{8}", text[m.end():]):
+                continue  # код позиции КТРУ: сверяет check_ktru_codes
             ctx = (b.text + " " + b.section).lower()
             whole_cell = any(c.strip() == code for c in b.cells)
             if not whole_cell and "окпд" not in ctx:
                 continue
             item = _item_name(b)
-            kit = bool(re.match(r"\s*(?:комплект(?!аци)|набор|стенд|комплекс|измерительн\w+ комплект)", item, re.I)) or any(
-                re.fullmatch(r"компл(?:\.|ект\w{0,2})?", c.strip().lower()) for c in b.cells)
-            verdict = okpd_dict.assess(item, code) if item and len(code) == 12 else None
+            kit = (bool(re.match(r"\s*(?:комплект(?!аци)|набор|стенд|комплекс|измерительн\w+ комплект)", item, re.I)) or any(
+                re.fullmatch(r"компл(?:\.|ект\w{0,2})?", c.strip().lower()) for c in b.cells))
+            verdict = okpd_dict.assess(item, code) if item and len(code) == 12 and code not in by_ktru.get(item, ()) else None
             v = verdict["verdict"] if verdict else None
             sug = "; ".join(f"{c} «{n}»" for c, n, *_ in (verdict or {}).get("suggest", [])[:2])
             nm = (verdict or {}).get("name") or okpd_dict.name(code) or ""
@@ -526,7 +683,8 @@ def check_okpd(doc: ParsedDoc) -> list[Finding]:
                 out.append(_f(b, code, "Неверный или общий код ОКПД 2",
                               f"Кода {code} нет в классификаторе ({ver}): позицию нельзя однозначно отнести к виду продукции и проверить меры национального режима.",
                               "Указать действующий код ОКПД 2" + (f"; по наименованию «{item[:60]}» подходят: {sug}." if sug else "."),
-                              "high", ["OK-034-2014"], False, "rule:okpd", 0.85))
+                              "high", ["OK-034-2014"], False, "rule:okpd", 0.85, "okpd.missing_code"))
+                out[-1].confirmed_by = f"классификатор ОКПД 2 ({ver})"
                 continue
             if v == "mismatch":
                 out.append(_f(b, code, "Неверный или общий код ОКПД 2",
@@ -534,50 +692,51 @@ def check_okpd(doc: ParsedDoc) -> list[Finding]:
                               (" Кроме того, под одним кодом объединены разные товары комплекта." if kit else ""),
                               (f"Разбить комплект на позиции и каждой указать свой код; по наименованию ближе всего: {sug}." if kit else
                                f"Указать код по виду товара, ближе всего по наименованию: {sug}. Проверить по ОК 034-2014."),
-                              "medium", ["OK-034-2014"], True, "rule:okpd", 0.75))
+                              "medium", ["OK-034-2014"], True, "rule:okpd", 0.75, "okpd.mismatch"))
                 continue
             if v == "generic":
                 out.append(_f(b, code, "Неверный или общий код ОКПД 2",
                               f"Код {code} обобщающий («{nm[:80]}»), а для позиции «{item[:60]}» в классификаторе есть точный код: {sug}.",
                               "Заменить код «прочие» на точный код вида продукции" + (" и разбить комплект на позиции." if kit else "."),
-                              "medium", ["OK-034-2014"], True, "rule:okpd", 0.75))
+                              "medium", ["OK-034-2014"], True, "rule:okpd", 0.75, "okpd.generic"))
                 continue
             generic_name = bool(re.search(r"прочи|не включенн", nm, re.I)) if nm else (
                 code.endswith(".190") or code.endswith(".000") or code.endswith(".990") or code.endswith(".900"))
-            if generic_name:
-                if not kit:
-                    if code in generic_seen and getattr(generic_seen[code], "_n", 1) >= 3:
-                        generic_seen[code].explanation = re.sub(r"Встречается в \d+ позициях\. ", "", generic_seen[code].explanation)
-                        generic_seen[code]._n = getattr(generic_seen[code], "_n", 1) + 1
-                        generic_seen[code].explanation = f"Встречается в {generic_seen[code]._n} позициях. " + generic_seen[code].explanation
-                        continue
+            if generic_name and not kit:
+                # без подсказки точного кода это вопрос, а не ошибка: одно замечание на документ со списком позиций
+                prochie.append((b, code))
+            elif generic_name:
                 out.append(_f(b, code, "Неверный или общий код ОКПД 2",
-                              f"Код {code} обобщающий («прочие»)." + (" Под ним объединены разные товары комплекта, у каждого из которых есть свой точный код." if kit else " Проверить по классификатору, нет ли точного кода для этого товара."),
-                              "Разбить комплект на позиции и указать для каждой точный код ОКПД 2 по ОК 034-2014." if kit else "Подобрать точный код ОКПД 2 для товара по ОК 034-2014; код «прочие» оставить, только если точного нет.",
-                              "medium" if kit else "low", ["OK-034-2014"], True, "rule:okpd", 0.65 if kit else 0.45))
-                if not kit:
-                    prev = generic_seen.get(code)
-                    if prev is not None:
-                        out[-1]._n = getattr(prev, "_n", 1) + 1
-                    generic_seen[code] = out[-1] if prev is None or getattr(prev, "_n", 1) < 3 else prev
+                              f"Код {code} обобщающий («прочие»). Под ним объединены разные товары комплекта, у каждого из которых есть свой точный код.",
+                              "Разбить комплект на позиции и указать для каждой точный код ОКПД 2 по ОК 034-2014.",
+                              "medium", ["OK-034-2014"], True, "rule:okpd", 0.65, "okpd.generic_prochie"))
             if len(code) < 12 and b.kind == "row":
                 out.append(_f(b, code, "Неверный или общий код ОКПД 2",
                               f"Код {code} указан не до уровня вида продукции (нужно 9 цифр, формат XX.XX.XX.XXX).",
-                              "Указать полный код ОКПД 2.", "low", ["OK-034-2014"], True, "rule:okpd", 0.6))
+                              "Указать полный код ОКПД 2.", "low", ["OK-034-2014"], True, "rule:okpd", 0.6, "okpd.short"))
             sect = int(code[:2])
             if is_goods and 41 <= sect <= 43:
                 out.append(_f(b, code, "Неверный или общий код ОКПД 2",
                               f"Код {code} из раздела строительных работ, а предмет закупки поставка товара.",
-                              "Проверить соответствие кода предмету закупки.", "medium", ["OK-034-2014"], True, "rule:okpd", 0.6))
+                              "Проверить соответствие кода предмету закупки.", "medium", ["OK-034-2014"], True, "rule:okpd", 0.6, "okpd.section_works"))
             if is_works and sect < 33 and "работ" in b.text.lower():
                 out.append(_f(b, code, "Неверный или общий код ОКПД 2",
                               f"Код {code} из разделов товаров, а строка описывает работы.",
-                              "Проверить соответствие кода предмету закупки.", "medium", ["OK-034-2014"], True, "rule:okpd", 0.55))
+                              "Проверить соответствие кода предмету закупки.", "medium", ["OK-034-2014"], True, "rule:okpd", 0.55, "okpd.section_goods"))
+    out += _grouped(prochie,
+                    lambda b, code: _f(b, code, "Неверный или общий код ОКПД 2",
+                                       f"Код {code} обобщающий («прочие»). Проверить по классификатору, нет ли точного кода для этого товара.",
+                                       "Подобрать точный код ОКПД 2 для товара по ОК 034-2014; код «прочие» оставить, только если точного нет.",
+                                       "low", ["OK-034-2014"], True, "rule:okpd", 0.45, "okpd.generic_prochie"),
+                    lambda items: _f(items[0][0], items[0][1], "Неверный или общий код ОКПД 2",
+                                     f"Коды «прочие» в {len(items)} позициях: " + ", ".join(dict.fromkeys(c for _, c in items)) +
+                                     ". Проверить по классификатору, нет ли для этих товаров точных кодов.",
+                                     "Подобрать точные коды ОКПД 2 по ОК 034-2014; код «прочие» оставить, только если точного нет.",
+                                     "low", ["OK-034-2014"], True, "rule:okpd", 0.45, "okpd.generic_prochie"))
     if not doc.fields.get("okpd2"):
-        b = doc.blocks[0]
-        out.append(_f(b, b.text[:120], "Неполнота или комплектность",
-                      "В документе не найден код ОКПД 2: без него нельзя проверить применимость национального режима и корректность описания.",
-                      "Указать код ОКПД 2 для каждой позиции.", "medium", ["OK-034-2014"], True, "rule:okpd", 0.5))
+        out.append(_unchecked(_doc_f(doc, "Неполнота или комплектность",
+                                     "В переданных файлах не найден код ОКПД 2. Обычно он указан в извещении; без него не проверены применимость национального режима и код позиции.",
+                                     "Сверить код ОКПД 2 в извещении или указать его в ТЗ для каждой позиции.", "medium", ["OK-034-2014"], True, "rule:okpd", 0.5, "okpd.absent")))
     return out
 
 
@@ -611,48 +770,50 @@ def subject_kinds(doc: ParsedDoc) -> set:
 def check_completeness(doc: ParsedDoc) -> list[Finding]:
     out = []
     text = doc.text()
-    first = doc.blocks[0]
     services_only = subject_kinds(doc) == {"services"}
     if services_only:
         pass
     elif not GUARANTEE_RE.search(text) and not SHELF_LIFE_RE.search(text):
-        out.append(_f(first, first.text[:120], "Гарантийные условия",
-                      "В ТЗ нет требований к гарантии: срок, порядок исчисления и срок устранения недостатков не определены.",
-                      "Добавить раздел о гарантии: срок (не менее N месяцев), с какого документа он исчисляется, срок устранения недостатков.",
-                      "high", ["GK-470", "GK-471"], False, "rule:complete", 0.7))
+        # вывод из отсутствия слова в переданных файлах: гарантия могла быть в проекте договора, поэтому вопрос, а не ошибка
+        out.append(_unchecked(_doc_f(doc, "Гарантийные условия",
+                                     "В переданных файлах не найдено требований к гарантии: срок, порядок исчисления и срок устранения недостатков. Если их нет и в проекте договора, гарантия не определена.",
+                                     "Проверить проект договора; если гарантии нет и там, добавить: срок (не менее N месяцев), с какого документа он исчисляется, срок устранения недостатков.",
+                                     "medium", ["GK-470", "GK-471"], True, "rule:complete", 0.5, "complete.no_warranty")))
     else:
         g = [b for b in doc.blocks if GUARANTEE_RE.search(NOT_WARRANTY_RE.sub(" ", b.text))]
         term = lambda t: MONTHS_RE.search(t) or WARRANTY_TERM_RE.search(t)
-        if g and not any(term(b.text) for b in g) and not any(term(o.text) for b in g for o in _neighbours(doc, b)):
+        if g and not any(term(b.text) for b in g) and not any(term(o.text) for b in g for o in _neighbours(doc, b)) and not SHELF_LIFE_RE.search(text):
             out.append(_f(g[0], g[0].text[:200], "Гарантийные условия",
                           "Гарантия упомянута, но срок гарантии не указан.", "Указать гарантийный срок в месяцах и начало его исчисления.",
-                          "medium", ["GK-470", "GK-471"], False, "rule:complete", 0.65))
+                          "medium", ["GK-470", "GK-471"], False, "rule:complete", 0.65, "complete.warranty_no_term"))
     if not re.search(r"адрес|место (?:поставки|выполнения|оказания)|г\.\s?[А-ЯЁ]", text):
-        out.append(_f(first, first.text[:120], "Неполнота или комплектность",
-                      "Не найдено место поставки или выполнения работ.", "Указать адрес поставки или выполнения работ.",
-                      "high", ["223-FZ-4-10-4"], False, "rule:complete", 0.6))
+        out.append(_unchecked(_doc_f(doc, "Неполнота или комплектность",
+                                     "В переданных файлах не найдено место поставки или выполнения работ.",
+                                     "Проверить извещение и проект договора; если места нет и там, указать адрес поставки или выполнения работ.",
+                                     "medium", ["223-FZ-4-10-4"], True, "rule:complete", 0.5, "complete.no_place")))
     if not TERM_RE.search(text):
-        out.append(_f(first, first.text[:120], "Неполнота или комплектность",
-                      "Не найден срок поставки или выполнения работ.", "Указать срок поставки (выполнения) в календарных днях с даты заключения договора или конкретной датой.",
-                      "high", ["223-FZ-4-10-4"], False, "rule:complete", 0.6))
+        out.append(_unchecked(_doc_f(doc, "Неполнота или комплектность",
+                                     "В переданных файлах не найден срок поставки или выполнения работ.",
+                                     "Проверить извещение и проект договора; если срока нет и там, указать срок в календарных днях с даты заключения договора или конкретной датой.",
+                                     "medium", ["223-FZ-4-10-4"], True, "rule:complete", 0.5, "complete.no_term")))
     for b in doc.blocks:
         m = re.search(r"(?:должен быть|быть)\s+новым[^.;]{0,160}", b.text, re.I)
         if m and not re.search(r"не ранее\s+\d{4}|год\w*\s+(?:выпуска|изготовления)|изготовлен\w*\s+не ранее", text, re.I):
             out.append(_practice(_f(b, m.group(0), "Неполнота или комплектность",
                           "Требование «новый» не ограничено годом изготовления: можно поставить новый, но давно выпущенный товар со склада.",
-                          "Добавить: «изготовленным не ранее YYYY года».", "low", ["223-FZ-4-10-1"], True, "rule:complete", 0.5), "complete.new_no_year"))
+                          "Добавить: «изготовленным не ранее YYYY года».", "low", ["223-FZ-4-10-1"], True, "rule:complete", 0.5, "complete.new_no_year"), "complete.new_no_year"))
         for m in re.finditer(r"(пусконалад\w*|инструктаж\w*|монтаж\w*|обучени\w*)[^.;]{0,80}?в случаях,?\s+(?:указанных|предусмотренных)[^.;]{0,60}", b.text, re.I):
             stem = m.group(1)[:7].lower()
             if not any(o.id != b.id and stem in o.text.lower() for o in doc.blocks):
                 out.append(_f(b, m.group(0), "Неполнота или комплектность",
                               f"Ссылка «в случаях, указанных…» никуда не ведёт: ни в одной позиции не сказано, где нужны {m.group(1).lower()}.",
-                              f"Указать позиции, для которых требуются {m.group(1).lower()}, например «(для поз. 2)».", "medium", ["223-FZ-4-10-1"], True, "rule:complete", 0.6))
+                              f"Указать позиции, для которых требуются {m.group(1).lower()}, например «(для поз. 2)».", "medium", ["223-FZ-4-10-1"], True, "rule:complete", 0.6, "complete.dangling_cases"))
         m = re.search(r"[^.;]{0,80}разгрузк\w*[^.;]{0,80}", b.text, re.I)
         if m and re.search(r"достав|поставк", b.text, re.I) and not re.search(r"подъ[её]м|занос", text, re.I):
             out.append(_practice(_f(b, m.group(0).strip(), "Неполнота или комплектность",
                           "Условия доставки названы разгрузкой, но не сказано, кто поднимает и заносит товар в помещение: спор при приёмке тяжёлого оборудования.",
                           "Указать: «доставка, погрузочно-разгрузочные работы, подъём и занос Товара в помещение — силами и за счёт Поставщика».",
-                          "low", ["223-FZ-4-10-4"], True, "rule:complete", 0.5), "complete.unloading"))
+                          "low", ["223-FZ-4-10-4"], True, "rule:complete", 0.5, "complete.unloading"), "complete.unloading"))
     for b in doc.blocks:
         if b.kind != "row" or len(b.cells) < 3:
             continue
@@ -660,13 +821,194 @@ def check_completeness(doc: ParsedDoc) -> list[Finding]:
         described = name and len(name) > 8 and any(
             o.id != b.id and name[:25] in o.text and re.search(r"шт|количеств|состав|комплект поставки", o.text, re.I) for o in doc.blocks)
         if (re.search(r"^(?:комплект(?!н)|набор)", name, re.I) or any(re.fullmatch(r"компл(?:\.|ект\w{0,2})?", c.strip().lower()) for c in b.cells)) \
-                and not described and not re.search(r"в составе|состав:|:\s*\w+.*[,;]", b.text) \
+                and not described and not _long_description(b, name) and not re.search(r"в составе|состав:|:\s*\w+.*[,;]", b.text) \
                 and not re.search(r"комплект\w*\s+[а-яёa-z][^,;]{1,40}?\s(?:\+|и)\s+[а-яёa-z]", name, re.I):
             out.append(_f(b, b.cells[1] if len(b.cells) > 1 and b.cells[1] in b.text else b.text[:150], "Неполнота или комплектность",
                           "Позиция «комплект» без перечня входящих предметов и их количества: непонятно, что именно поставить и как принять.",
                           "Раскрыть состав комплекта: перечень предметов, количество каждого и ключевые характеристики.",
-                          "medium", ["GK-478", "223-FZ-4-10-1"], True, "rule:complete", 0.55))
+                          "medium", ["GK-478", "223-FZ-4-10-1"], True, "rule:complete", 0.55, "complete.kit_no_list"))
     return out
+
+
+# Решение отложено на потом. «По факту» не берётся: так пишут об оплате и приёмке.
+DEFER_RE = re.compile(r"ориентировочн\w+|буд[еу]т\s+уточн\w+|уточня\w+\s+(?:при|по|в ходе|на этапе)|подлежит\s+уточнени\w+|определя\w+\s+(?:позднее|дополнительно)", re.I)
+CHAR_COL_RE = re.compile(r"наименование характеристик|показател[ья]|параметр|характеристик", re.I)
+VALUE_COL_RE = re.compile(r"\s*(?:значени[ея].{0,40}|требовани[ея].{0,40}|величина.{0,20})\s*", re.I)
+# столбец, который заполняет участник: пустой по замыслу
+BIDDER_COL_RE = re.compile(r"участник|предлага|в заявке|поставщик", re.I)
+
+
+def check_deferred(doc: ParsedDoc) -> list[Finding]:
+    out, seen = [], set()
+    for b in doc.blocks:
+        m = DEFER_RE.search(b.text)
+        if not m or b.id in seen:
+            continue
+        seen.add(b.id)
+        out.append(_f(b, _sentence_around(b.text, m.start(), m.end()), "Неполнота или комплектность",
+                      f"Значение оставлено на потом («{m.group(0)}»): участник не знает, что именно предложить и учесть в цене, а при приёмке не с чем сравнить.",
+                      "Указать значение сейчас или порядок и срок его определения: кто уточняет, по какому документу, в какой срок и в каких пределах.",
+                      "medium", ["223-FZ-4-10-1"], True, "rule:complete", 0.55, "complete.deferred"))
+    return out
+
+
+def _group_header(doc: ParsedDoc, i: int, b: Block, ci: int) -> bool:
+    """Строка-заголовок группы характеристик: «2.1.6 | Оперативная память | (пусто)», дальше идут «2.1.6.1 …»; или имя кончается двоеточием."""
+    name = b.cells[ci].strip()
+    if name.endswith(":"):
+        return True
+    nxt = doc.blocks[i + 1] if i + 1 < len(doc.blocks) else None
+    if nxt is None or nxt.kind != "row" or nxt.table != b.table or nxt.source != b.source:
+        return True
+    num = re.match(r"\s*(\d+(?:\.\d+)*)\.?\s*$", b.cells[0]) if b.cells else None
+    if num and nxt.cells and nxt.cells[0].strip().startswith(num.group(1) + "."):
+        return True
+    sub = nxt.cells[ci].strip() if len(nxt.cells) > ci else ""
+    return not sub or bool(re.match(r"[-–—•]|[а-яё]", sub))
+
+
+def check_empty_values(doc: ParsedDoc) -> list[Finding]:
+    """Характеристика названа, а значение в столбце «Значение» пустое. Столбцы, которые заполняет участник, и заголовки групп не считаются."""
+    cols, empty = {}, []
+    for i, b in enumerate(doc.blocks):
+        if b.kind != "row" or not b.cells:
+            continue
+        tid = (b.source, b.table)
+        ci = next((k for k, c in enumerate(b.cells) if CHAR_COL_RE.search(c)), None)
+        vi = next((k for k, c in enumerate(b.cells) if VALUE_COL_RE.fullmatch(c) and not BIDDER_COL_RE.search(c)), None)
+        if ci is not None and vi is not None and ci != vi:
+            cols[tid] = (ci, vi, len(b.cells))
+            continue
+        if tid not in cols:
+            continue
+        ci, vi, n = cols[tid]
+        name = b.cells[ci].strip() if len(b.cells) == n else ""
+        if not name or len(name) >= 120 or b.cells[vi].strip() or len({c.strip() for c in b.cells if c.strip()}) <= 1:
+            continue
+        if not re.search(r"[А-ЯЁа-яё]{3}", name) or _group_header(doc, i, b, ci):
+            continue
+        empty.append((b, name))
+    return _grouped(empty,
+                    lambda b, name: _f(b, name, "Неполнота или комплектность",
+                                       f"У характеристики «{name[:80]}» не указано значение: участник не знает, что предложить, а при приёмке не с чем сравнить.",
+                                       "Указать значение с границей (не менее, не более, от и до) или удалить строку.",
+                                       "medium", ["223-FZ-4-10-1"], True, "rule:complete", 0.55, "complete.empty_value"),
+                    lambda items: _f(items[0][0], items[0][1], "Неполнота или комплектность",
+                                     f"Не указаны значения у {len(items)} характеристик: " + "; ".join(dict.fromkeys(n[:60] for _, n in items[:12])) +
+                                     ("…" if len(items) > 12 else "") + ". Участник не знает, что предложить, а при приёмке не с чем сравнить.",
+                                     "Указать значения с границами (не менее, не более, от и до) или удалить пустые строки.",
+                                     "medium", ["223-FZ-4-10-1"], True, "rule:complete", 0.55, "complete.empty_value"))
+
+
+def _stem_in(word: str, text: str) -> bool:
+    w = word.lower().replace("ё", "е")
+    return (w[:max(5, len(w) - 3)] if len(w) > 6 else w) in text
+
+
+def check_ktru(doc: ParsedDoc) -> list[Finding]:
+    """Вопрос по КТРУ: для кода ОКПД 2 из ТЗ в каталоге есть позиция, а её обязательных характеристик в тексте нет."""
+    out = []
+    text = doc.text().lower().replace("ё", "е")
+    for code in dict.fromkeys(c for c in doc.fields.get("okpd2") or [] if len(c) == 12):
+        items = [r for r in refdata.ktru_items(code) if r.get("chars_required") and "исключ" not in (r.get("status") or "").lower()]
+        best = None
+        for r in items:
+            head = next((w for w in re.findall(r"[А-ЯЁа-яё]{4,}", r.get("name") or "")), "")
+            if not head or not _stem_in(head, text):
+                continue
+            req = [c["name"] for c in r.get("chars") or [] if c.get("required")]
+            missing = [n for n in req if not any(_stem_in(w, text) for w in re.findall(r"[А-ЯЁа-яё]{5,}", n))]
+            if best is None or len(missing) < len(best[1]):
+                best = (r, missing)
+        if best is None or not best[1]:
+            continue
+        r, missing = best
+        b = next((x for x in doc.blocks if code in x.text), doc.blocks[0])
+        f = _f(b, code, "Неполнота или комплектность",
+               f"Для кода {code} в КТРУ есть позиция {r['code']} «{(r.get('name') or '')[:80]}»; её обязательных характеристик в ТЗ не найдено: "
+               + ", ".join(missing[:8]) + ". Если для закупки применяется КТРУ, описание должно содержать эти характеристики.",
+               "Проверить, применяется ли позиция КТРУ к закупке; если да, добавить обязательные характеристики позиции со значениями из каталога.",
+               "low", ["223-FZ-4-10-1"], True, "rule:complete", 0.45, "complete.ktru")
+        f.evidence.update({"позиция КТРУ": f"{r['code']} «{r.get('name')}», {r.get('status') or ''}", "ссылка на позицию": r.get("url") or "",
+                           "КТРУ проверен": refdata.msk(r.get("checked_at"), True)})
+        out.append(f)
+    return out
+
+
+KTRU_CODE_RE = re.compile(r"(?<![\d.])(\d{2}\.\d{2}\.\d{2}\.\d{3})-\d{8}(?!\d)")
+
+
+def check_ktru_codes(doc: ParsedDoc) -> list[Finding]:
+    """Код позиции КТРУ начинается с кода ОКПД 2. Если в той же строке указан другой код ОКПД 2, одна из двух ссылок неверна."""
+    bad = []
+    for b in doc.blocks:
+        if b.kind != "row":
+            continue
+        for m in KTRU_CODE_RE.finditer(b.text):
+            others = [c for c in OKPD_RE.findall(KTRU_CODE_RE.sub(" ", b.text)) if len(c) == 12]
+            if others and m.group(1) not in others:
+                bad.append((b, m.group(0), others[0], m.group(1)))
+    return _grouped(bad,
+                    lambda b, ktru, okpd, pref: _f(b, ktru, "Неверный или общий код ОКПД 2",
+                                                   f"Код позиции КТРУ {ktru} относится к коду ОКПД 2 {pref}, а в строке указан код ОКПД 2 {okpd}.",
+                                                   "Сверить позицию КТРУ и код ОКПД 2: код ОКПД 2 должен совпадать с первыми 12 знаками кода позиции КТРУ.",
+                                                   "medium", ["OK-034-2014"], False, "rule:okpd", 0.8, "okpd.ktru_mismatch"),
+                    lambda items: _f(items[0][0], items[0][1], "Неверный или общий код ОКПД 2",
+                                     f"В {len(items)} позициях код КТРУ относится к другому коду ОКПД 2, чем указан в строке: "
+                                     + "; ".join(f"{k} при ОКПД 2 {o}" for _, k, o, _ in items[:6]) + ("…" if len(items) > 6 else "") + ".",
+                                     "Сверить позиции КТРУ и коды ОКПД 2: код ОКПД 2 должен совпадать с первыми 12 знаками кода позиции КТРУ.",
+                                     "medium", ["OK-034-2014"], False, "rule:okpd", 0.8, "okpd.ktru_mismatch"))
+
+
+# единица не той величины: название характеристики против единицы в ячейке или в тексте
+UNIT_CHECKS = [
+    (re.compile(r"объ[её]м", re.I), re.compile(r"^\s*(?:шт|штук\w*)\.?\s*$", re.I), "объём задан в штуках"),
+]
+
+
+def check_units(doc: ParsedDoc) -> list[Finding]:
+    out, seen = [], set()
+
+    def add(b, quote, expl, fix):
+        if (expl, quote[:60]) in seen or quote not in b.text:
+            return
+        seen.add((expl, quote[:60]))
+        out.append(_f(b, quote, "Некорректная характеристика", expl, fix, "medium", ["223-FZ-3-6.1-2"], True, "rule:position", 0.6, "pos.unit_meaning"))
+
+    for b in doc.blocks:
+        cells = [c.strip() for c in b.cells] if b.kind == "row" else [b.text]
+        for i, c in enumerate(cells):
+            for name_rx, unit_rx, why in UNIT_CHECKS:
+                if name_rx.search(c) and len(c) < 160:
+                    unit = next((u for u in cells[i:] if unit_rx.search(u)), None) if unit_rx.pattern.startswith("^") else (c if unit_rx.search(c) else None)
+                    if unit:
+                        add(b, c, f"Единица не соответствует характеристике: {why}. По такому значению товар не принять.",
+                            "Указать единицу той величины, которую задаёт характеристика.")
+    return out
+
+
+SHELF_PCT_RE = re.compile(r"остаточн\w+\s+срок\w*\s+годности[^.;]{0,60}?(\d{1,3})\s*(?:%|процент)", re.I)
+
+
+def check_shelf_life_conflict(doc: ParsedDoc) -> list[Finding]:
+    """Остаточный срок годности в процентах указан в разных частях по-разному (спецификация и договор)."""
+    found = []
+    for b in doc.blocks:
+        ms = list(SHELF_PCT_RE.finditer(b.text))
+        if len({m.group(1) for m in ms}) == 1:
+            # блок с несколькими значениями задаёт их для разных товаров («80 %, а для реактивов со сроком 6 месяцев 90 %»)
+            found.append((b, ms[0]))
+    values = {m.group(1) for _, m in found}
+    if len(values) < 2:
+        return []
+    (a, ma), rest = found[0], found[1:]
+    other = next((b, m) for b, m in rest if m.group(1) != ma.group(1))
+    f = _f(a, _sentence_around(a.text, ma.start(), ma.end()), "Противоречие",
+           f"Остаточный срок годности указан по-разному: {', '.join(v + ' %' for v in sorted(values, key=int))} ({a.location()}; {other[0].location()}).",
+           "Оставить одно значение остаточного срока годности во всех частях документации.",
+           "medium", ["223-FZ-4-10-1"], False, "rule:contra", 0.75, "contra.shelf_life")
+    f.also_in = [other[0].id]
+    return [f]
 
 
 def _neighbours(doc: ParsedDoc, b: Block, n: int = 2) -> list[Block]:
@@ -686,7 +1028,7 @@ def check_contradictions(doc: ParsedDoc) -> list[Finding]:
                         tw = re.search(x + r"\w*", title).group(0)
                         out.append(_f(b, _sentence_around(b.text, m.start(), m.end()), "Противоречие",
                                       f"В предмете закупки указано «{tw}», а в этой строке «{m.group(0)}»: части документа описывают разные объекты.",
-                                      "Привести строку в соответствие с предметом закупки или исправить предмет.", "medium" if "поставк" in (x, y) else "high", ["223-FZ-3-6.1-1"], True, "rule:contra", 0.7))
+                                      "Привести строку в соответствие с предметом закупки или исправить предмет.", "medium" if "поставк" in (x, y) else "high", ["223-FZ-3-6.1-1"], True, "rule:contra", 0.7, "contra.subject_opposite"))
     params = defaultdict(list)
     for b in doc.blocks:
         if b.kind == "row" and len(b.cells) >= 2:
@@ -712,11 +1054,11 @@ def check_contradictions(doc: ParsedDoc) -> list[Finding]:
                 out.append(_f(b, frag, "Противоречие",
                               f"Размер {frag} не совпадает с {base[2]} в {base[0].location()}: при одной ширине {first} мм указаны разные высоты.",
                               "Сверить размеры проёма или изделия во всех частях документа и оставить одно значение.",
-                              "medium", ["223-FZ-3-6.1-1"], True, "rule:contra", 0.55))
+                              "medium", ["223-FZ-3-6.1-1"], True, "rule:contra", 0.55, "contra.dims"))
                 out.append(_f(base[0], base[2], "Противоречие",
                               f"Размер {base[2]} не совпадает с {frag} в {b.location()}.",
                               "Сверить размеры во всех частях документа и оставить одно значение.",
-                              "medium", ["223-FZ-3-6.1-1"], True, "rule:contra", 0.55))
+                              "medium", ["223-FZ-3-6.1-1"], True, "rule:contra", 0.55, "contra.dims"))
     for stem, rows in params.items():
         for b in doc.blocks:
             low = b.text.lower()
@@ -730,7 +1072,7 @@ def check_contradictions(doc: ParsedDoc) -> list[Finding]:
                     if rb.id != b.id and rv != val and b.kind != "row":
                         out.append(_f(rb, rb.text[:200], "Противоречие",
                                       f"Параметр «{name}» в таблице = {rv}, а в {b.location()} указано {val}.",
-                                      "Сверить значения и оставить одно, согласованное с предметом закупки.", "high", ["223-FZ-3-6.1-1"], True, "rule:contra", 0.6))
+                                      "Сверить значения и оставить одно, согласованное с предметом закупки.", "high", ["223-FZ-3-6.1-1"], True, "rule:contra", 0.6, "contra.param_value"))
     return out
 
 QTY_WORDS = re.compile(r"сопротивлени|частот|[её]мкост|напряжени|\bток\w*|температур|давлени|мощност|влажност|момент|скорост|освещ[её]нност", re.I)
@@ -825,17 +1167,20 @@ def _profile_targets(doc: ParsedDoc, b: Block):
         yield bullet, m, bullet, bullet
 
 
+DOC_WIDE_KEY_RE = re.compile(r"хранени|транспорт|перевоз|годност", re.I)
+
+
 def check_positions(doc: ParsedDoc) -> list[Finding]:
     out = []
-    seen = set()
+    seen, seen_profiles = set(), set()
 
-    def add(b, quote, cat, expl, fix, sev="medium", review=True, conf=0.55):
+    def add(b, quote, cat, expl, fix, sev="medium", review=True, conf=0.55, rid=""):
         key = (b.id, quote[:60], cat)
         if key in seen or quote not in b.text:
             return
         seen.add(key)
         norms = ["223-FZ-3-6.1-2"] if cat == "Некорректная характеристика" else ["223-FZ-4-10-1"]
-        out.append(_f(b, quote, cat, expl, fix, sev, norms, review, "rule:position", conf))
+        out.append(_f(b, quote, cat, expl, fix, sev, norms, review, "rule:position", conf, rid))
 
     for b in doc.blocks:
         if b.kind != "row" and not re.search(r"компл|диапазон|измерени", b.text, re.I):
@@ -846,42 +1191,47 @@ def check_positions(doc: ParsedDoc) -> list[Finding]:
                     and len(QTY_WORDS.findall(seg)) / max(len(words), 1) >= 0.6:
                 add(b, seg, "Неполнота или комплектность",
                     "Измеряемые величины перечислены без диапазонов и точности: по такому описанию нельзя сравнить предложения и принять товар.",
-                    "Для каждой величины указать диапазон измерения и пределы погрешности, например: «сопротивление — до 40 МОм».")
+                    "Для каждой величины указать диапазон измерения и пределы погрешности, например: «сопротивление — до 40 МОм».", rid="pos.quantities_no_range")
             m = KIT_RE.search(seg)
             if m and m.group(1).count(",") >= 1 and not re.search(r"шт|компл\w*\.|\d", m.group(1)):
                 add(b, m.group(0).strip(), "Неполнота или комплектность",
                     "Состав комплекта перечислен без количества каждого предмета и без характеристик принадлежностей.",
-                    "Указать комплект поставки построчно: предмет — количество (шт.), для принадлежностей ключевые параметры.")
+                    "Указать комплект поставки построчно: предмет — количество (шт.), для принадлежностей ключевые параметры.", rid="pos.kit_no_qty")
             am = ACCESSORY_RE.search(seg)
             tail = QTY_SUFFIX_RE.sub("", seg[am.end():am.end() + 40]) if am else ""
             if am and not re.search(r"\d", tail.split(",")[0]) and not re.search(r"\d", seg[max(0, am.start() - 15):am.start()]):
                 add(b, seg if len(seg) < 160 else am.group(0), "Неполнота или комплектность",
                     "Принадлежность названа без характеристик: поставщик может поставить любой вариант.",
-                    "Указать параметры принадлежности (длина кабеля, высота стойки, фокусное расстояние, размер и т.п.).", "low")
+                    "Указать параметры принадлежности (длина кабеля, высота стойки, фокусное расстояние, размер и т.п.).", "low", rid="pos.accessory")
             om = ONE_SIDED_RE.search(seg)
             if om and not re.match(r"[\d,]*\s*[–-]\s*\d", seg[om.end():]):
                 add(b, om.group(0), "Некорректная характеристика",
                     "Диапазон задан одной границей «не менее»: непонятно, от какого значения должен начинаться диапазон измерения.",
-                    "Задать диапазон двумя границами: «от … до …» с допустимым направлением отклонения.")
+                    "Задать диапазон двумя границами: «от … до …» с допустимым направлением отклонения.", rid="pos.one_sided_range")
             if MIXED_RE.search(seg):
                 add(b, seg, "Некорректная характеристика",
                     "В одной характеристике смешаны «до» и «не менее»: неясно, какая граница обязательна для каждого параметра.",
-                    "Разделить параметры и для каждого указать одну обязательную границу.")
+                    "Разделить параметры и для каждого указать одну обязательную границу.", rid="pos.mixed_bounds")
             cm = COMPAT_RE.search(seg)
             if cm and not re.search(r"\d|USB|RS-?\d|Ethernet|ГОСТ", cm.group(0)):
                 add(b, cm.group(0), "Некорректная характеристика",
                     "Требование «совместимый с …» не проверяется при приёмке: не указан интерфейс или сигнал.",
-                    "Указать измеримый параметр: тип и диапазон выходного сигнала или интерфейс.")
+                    "Указать измеримый параметр: тип и диапазон выходного сигнала или интерфейс.", rid="pos.compat_vague")
             mm = MEMORY_RE.search(seg)
             name_cell = b.kind == "row" and len(b.cells) >= 3 and any(c.strip(" .;") == seg for c in b.cells)
-            if mm and not name_cell and SI_WORDS.search(b.text) and not re.search(r"оперативн|видеопамят|ОЗУ|\bГБ\b", seg, re.I) and not re.search(r"\d|USB|RS-?\d|Bluetooth|Wi-?Fi|Ethernet", bullet, re.I):
+            if mm and not name_cell and _si_match(doc, b) and not re.search(r"оперативн|видеопамят|ОЗУ|\bГБ\b", seg, re.I) and not re.search(r"\d|USB|RS-?\d|Bluetooth|Wi-?Fi|Ethernet", bullet, re.I):
                 add(b, seg, "Некорректная характеристика",
                     "Функция названа без параметра: не указан объём памяти или интерфейс передачи данных.",
-                    "Указать объём памяти (не менее N измерений) и интерфейс передачи данных (например, USB).", "low")
+                    "Указать объём памяти (не менее N измерений) и интерфейс передачи данных (например, USB).", "low", rid="pos.memory")
         profiled = set()
         if b.kind == "row":
             for bullet, pr, scope, quote in _profile_targets(doc, b):
-                missing = [k for k, rx in pr["required"].items() if not rx.search(scope)]
+                # условия хранения и перевозки и срок годности обычно в общем разделе или договоре, а не в строке позиции
+                missing = [k for k, rx in pr["required"].items() if not rx.search(scope)
+                           and not (DOC_WIDE_KEY_RE.search(k) and rx.search(doc.text()))]
+                if (pr["name"], bullet[:60]) in seen_profiles:
+                    continue
+                seen_profiles.add((pr["name"], bullet[:60]))
                 if re.search(r"утвержд\w* типа|является средством измерени", scope, re.I):
                     missing = [k for k in missing if not re.search(r"погрешн|точност", k)]
                 profiled.add(bullet)
@@ -890,8 +1240,8 @@ def check_positions(doc: ParsedDoc) -> list[Finding]:
                 add(b, quote, "Неполнота или комплектность",
                     f"Для позиции «{pr['name']}» не указаны характеристики: {', '.join(missing)}. Без них нельзя однозначно сравнить предложения участников и принять товар.",
                     "Добавить: " + "; ".join(f"{k} — значение с допустимой границей (не менее / не более / от … до …)" for k in missing) + ".",
-                    "medium", True, 0.55)
-        if b.kind == "row" and SI_WORDS.search(b.text) and not re.search(r"утвержд\w* типа|является средством измерени", b.text, re.I):
+                    "medium", True, 0.55, "pos.profile_missing")
+        if b.kind == "row" and _si_match(doc, b) and not re.search(r"утвержд\w* типа|является средством измерени", b.text, re.I):
             for bullet in dict.fromkeys(x[0] for x in _segments(b)):
                 if bullet in profiled:
                     continue
@@ -900,10 +1250,10 @@ def check_positions(doc: ParsedDoc) -> list[Finding]:
                     scope = " ".join(o.text for o in doc.blocks if bullet[:25] in o.text)
                     if re.search(r"утвержд\w* типа|является средством измерени", scope, re.I):
                         continue
-                if SI_WORDS.search(bullet) and RANGE_RE.search(bullet) and not ACCURACY_RE.search(scope) and len(bullet) < 300:
+                if _si_match(doc, b, bullet) and RANGE_RE.search(bullet) and not ACCURACY_RE.search(scope) and len(bullet) < 300:
                     add(b, bullet, "Неполнота или комплектность",
                         "Для средства измерения указан только диапазон, нет метрологических характеристик (пределы погрешности или класс точности).",
-                        "Добавить пределы допускаемой погрешности (или класс точности) и цену деления для каждого прибора.", "medium", True, 0.5)
+                        "Добавить пределы допускаемой погрешности (или класс точности) и цену деления для каждого прибора.", "medium", True, 0.5, "pos.si_no_accuracy")
     return out
 
 
@@ -914,8 +1264,19 @@ GENERIC_QUALITY_RE = re.compile(r"соответствовать\s+назнач�
 WARRANTY_START_RE = re.compile(r"(?:с\s+даты|с\s+момента)\s+при[её]мки\s+товара(?!\s*(?:по|согласно)\s+акт)|или\s+иного\s+документа,?\s+подтверждающего\s+при[её]мку", re.I)
 
 
+# правила описания объекта закупки по 44-ФЗ (ст. 33) вместо 223-ФЗ; реестр недобросовестных поставщиков и банки-гаранты по 44-ФЗ в 223-ФЗ применяются законно
+LAW44_RE = re.compile(r"ст(?:\.|атьи|атьей|атье|атья)\s*33\b[^.;]{0,60}?(?:44-ФЗ|05\.04\.2013|№\s*44\b)|44-ФЗ[^.;]{0,30}?ст(?:\.|атьи|атьей|атье|атья)\s*33\b", re.I)
+
+
 def check_wording(doc: ParsedDoc) -> list[Finding]:
     out = []
+    law = next((b for b in doc.blocks if LAW44_RE.search(b.text) and not re.search(r"223-ФЗ|не\s+применя", b.text, re.I)), None)
+    if law is not None:
+        m = LAW44_RE.search(law.text)
+        out.append(_f(law, _sentence_around(law.text, m.start(), m.end()), "Некорректная характеристика",
+                      "Ссылка на 44-ФЗ в описании закупки по 223-ФЗ: нормы контрактной системы к этой закупке не применяются, участник не поймёт, какие требования действуют.",
+                      "Заменить ссылку на положение о закупке заказчика или на 223-ФЗ; если требование нужно, записать его своими словами.",
+                      "low", ["223-FZ-4-10-1"], True, "rule:wording", 0.55, "wording.law44"))
     for b in doc.blocks:
         m = LANG_RE.search(b.text)
         if m:
@@ -923,13 +1284,13 @@ def check_wording(doc: ParsedDoc) -> list[Finding]:
                           "Формулировка допускает документацию только на английском языке. Эксплуатационная документация по техрегламентам ЕАЭС "
                           "должна быть на русском, иначе персонал не сможет безопасно эксплуатировать товар, а приёмку нечем подтвердить.",
                           "Указать: «Товар сопровождается эксплуатационной документацией на русском языке».",
-                          "medium", ["TR-TS-004-5"], False, "rule:wording", 0.75))
+                          "medium", ["TR-TS-004-5"], False, "rule:wording", 0.75, "wording.english_docs"))
         m = READY_RE.search(b.text)
         if m:
             out.append(_f(b, m.group(0).strip(), "Некорректная характеристика",
                           "Срок «обеспечивающий готовность к приёмке» не определяет дату поставки: непонятно, когда поставщик обязан передать товар.",
                           "Указать срок поставки датой или числом дней: «не позднее 10 декабря 2026 г.».",
-                          "medium", ["223-FZ-4-10-4"], False, "rule:wording", 0.7))
+                          "medium", ["223-FZ-4-10-4"], False, "rule:wording", 0.7, "wording.ready_term"))
         if re.search(r"\bвес(?:ы|ов)\b", b.text + " " + b.section, re.I) and not re.search(r"цен\w+\s+делени", b.text, re.I):
             m = SCALE_RE.search(b.text)
             if m:
@@ -937,20 +1298,20 @@ def check_wording(doc: ParsedDoc) -> list[Finding]:
                               "Для весов указана «дискретность», которой нет среди нормируемых характеристик: по ГОСТ OIML R 76-1 задаются действительная цена деления (d) и поверочный интервал (e). "
                               "Поставщик может предложить весы с мелкой индикацией, но грубой поверочной ценой деления.",
                               "Заменить на «действительная цена деления (d) — не более …; поверочный интервал (e) — не более …; класс точности — …».",
-                              "medium", ["GOST-OIML-R76-1"], False, "rule:wording", 0.7))
+                              "medium", ["GOST-OIML-R76-1"], False, "rule:wording", 0.7, "wording.scale"))
         m = GENERIC_QUALITY_RE.search(b.text)
         if m:
             out.append(_f(b, _sentence_around(b.text, m.start(), m.end()), "Некорректная характеристика",
                           "Требование «соответствовать назначению и применимым требованиям законодательства» не называет ни одного проверяемого требования: при приёмке на него нельзя сослаться.",
                           "Перечислить конкретные требования (техрегламенты, ГОСТ, документы о соответствии) или удалить общую фразу.",
-                          "low", ["223-FZ-4-10-1"], True, "rule:wording", 0.55))
+                          "low", ["223-FZ-4-10-1"], True, "rule:wording", 0.55, "wording.generic_quality"))
         if GUARANTEE_RE.search(b.text + " " + b.section):
             m = WARRANTY_START_RE.search(b.text)
             if m:
                 out.append(_f(b, _sentence_around(b.text, m.start(), m.end()), "Гарантийные условия",
                               "Начало гарантийного срока привязано к неопределённому событию («дата приёмки» или «иной документ»): гарантия может начаться в разные даты, и это повод для спора.",
                               "Привязать начало гарантии к одному документу: «с даты подписания Заказчиком документа о приёмке Товара».",
-                              "medium", ["GK-470", "GK-471"], False, "rule:wording", 0.7))
+                              "medium", ["GK-470", "GK-471"], False, "rule:wording", 0.7, "wording.warranty_start"))
     return out
 
 
@@ -979,11 +1340,12 @@ def check_subject(doc: ParsedDoc) -> list[Finding]:
             need = ", ".join(WORK_KINDS[k] for k in sorted(subject))
             out.append(_f(b, b.text, "Предмет закупки или наименование",
                           f"В названии части документа вид работ «{have}», а предмет закупки «{need}»: название не совпадает с предметом.",
-                          "Назвать часть документа по предмету закупки.", "medium", ["223-FZ-3-6.1-1"], True, "rule:subject", 0.6))
+                          "Назвать часть документа по предмету закупки.", "medium", ["223-FZ-3-6.1-1"], True, "rule:subject", 0.6, "subject.part_title"))
     return out
 
 
-ALL_RULES = [check_subject, check_wording, check_brands, check_notes, check_days, check_gost, check_si, check_okpd, check_completeness, check_positions, check_contradictions]
+ALL_RULES = [check_subject, check_wording, check_brands, check_trade_names, check_notes, check_days, check_gost, check_si, check_okpd, check_ktru_codes,
+             check_completeness, check_deferred, check_empty_values, check_ktru, check_positions, check_units, check_contradictions, check_shelf_life_conflict]
 
 
 def _apply_customer(doc: ParsedDoc, found: list[Finding]) -> list[Finding]:
@@ -1005,11 +1367,76 @@ def _apply_customer(doc: ParsedDoc, found: list[Finding]) -> list[Finding]:
     return out
 
 
-def run_rules(doc: ParsedDoc) -> list[Finding]:
+def _gost_rule_id(f: Finding) -> str:
+    """rule_id для замечаний check_gost по тексту объяснения (сама функция rule_id пока не ставит)."""
+    e = f.explanation
+    if "без «Р»" in e or "Номер" in e and "ГОСТ Р" in e:
+        return "gost.missing_R"
+    if "Национального стандарта" in e:
+        return "gost.extra_R"
+    if "СНиП" in e and ("актуализированы" in e or e.startswith("СНиП")):
+        return "gost.snip"
+    if "принят в" in e or "принятых до 2012" in e:
+        return "gost.old_unverified"
+    if e.startswith("Общая ссылка"):
+        return "gost.generic_ref"
+    return "gost.inactive" if "статус по каталогу" in f.evidence else "gost.other"
+
+
+GARBLE_WORD_RE = re.compile(r"[а-яё]{3,}", re.I)
+GARBLE_HEAD_RE = re.compile(r"^\W*([а-яё]{2,})")
+
+
+def _garbled_tables(doc: ParsedDoc) -> set:
+    """Таблицы PDF, где текстовый слой перемешан: не меньше 20 % слов не узнаёт морфологический словарь
+    и не меньше 20 % ячеек начинаются с обрывка слова. На чистых PDF и DOCX набора эти доли не выше 13 % и 6 %."""
+    if doc.source_format != "pdf":
+        return set()
+    try:
+        import pymorphy3
+        morph = pymorphy3.MorphAnalyzer()
+    except Exception:
+        return set()
+    stat = defaultdict(lambda: [0, 0, 0, 0])
+    for b in doc.blocks:
+        if b.kind != "row":
+            continue
+        s = stat[(b.source, b.table)]
+        words = [w.lower() for w in GARBLE_WORD_RE.findall(b.text)]
+        s[0] += len(words)
+        s[1] += sum(1 for w in words if not morph.word_is_known(w))
+        for c in b.cells:
+            if c.strip():
+                s[2] += 1
+                m = GARBLE_HEAD_RE.match(c)
+                s[3] += bool(m and not morph.word_is_known(m.group(1)))
+    return {k for k, (n, unk, cells, frag) in stat.items() if n >= 20 and unk / n >= 0.2 and frag / max(cells, 1) >= 0.2}
+
+
+def run_rules(doc: ParsedDoc, rules=None) -> list[Finding]:
+    """rules: подмножество ALL_RULES (выбор групп проверок, tzcheck.checks); None = все правила."""
+    garbled = _garbled_tables(doc)
+    skipped = [b for b in doc.blocks if b.kind == "row" and (b.source, b.table) in garbled]
+    view = ParsedDoc(doc.name, [b for b in doc.blocks if b not in skipped], doc.fields, doc.warnings, doc.source_format) if skipped else doc
     out = []
-    for rule in ALL_RULES:
+    for rule in (ALL_RULES if rules is None else rules):
         try:
-            out.extend(rule(doc))
+            out.extend(rule(view))
         except Exception as e:
             doc.warnings.append(f"правило {rule.__name__} упало: {e}")
-    return _apply_customer(doc, out)
+    for f in out:
+        if f.source == "rule:gost" and not f.rule_id:
+            f.rule_id = _gost_rule_id(f)
+        if f.rule_id == "gost.old_unverified":
+            _unchecked(f)
+        if f.source == "rule:gost" and "статус по каталогу" in f.evidence and not f.confirmed_by:
+            f.confirmed_by = "каталог Росстандарта"
+    if skipped:
+        first = skipped[0]
+        f = Finding(first.id, "", "Неполнота или комплектность",
+                    f"Текст таблиц на {len(skipped)} строках разобран из PDF с перемешанными словами (обрывки слов, смешанные ячейки): правила эти строки не проверяли.",
+                    "Проверить таблицы вручную или загрузить документ в DOCX.", "low", [], True, "rule:parse", 0.5, first.location(),
+                    also_in=[b.id for b in skipped[1:]], rule_id="parse.garbled", evidence={"цитата найдена в тексте": False})
+        out.append(_unchecked(f))
+    doc.candidates = [f for f in out if getattr(f, "_candidate", False)]
+    return _apply_customer(doc, [f for f in out if not getattr(f, "_candidate", False)])

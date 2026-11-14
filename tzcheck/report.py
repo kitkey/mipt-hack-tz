@@ -130,6 +130,17 @@ def _model_table(rows: list[str], block: dict | None = None) -> str:
             f'<ul class="chips">{sev_chips}</ul><ul class="chips">{cat_chips}</ul>{note_html}{table}')
 
 
+def _unchecked_table(rows: list[str], block: dict | None = None) -> str:
+    if not rows:
+        return ""
+    table = ('<table><thead><tr><th>№</th><th>Риск и статус</th><th>Уверенность</th><th>Категория</th><th>Где и цитата</th><th>Что не найдено</th>'
+             f'<th>Что сделать</th><th>Основание</th></tr></thead><tbody id="urows">{"".join(rows)}</tbody></table>')
+    return (f'<h2>Не проверено и не найдено в переданных файлах ({len(rows)})</h2>'
+            '<div class="meta">Здесь выводы из отсутствия сведений: кода ОКПД 2, гарантии, приложения, статуса старого стандарта нет в переданных файлах '
+            'или справочниках. Это вопросы к комплекту документов, а не найденные ошибки ТЗ: они не входят в вердикт и счётчики над основным списком.</div>'
+            + table)
+
+
 def _passport_html(result: dict) -> str:
     p = result.get("passport")
     if not p:
@@ -143,9 +154,9 @@ def _passport_html(result: dict) -> str:
 
 def to_html(result: dict, run_id: str | None = None) -> str:
     esc = html.escape
-    rows, model_rows = [], []
+    rows, model_rows, unchecked_rows = [], [], []
     for f in result.get("findings", []):
-        target = model_rows if f.get("section") == "llm_review" else rows
+        target = {"llm_review": model_rows, "unchecked": unchecked_rows}.get(f.get("section"), rows)
         norms = "<br>".join(
             f'<a href="{esc(result["norms"][n]["url"])}" target="_blank">{esc(result["norms"][n]["title"])}</a>' if result["norms"][n]["url"]
             else esc(result["norms"][n]["title"]) for n in f["norm_ids"] if n in result.get("norms", {}))
@@ -160,15 +171,17 @@ def to_html(result: dict, run_id: str | None = None) -> str:
         second = (f'<br><a href="#src-{esc(str(ev.get("второй блок", "")), quote=True)}">{esc(str(ev.get("второе место", "")))}</a><blockquote>{esc(str(ev["вторая цитата"]))}</blockquote>'
                   if ev.get("вторая цитата") else "")
         conf = f.get("confidence_pct")
+        qhtml = f"<blockquote>{esc(f['quote'])}</blockquote>" if f["quote"] else ""
         target.append(
             f'<tr class="sev-{f["severity"]}" data-conf="{"" if conf is None else int(conf)}" data-idx="{len(target)}"><td>{f["id"]}</td><td><span class="sev">{SEV_RU.get(f["severity"], "")}</span><br>'
             f'<span class="st {STATUS_CLS.get(status, "")}">{esc(status)}</span></td>{_conf_cell(f)}'
-            f'<td>{esc(f["category"])}</td><td><a href="#src-{esc(f["block_id"], quote=True)}">{esc(f["location"])}</a><blockquote>{esc(f["quote"])}</blockquote>{second}</td>'
+            f'<td>{esc(f["category"])}</td><td><a href="#src-{esc(f["block_id"], quote=True)}">{esc(f["location"])}</a>{qhtml}{second}</td>'
             f'<td>{esc(f["explanation"])}{_evidence(f)}</td><td>{esc(f["fix"])}{fbk}</td><td>{norms or "—"}</td></tr>')
     doc = result.get("_doc")
     sources = "".join(f'<p id="src-{esc(b.id, quote=True)}"><b>{esc(b.location())}</b><br>{esc(b.text)}</p>' for b in doc.blocks) if doc else ""
     stats = result.get("stats", {})
     cats = "".join(f"<li>{esc(k)}: {v}</li>" for k, v in sorted(stats.get("by_category", {}).items(), key=lambda x: -x[1]))
+    groups = "".join(f"<li><b>{esc(k)}: {v}</b></li>" for k, v in stats.get("by_group", {}).items())
     sts = "".join(f"<li>{esc(k)}: {v}</li>" for k, v in stats.get("by_status", {}).items())
     warn = "".join(f"<li>{esc(w)}</li>" for w in result.get("warnings", []))
     model = f" · модель {esc(result['model'])}" if result.get("model") else ""
@@ -180,10 +193,10 @@ def to_html(result: dict, run_id: str | None = None) -> str:
 <h1>Проверка ТЗ: {esc(result.get('file', ''))}</h1>
 <div class="meta">Режим: {esc(mode)}{model} · время {result.get('seconds', '')} с · {esc(pii_text)}</div>
 <div class="summary"><b>Итоговое заключение.</b> {esc(result.get('summary', ''))}</div>
-<ul class="chips">{sts}</ul><ul class="chips">{cats}</ul>{f'<div class="warn"><b>Предупреждения</b><ul>{warn}</ul></div>' if warn else ''}
+<ul class="chips">{sts}</ul>{f'<ul class="chips">{groups}</ul>' if groups else ''}<ul class="chips">{cats}</ul>{f'<div class="warn"><b>Предупреждения</b><ul>{warn}</ul></div>' if warn else ''}
 {_conf_controls(len(rows))}
 <table><thead><tr><th>№</th><th>Риск и статус</th><th>Уверенность</th><th>Категория</th><th>Где и цитата</th><th>Почему</th><th>Как исправить</th><th>Основание</th></tr></thead>
-<tbody id="frows">{''.join(rows)}</tbody></table>{_model_table(model_rows, stats.get('model_block'))}{_passport_html(result)}<h2>Текст документов</h2>{sources}{CONF_JS}{FB_JS if run_id else ''}</body></html>"""
+<tbody id="frows">{''.join(rows)}</tbody></table>{_model_table(model_rows, stats.get('model_block'))}{_unchecked_table(unchecked_rows)}{_passport_html(result)}<h2>Текст документов</h2>{sources}{CONF_JS}{FB_JS if run_id else ''}</body></html>"""
 
 
 def to_compare_html(cmp: dict) -> str:
@@ -259,7 +272,7 @@ def to_docx_comments(result: dict, src_path: str, out_path: str) -> bool:
                     next((p for p in cell.paragraphs if p.runs), None)
         if target is None or not target.runs:
             continue
-        text = ("Модель, проверить вручную. " if f.get("section") == "llm_review" else "") + f'[{f["id"]}] {f["category"]} ({SEV_RU.get(f["severity"], "")} риск{", ручная проверка" if f["needs_review"] else ""}; ' \
+        text = {"llm_review": "Модель, проверить вручную. ", "unchecked": "Не проверено, сведений нет в переданных файлах. "}.get(f.get("section"), "") + f'[{f["id"]}] {f["category"]} ({SEV_RU.get(f["severity"], "")} риск{", ручная проверка" if f["needs_review"] else ""}; ' \
                f'уверенность: {conf_label(f)}). {f["explanation"]} Исправление: {f["fix"]}'
         ev = f.get("evidence") or {}
         if ev.get("вторая цитата"):

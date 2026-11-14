@@ -2,9 +2,10 @@
 import re
 from datetime import date
 from dataclasses import dataclass, field, asdict
+from difflib import SequenceMatcher
 from itertools import combinations
 
-from .model import Finding
+from .model import SECTION_UNCHECKED, Finding
 
 NUMBER = r"\d+(?:[.,]\d+)?"
 UNITS = {"мм": ("length", .001), "см": ("length", .01), "м": ("length", 1), "кг": ("mass", 1), "г": ("mass", .001), "шт": ("count", 1), "дней": ("day", 1), "дня": ("day", 1), "дн": ("day", 1), "месяцев": ("month", 1), "месяца": ("month", 1), "месяц": ("month", 1), "года": ("month", 12), "год": ("month", 12), "лет": ("month", 12), "вт": ("power", 1), "квт": ("power", 1000), "л": ("volume", 1), "м/с": ("speed", 1), "%": ("percent", 1), "гц": ("frequency", 1), "ч": ("hour", 1), "часов": ("hour", 1), "часа": ("hour", 1), "час": ("hour", 1), "компл": ("set", 1)}
@@ -114,12 +115,14 @@ def extract(doc):
             name_index = next((i for i, c in enumerate(lowered) if re.search(r"наименовани", c)), None)
             if name_index is None:
                 name_index = next((i for i, c in enumerate(lowered) if re.fullmatch(r"\s*(?:предмет|товар)\s*", c)), None)
-            count_index = next((i for i, c in enumerate(lowered) if re.search(r"количеств|кол-?во", c)), None)
+            # столбец количества: заголовок начинается со слова «Количество» или «Кол-во» («Количество товара», «Кол-во, шт.»)
+            count_index = next((i for i, c in enumerate(lowered) if re.match(r"\s*(?:количество|кол-?во)(?![а-яё])", c)), None)
             if name_index is not None and count_index is not None and name_index != count_index:
-                table_columns[table_id] = (name_index, count_index)
+                table_columns[table_id] = (name_index, count_index, len(block.cells))
                 continue
             columns = table_columns.get(table_id)
-            if columns and max(columns) < len(block.cells):
+            # строки с другим числом ячеек (подтаблицы характеристик КТРУ внутри позиции) колонки заголовка не наследуют
+            if columns and len(block.cells) == columns[2]:
                 item, count = block.cells[columns[0]].strip(), block.cells[columns[1]].strip()
                 if 2 <= len(item) <= 200 and re.search(r"[а-яёa-z]", item, re.I) and re.fullmatch(r"\d+(?:[.,]\d+)?", count):
                     n = float(count.replace(",", "."))
@@ -145,8 +148,14 @@ def extract(doc):
                 row_sig = (block.source, block.table, _scope_key(" ".join(pieces[:first_value])))
             else:
                 for i, cell in enumerate(pieces[:-1]):
-                    if re.search(r"[а-яёa-z]", cell, re.I) and _value(" ".join(pieces[i+1:])):
-                        label, value = cell, " ".join(pieces[i+1:]); break
+                    # подпись стоит прямо перед числом: в строке «позиция | характеристика | 3 | шт» подпись это характеристика, а позиция объект
+                    if re.search(r"[а-яёa-z]", cell, re.I) and _value(" ".join(pieces[i+1:])) \
+                            and not (re.search(r"[а-яёa-z]{3}", pieces[i + 1], re.I) and not re.match(r"\s*[<>≥≤=~±-]*\s*\d", pieces[i + 1])):
+                        label, value = cell, " ".join(pieces[i+1:])
+                        earlier = [p for p in pieces[:i] if re.search(r"[а-яёa-z]{3}", p, re.I)]
+                        if earlier:
+                            row_object = _scope_key(earlier[0])
+                        break
         if not label:
             m = LABEL.match(block.text)
             if m:
@@ -292,7 +301,8 @@ def _reference_findings(doc):
                     previous.also_in.append(block.id)
                 continue
             finding = Finding(block.id, match.group(), "Некорректная характеристика", "Указанный объект ссылки не найден среди переданных файлов.",
-                "Проверить ссылку и приложить отсутствующий раздел или приложение.", source="reconcile", location=block.location(), needs_review=True)
+                "Проверить ссылку и приложить отсутствующий раздел или приложение.", source="reconcile", location=block.location(), needs_review=True,
+                rule_id="reconcile.missing_ref", section=SECTION_UNCHECKED)
             seen[key] = finding
             findings.append(finding)
     # References are only checked when the wording explicitly points to a table or section.
@@ -312,7 +322,8 @@ def _reference_findings(doc):
             if key in seen:
                 continue
             finding = Finding(block.id, m.group(0), "Некорректная характеристика", "Таблица или раздел по ссылке не найдены среди переданных файлов.",
-                "Проверить номер ссылки и передать недостающий материал.", source="reconcile", location=block.location(), needs_review=True)
+                "Проверить номер ссылки и передать недостающий материал.", source="reconcile", location=block.location(), needs_review=True,
+                rule_id="reconcile.missing_table_ref", section=SECTION_UNCHECKED)
             seen[key] = finding
             findings.append(finding)
     return _merge_references(findings)
@@ -328,6 +339,7 @@ def _merge_references(findings):
     first.explanation = (f"Не найдены среди переданных файлов объекты {len(names)} ссылок: " + "; ".join(names[:12]) + ("…" if len(names) > 12 else "") +
                          ". Если это пункты договора или отдельные приложения закупки, приложить их к проверке; если ТЗ, восстановить разделы.")
     first.fix = "Проверить ссылки и приложить отсутствующие разделы или приложения."
+    first.rule_id = "reconcile.missing_ref"
     for f in findings[1:]:
         for b in [f.block_id] + f.also_in:
             if b != first.block_id and b not in first.also_in:
@@ -376,7 +388,7 @@ def _structure_findings(doc):
     for block, number, title in toc:
         if number not in definitions:
             findings.append(Finding(block.id, block.text, "Некорректная характеристика", f"Раздел {number} «{title}» из содержания не найден в тексте.",
-                "Восстановить раздел или исправить содержание.", source="reconcile", location=block.location(), needs_review=True))
+                "Восстановить раздел или исправить содержание.", source="reconcile", location=block.location(), needs_review=True, rule_id="reconcile.toc"))
     # Repeated section titles are candidates only if the following bodies differ.
     positions = {b.id: i for i, b in enumerate(doc.blocks)}
     for (_, _), group in headings.items():
@@ -395,10 +407,13 @@ def _structure_findings(doc):
             text_x, text_y = " ".join(item.text for item in x), " ".join(item.text for item in y)
             if any(SIGN_OR_CONTRACT.search(t[:400]) for t in (text_x, text_y)):
                 continue
-            if len(text_x) >= 30 and len(text_y) >= 30 and _key(text_x) != _key(text_y):
+            # дубль только при почти совпадающих телах: у разных лотов и видов транспорта одинаковые подзаголовки с разным содержимым
+            if len(text_x) >= 30 and len(text_y) >= 30 and _key(text_x) != _key(text_y) and \
+                    SequenceMatcher(None, _key(text_x)[:3000], _key(text_y)[:3000]).ratio() >= 0.5:
                 first, second = x[0], y[0]
                 findings.append(Finding(first.id, first.text, "Противоречие", f"Разделы «{a.text}» и «{b.text}» с одинаковым названием имеют разное содержимое; требуется проверка.",
                     "Сверить содержимое и устранить неоднозначность.", source="reconcile", location=first.location(), also_in=[second.id], needs_review=True,
+                    rule_id="reconcile.dup_section",
                     evidence={"второе место": second.location(), "вторая цитата": second.text, "второй блок": second.id, "содержание первого": text_x[:500], "содержание второго": text_y[:500]}))
     return findings
 
@@ -418,7 +433,7 @@ def _completeness_findings(doc):
         if term != term2 or negative == negative2 or a.id == b.id:
             continue
         findings.append(Finding(a.id, a.text, "Противоречие", f"Компонент «{term}» одновременно включён в комплект и исключён из него.",
-            "Согласовать состав комплекта.", source="reconcile", location=a.location(), also_in=[b.id],
+            "Согласовать состав комплекта.", source="reconcile", location=a.location(), also_in=[b.id], rule_id="reconcile.kit_in_out",
             evidence={"второе место": b.location(), "вторая цитата": b.text, "второй блок": b.id}))
     return findings
 
@@ -455,8 +470,10 @@ def reconcile(doc):
         if edge["relation"] == "unit_mismatch":
             f = _pair(a, b, f"Для параметра «{a.parameter}» указаны единицы разных физических величин.", review=True)
             f.category = "Некорректная характеристика"
+            f.rule_id = "reconcile.unit_mismatch"
         else:
             f = _pair(a, b, f"Несовместимые значения параметра «{a.parameter}»: {b.location}.", review=a.unit == "text")
+            f.rule_id = "reconcile.value_conflict"
         by_first[group] = f
         findings.append(f)
     findings.extend(_reference_findings(doc))
@@ -487,7 +504,8 @@ def reconcile_semantic(doc, scrubber):
                 failures += 1
                 continue
             try:
-                data = llm._call(prompt, 1000)
+                with llm.doc_scope(doc):
+                    data = llm._call(prompt, 1000)
             except Exception:
                 failures += 1
                 continue
@@ -505,7 +523,7 @@ def reconcile_semantic(doc, scrubber):
                     a.quote not in ba.text or b.quote not in bb.text or max(a.low, b.low) <= min(a.high, b.high) + 1e-9):
                     continue
                 out.append(Finding(a.block_id, a.quote, "Противоречие", "Модель сопоставила формулировки; числовые интервалы не пересекаются.",
-                    "Проверить, относятся ли требования к одному объекту, и согласовать значения.", source="reconcile_llm", needs_review=True,
+                    "Проверить, относятся ли требования к одному объекту, и согласовать значения.", source="reconcile_llm", needs_review=True, rule_id="reconcile.llm_pair",
                     location=a.location, also_in=[b.block_id], evidence={"второе место": b.location, "вторая цитата": b.quote, "второй блок": b.block_id}))
     if failures:
         doc.warnings.append(f"Семантическая сверка: не выполнено запросов {failures}; часть сопоставлений не проверена.")
