@@ -490,12 +490,14 @@ def test_two_models_second_check(monkeypatch):
     order = [f.quote for f in found]
     out = {f.quote: f for f in core.verify(doc, Scrubber(), found)}
     verdict = {q: (out[q].evidence["вторая проверка"], out[q].needs_review) if q in out else ("снято", None) for q in order}
-    assert [verdict[q][0] for q in order] == ["подтверждено", "подтверждено одной из двух моделей, на проверку", "снято",
+    # снятое обеими моделями замечание средней или высокой важности остаётся на ручной проверке с пониженной важностью
+    assert [verdict[q][0] for q in order] == ["подтверждено", "подтверждено одной из двух моделей, на проверку", "понижено, на проверку",
                                               "понижено, на проверку"]
-    assert [verdict[q][1] for q in order] == [False, True, None, True]
+    assert [verdict[q][1] for q in order] == [False, True, True, True]
+    assert out[order[2]].evidence["снято обеими моделями"].startswith("оставлено на проверку")
     assert out[order[1]].evidence["вторая проверка, две модели"] == "подтверждено / снято" and out[order[1]].severity == "high"
     assert {c["model"] for c in doc.journal.calls if c["stage"] == "verify2"} == {"stub/b"}
-    assert pipeline.route(out[order[1]].finalize()).section == "llm_review" and len(doc.llm_rejected) == 1
+    assert pipeline.route(out[order[1]].finalize()).section == "llm_review" and len(doc.llm_rejected) == 0
     assert core._two_checks("keep", "") == "split" and core._two_checks("lower", "reject") == "lower" and core._two_checks("", "") == "lower"
 
 

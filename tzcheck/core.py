@@ -1075,6 +1075,11 @@ def verify(doc, scr, findings: list[Finding]) -> list[Finding]:
             if d2 and d2.get("reason"):
                 f.evidence["довод второй модели"] = scr.restore(str(d2.get("reason") or ""))
             dec, d = _two_checks(dec, dec2), d or d2
+            # замечание средней или высокой важности, которое сняли обе модели, не пропадает из отчёта:
+            # оно идёт на ручную проверку с пониженной важностью, основной список от этого не меняется
+            if dec == "reject" and f.severity in SEV[1:]:
+                dec = "lower"
+                f.evidence["снято обеими моделями"] = "оставлено на проверку: важность средняя или высокая"
         elif d:
             f.trace.append({"step": "verify", "call": calls.get(n, ""), "item": d,
                             "text": names.get(dec, dec) + (f": {scr.restore(str(d.get('reason') or ''))}" if d.get("reason") else "")})
