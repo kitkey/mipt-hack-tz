@@ -190,8 +190,9 @@ def check(path: str, use_llm: bool | None = None, orchestrator: str | None = Non
         rep.fail("parse", str(e))
         name = path if isinstance(path, (str, os.PathLike)) else (path[0] if path else "")
         return {"file": os.path.basename(os.fspath(name)), "status": "error", "error": str(e), "findings": [], "summary": f"Документ не проверен: {e}"}
-    rep.done("parse", blocks=len(doc.blocks), files=len(paths))
+    # документ привязывается до итога разбора: пропущенные страницы (скан без OCR) делают шаг «не выполнен», проверку неполной
     prog.attach(doc, rep)
+    rep.done("parse", blocks=len(doc.blocks), files=len(paths))
     doc.check_categories = categories_for(groups)
     doc.public = bool(public)
     rep.start("security")

@@ -51,8 +51,8 @@ def n_parse(state: State) -> State:
         p = state["paths"][0]
         return {"result": {"file": os.path.basename(os.fspath(p)), "status": "error", "error": str(e), "findings": [],
                            "summary": f"Документ не проверен: {e}"}, "steps": _step(state, "parse")}
+    prog.attach(doc, rep)  # до итога разбора: пропущенные страницы делают проверку неполной
     rep.done("parse", blocks=len(doc.blocks), files=len(state["paths"]))
-    prog.attach(doc, rep)
     doc.check_categories = categories_for(_groups(state))
     doc.public = bool(state.get("public", False))
     # внешняя модель без NER и без пометки «открытый» не вызывается: только оформление и безопасность
