@@ -17,7 +17,8 @@ from pathlib import Path
 
 from tzcheck.chunks import clip, window
 from tzcheck.model import from_model
-from . import _doc_files, _read_doc, chunks, corpus_dirs
+from tzcheck.norms import NORMS
+from . import LAW_OF_ID, LAWS, NORM_ID, _doc_files, _read_doc, chunks, corpus_dirs
 
 APPLICABLE, NOT_APPLICABLE, UNCLEAR = "applicable", "not_applicable", "unclear"
 DEC_RU = {APPLICABLE: "применим", NOT_APPLICABLE: "не применим", UNCLEAR: "не решить"}
@@ -323,6 +324,41 @@ def _clause_text(f, rows) -> str:
     return quote
 
 
+def _plain(s: str) -> str:
+    return " ".join(str(s).lower().split())
+
+
+def clause_ids(f) -> list[str]:
+    """id из norm_ids, на которые указывает приложенный пункт: та же статья закона (и часть, если она есть в id) или тот же
+    документ из каталога норм."""
+    label = f.evidence.get("пункт нормы", "")
+    name = _plain(label.split(",", 1)[0])
+    out = []
+    for n in f.norm_ids:
+        m = NORM_ID.match(n)
+        if m:
+            law = LAW_OF_ID[m.group(1)]
+            head = f"{law}, Статья {m.group(2)}" + (f", {LAWS[law]} {m.group(3)}" if m.group(3) else "")
+            if re.match(re.escape(head) + r"(?![\d.])", label):
+                out.append(n)
+        elif n in NORMS and name and _plain(re.split(r",| «", NORMS[n]["title"], maxsplit=1)[0]) == name:
+            out.append(n)
+    return out
+
+
+def drop_clause(f) -> list[str]:
+    """Снять отклонённый пункт: ключи пункта в evidence и его id в norm_ids (и в производных от них полях evidence)."""
+    ids = clause_ids(f)
+    for key in CLAUSE_KEYS:
+        f.evidence.pop(key, None)
+    if ids:
+        f.norm_ids = [n for n in f.norm_ids if n not in ids]
+        f.evidence.pop("нормы", None)
+        if "основание из базы норм" in f.evidence:
+            f.evidence["основание из базы норм"] = bool(f.norm_ids)
+    return ids
+
+
 def check_attached(findings, search=None, doc=None, scr=None, use_llm: bool = True) -> int:
     """Пункты норм, приложенные без решения модели о применимости (по статье из norm_ids, по стандарту из ТЗ, поиском,
     при второй проверке ядра), проверяет модель: пачки до NORMCHECK_BATCH пар «замечание + пункт», по паре «применим или нет»
@@ -370,8 +406,9 @@ def check_attached(findings, search=None, doc=None, scr=None, use_llm: bool = Tr
                 if f.evidence.get("основание нормы") == NOT_FOUND:  # пункт второй проверки ядра подтверждён после отказа по кандидатам
                     f.evidence.pop("основание нормы")
             else:
-                for key in CLAUSE_KEYS:
-                    f.evidence.pop(key, None)
+                ids = drop_clause(f)
+                if ids:
+                    step["text"] += f"; снято из norm_ids: {', '.join(ids)}"
             answered += 1
     return answered
 

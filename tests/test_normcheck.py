@@ -85,7 +85,29 @@ def test_not_applicable_clause_removed_finding_kept(monkeypatch, tmp_path):
     assert findings == [f]
     assert not {"пункт нормы", "цитата нормы", "источник нормы", verify.BASIS} & set(f.evidence)
     step = next(s for s in f.trace if s["step"] == "norm")
-    assert step["text"].startswith("пункт 223-ФЗ, Статья 3, ч. 6.1") and step["text"].endswith("не применим: пункт о другом")
+    assert step["text"].startswith("пункт 223-ФЗ, Статья 3, ч. 6.1") and "не применим: пункт о другом" in step["text"]
+
+
+def test_rejected_clause_id_removed_from_norm_ids(monkeypatch, tmp_path):
+    model = Model(lambda n: {"applicable": False, "reason": "пункт о другом"})
+    f = _model_finding()
+    f.norm_ids = ["223-FZ-3-6.1-2", "223-FZ-3-6-1", "TR-TS-004-5"]
+    _run(monkeypatch, tmp_path, model, [f])
+    assert f.norm_ids == ["223-FZ-3-6-1", "TR-TS-004-5"]
+    assert "пункт нормы" not in f.evidence and verify.BASIS not in f.evidence
+    step = next(s for s in f.trace if s["step"] == "norm")
+    assert step["text"].endswith("снято из norm_ids: 223-FZ-3-6.1-2")
+    f.finalize()
+    assert f.evidence["основание из базы норм"] is True
+
+
+def test_rejected_clause_last_id_leaves_no_basis(monkeypatch, tmp_path):
+    model = Model(lambda n: {"applicable": False, "reason": "пункт о другом"})
+    f = _model_finding()
+    f.evidence["основание из базы норм"] = True
+    f.evidence["нормы"] = ["223-ФЗ, ст. 3, ч. 6.1, п. 2"]
+    _run(monkeypatch, tmp_path, model, [f])
+    assert f.norm_ids == [] and f.evidence["основание из базы норм"] is False and "нормы" not in f.evidence
 
 
 def test_no_answer_leaves_clause_marked_unchecked(monkeypatch, tmp_path):
