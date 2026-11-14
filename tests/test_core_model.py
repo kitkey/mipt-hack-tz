@@ -331,6 +331,19 @@ def test_verify_sees_what_the_finding_stands_on(stub):
     assert [(f.needs_review, f.evidence["вторая проверка"]) for f in out] == [(True, "понижено, на проверку"), (False, "подтверждено")]
 
 
+def test_verify_asks_again_when_answer_has_no_decision(stub):
+    """Негодный ответ второй проверки (нет ни одного решения) запрашивается ещё раз; годный со второго раза принимается."""
+    answers = [{")decisions": ["){"]}, {"decisions": [{"n": 0, "decision": "keep", "reason": "значения нет", "confidence": 90}]}]
+    asked = []
+
+    def verify(prompt):
+        asked.append(prompt)
+        return answers[min(len(asked), 2) - 1]
+    s, doc = _prep(stub, {"найти дефекты": lambda p: {"findings": [_finding()] if "Стол" in p else []}, "независимая вторая проверка": verify})
+    out = core.verify(doc, Scrubber(), core.find(doc, Scrubber(), CATS))
+    assert len(asked) == 2 and [f.evidence["вторая проверка"] for f in out] == ["подтверждено"]
+
+
 def test_verify_can_reject_or_lower_but_not_raise(stub):
     items = [_finding(), _finding(block_id="t1r4", quote="Высота сиденья", severity="medium", category="Противоречие"),
              _finding(block_id="t1r2", quote="Длина", severity="low", category="Стандарты (ГОСТ, поверка)")]
