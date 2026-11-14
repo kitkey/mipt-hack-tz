@@ -190,8 +190,9 @@ def check(path: str, use_llm: bool | None = None, orchestrator: str | None = Non
         rep.fail("parse", str(e))
         name = path if isinstance(path, (str, os.PathLike)) else (path[0] if path else "")
         return {"file": os.path.basename(os.fspath(name)), "status": "error", "error": str(e), "findings": [], "summary": f"Документ не проверен: {e}"}
-    rep.done("parse", blocks=len(doc.blocks), files=len(paths))
+    # документ привязывается до итога разбора: пропущенные страницы (скан без OCR) делают шаг «не выполнен», проверку неполной
     prog.attach(doc, rep)
+    rep.done("parse", blocks=len(doc.blocks), files=len(paths))
     doc.check_categories = categories_for(groups)
     doc.public = bool(public)
     rep.start("security")
@@ -294,13 +295,15 @@ def route(f: Finding) -> Finding:
     """Раздел отчёта для замечания ядра по решению второй проверки, без проверки текста кодом. В основной список идёт то, что
     вторая проверка подтвердила по тексту. В раздел «на проверку» идёт остальное, ничего не снимается: пониженное (вывод зависит
     от сведений вне комплекта), не проверенное, утверждение «не указано» (поиск по комплекту отсутствие не доказывает) и
-    замечание по пункту чеклиста ГОСТ, который не утвердил человек. Сомнение шага поиска (needs_review) подтверждение снимает."""
+    замечание по пункту чеклиста ГОСТ, который не утвердил человек. Сомнение шага поиска (needs_review) подтверждение снимает,
+    причины из f._hold (закупщики отклоняли такие замечания) не снимает."""
     if f.section != SECTION_MAIN or not f.source.startswith("model:"):
         return f
     why = []
     verdict = str(f.evidence.get("вторая проверка") or "не проведена")
     if verdict != CONFIRMED:
         why.append(f"вторая проверка: {verdict}")
+    why += getattr(f, "_hold", [])
     if getattr(f, "_absent", False) or f.evidence.get("проверка «не указано»"):
         why.append("вывод «не указано»")
     gost = f.evidence.get("пункт ГОСТ")

@@ -68,3 +68,36 @@ def test_non_core_and_other_sections_untouched():
     assert rule.section == SECTION_MAIN and not rule.trace
     unchecked = pipeline.route(make(section=SECTION_UNCHECKED, status="ручная проверка"))
     assert unchecked.section == SECTION_UNCHECKED
+
+
+def _reject_rule(feedback, runs=5):
+    for i in range(runs):
+        feedback.record(f"r{i}", "a.docx", {"id": "F001", "category": "Противоречие", "source": "model:find", "rule_id": "model.find",
+                                            "quote": f"срок {i}"}, "reject")
+
+
+def test_feedback_review_survives_confirmation(tmp_path, monkeypatch):
+    from tzcheck import feedback
+    monkeypatch.setattr(feedback, "PATH", str(tmp_path / "feedback.jsonl"))
+    _reject_rule(feedback)
+    f = make()
+    f.rule_id = "model.find"
+    f = pipeline.route(feedback.apply([f])[0])
+    assert f.section == SECTION_LLM and f.needs_review
+    assert "закупщики отклонили такие замечания в 5 из 5 проверок" in f.evidence["блок отчёта"]
+    other = pipeline.route(make())
+    assert other.section == SECTION_MAIN and not other.needs_review
+
+
+def test_feedback_review_in_pipeline(scripted, tmp_path, monkeypatch):
+    from tzcheck import feedback
+    monkeypatch.setattr(feedback, "PATH", str(tmp_path / "feedback.jsonl"))
+    monkeypatch.setenv("TZCHECK_REFDATA_OFFLINE", "1")
+    for k in ("TZCHECK_ORCHESTRATOR", "TZCHECK_RAG", "TZCHECK_CUSTOMER", "TZCHECK_MAIN_MIN_CONFIDENCE"):
+        monkeypatch.delenv(k, raising=False)
+    before = pipeline.check("samples/lift_fin.docx", use_llm=True)["findings"]
+    assert any(f["section"] == SECTION_MAIN and f["rule_id"] == "model.find" for f in before)
+    _reject_rule(feedback)
+    after = [f for f in pipeline.check("samples/lift_fin.docx", use_llm=True)["findings"] if f["rule_id"] == "model.find"]
+    assert after and all(f["section"] == SECTION_LLM and f["needs_review"] and f["status"] == "ручная проверка" for f in after)
+    assert all("закупщики отклонили" in f["evidence"]["блок отчёта"] for f in after)

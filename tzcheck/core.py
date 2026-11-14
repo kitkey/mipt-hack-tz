@@ -423,9 +423,14 @@ def _finding(doc, item: dict, blocks: list, scr, source: str, cats: list, call: 
         _drop(doc, source, item, call, "цитаты нет в тексте")
         return None
     b, quote = loc
+    explanation, fix = (scr.restore(str(item.get(k) or "")).strip() for k in ("explanation", "fix"))
+    if not re.search(r"\w", explanation):
+        # обязательное поле: без объяснения замечание не выпускается («», «...», «-» тоже пусто)
+        _drop(doc, source, item, call, "модель не объяснила замечание")
+        return None
     norms = [n for n in item.get("norm_ids") or [] if n in NORMS]
     sev = item.get("severity") if item.get("severity") in SEV else "medium"
-    f = Finding(b.id, quote, cat, scr.restore(str(item.get("explanation") or "")).strip(), scr.restore(str(item.get("fix") or "")).strip(),
+    f = Finding(b.id, quote, cat, explanation, fix,
                 sev, norms, bool(item.get("needs_review")), source, 0.7, b.location(), rule_id=source.replace(":", "."))
     rep = _norm(scr.restore(str(item.get("replacement") or "")))
     if rep and rep != _norm(quote):
@@ -434,6 +439,12 @@ def _finding(doc, item: dict, blocks: list, scr, source: str, cats: list, call: 
     f._missing = scr.restore(str(item.get("missing") or ""))
     f.trace = [{"step": "found", "call": call, "item": item},
                {"step": "located", "text": f"цитата найдена: {b.location()} (блок {b.id})" + ("" if b.id == pref else f", модель указала блок {pref or 'не указан'}")}]
+    if not re.search(r"\w", fix):
+        # без «как исправить» замечание идёт на проверку; подтверждение второй проверки эту причину не снимает (pipeline.route)
+        f.needs_review = True
+        f.evidence["неполный ответ модели"] = "не указано, как исправить"
+        f._hold = ["модель не указала, как исправить"]
+        f.trace.append({"step": "incomplete", "text": "модель не указала, как исправить: на проверку"})
     return confidence.set_model_score(f, item.get("confidence"), confidence.STAGE_FIND)
 
 

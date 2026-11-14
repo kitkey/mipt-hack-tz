@@ -123,3 +123,44 @@ def test_mixed_alphabet_words_go_to_one_alphabet():
     assert ocr.fix_homoglyphs("ШT.") == "ШТ."
     assert ocr.fix_homoglyphs("Осциллограф RIGОL DНО804 или эквивалент") == "Осциллограф RIGOL DHO804 или эквивалент"
     assert ocr.fix_homoglyphs("вместо анализатора НIОКI РW3335") == "вместо анализатора HIOKI PW3335"
+
+
+def _mixed_pdf(tmp_path):
+    """Текстовый PDF из образца и в конце страница без текстового слоя (как скан)."""
+    pymupdf = pytest.importorskip("pymupdf")
+    from pathlib import Path
+    src = Path("samples/pdf/lift_src.pdf")
+    if not src.exists():
+        pytest.skip("нет образца PDF")
+    pdf = pymupdf.open(str(src))
+    pdf.new_page()
+    path = tmp_path / "mixed.pdf"
+    pdf.save(str(path))
+    return str(path), len(pdf)
+
+
+@pytest.mark.parametrize("orchestrator", ["linear", "graph"])
+def test_mixed_pdf_with_skipped_scan_page_is_incomplete(monkeypatch, tmp_path, orchestrator):
+    from tzcheck.pipeline import check
+    monkeypatch.setenv("TZCHECK_OCR", "0")
+    monkeypatch.setenv("TZCHECK_REFDATA_OFFLINE", "1")
+    path, pages = _mixed_pdf(tmp_path)
+    r = check(path, use_llm=False, orchestrator=orchestrator)
+    assert any(w.startswith(f"mixed.pdf: стр. {pages}: нет текстового слоя, OCR недоступен") for w in r["warnings"])
+    assert r["status"] == "incomplete" and r["completeness"]["incomplete_steps"] == ["parse"]
+    parse_step = next(s for s in r["steps_status"] if s["id"] == "parse")
+    assert parse_step["state"] == "не выполнен" and "OCR недоступен" in parse_step["reason"]
+    assert r["verdict"].startswith("Проверка неполная")
+
+
+def test_mixed_pdf_incomplete_with_model(scripted, monkeypatch, tmp_path):
+    from tzcheck.pipeline import check
+    for k in ("TZCHECK_ORCHESTRATOR", "TZCHECK_RAG", "TZCHECK_CUSTOMER"):
+        monkeypatch.delenv(k, raising=False)
+    monkeypatch.setenv("TZCHECK_OCR", "0")
+    monkeypatch.setenv("TZCHECK_REFDATA_OFFLINE", "1")
+    path, _ = _mixed_pdf(tmp_path)
+    r = check(path, use_llm=True)
+    assert r["status"] == "incomplete" and r["completeness"]["incomplete_steps"] == ["parse"]
+    assert r["summary"].startswith("Проверка неполная") and "OCR недоступен" in r["summary"]
+    assert check("samples/pdf/lift_src.pdf", use_llm=False)["status"] == "ok"

@@ -176,10 +176,18 @@ def doc_scope(doc):
         _flags.value = prev
 
 
-def allow_external(doc_flags: dict | None = None) -> bool:
+def call_target(stage: str = "") -> tuple[str, str]:
+    """Модель и адрес, куда фактически уходит вызов (как в _call): у шага со своей моделью (TZCHECK_<ШАГ>_MODEL) свой адрес,
+    у остальных общие."""
+    own = bool(stage and os.environ.get(f"TZCHECK_{stage.upper()}_MODEL"))
+    model = stage_setting("MODEL", stage) or os.environ.get("TZCHECK_LLM_MODEL", "")
+    return model, os.environ.get(f"TZCHECK_{stage.upper()}_API_BASE" if own else "TZCHECK_LLM_API_BASE", "")
+
+
+def allow_external(doc_flags: dict | None = None, stage: str = "") -> bool:
     """Текст ТЗ уходит во внешнюю модель, только если включён и загрузился слой NER или документ помечен открытым.
-    Локальная модель без ограничений."""
-    if not pii.external_model():
+    Внешняя модель или нет, решают модель и адрес самого вызова (stage: шаг со своей моделью). Локальная модель без ограничений."""
+    if not pii.external_model(*call_target(stage)):
         return True
     if (doc_flags or {}).get("public") or os.environ.get("TZCHECK_DOC_PUBLIC", "0").strip().lower() in ("1", "true", "yes", "on"):
         return True
@@ -225,7 +233,7 @@ def _call(prompt: str, max_tokens: int = 4000, doc_flags: dict | None = None, st
     """Все вызовы модели по тексту ТЗ идут сюда. doc_flags: явно или из _safe текущего потока.
     stage: шаг ядра, для которого заданы свои настройки модели (stage_setting).
     Каждый вызов пишется в журнал прогона (journal_scope): промпт с маской ПД, сырой ответ, разбор, ошибка."""
-    if not allow_external(doc_flags if doc_flags is not None else getattr(_flags, "value", None)):
+    if not allow_external(doc_flags if doc_flags is not None else getattr(_flags, "value", None), stage):
         _journal(prompt, stage_setting("MODEL", stage) or os.environ.get("TZCHECK_LLM_MODEL", ""), 0.0, 0.0, None, "", None, f"внешняя отправка запрещена: {BLOCKED}")
         raise ExternalBlocked(BLOCKED)
     import litellm

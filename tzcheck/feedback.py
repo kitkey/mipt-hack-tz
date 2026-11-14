@@ -105,6 +105,8 @@ def apply(findings: list, customer: str = "") -> list:
                 f.confidence_pct = max(0, int(f.confidence_pct) - 20)
                 f.confidence_basis = (f.confidence_basis or "оценка") + "; −20 по отклонениям закупщиков"
             f.evidence["обратная связь"] = f"закупщики отклонили такие замечания в {rej} из {n} проверок"
+            # причина ручной проверки, которую подтверждение второй проверки не снимает (pipeline.route)
+            f._hold = getattr(f, "_hold", []) + [f.evidence["обратная связь"]]
         elif n >= 5:
             f.evidence["обратная связь"] = f"закупщики приняли такие замечания в {n - rej} из {n} проверок"
         out.append(f)

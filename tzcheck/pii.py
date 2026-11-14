@@ -46,14 +46,15 @@ _failed = False
 _cache: dict[str, list] = {}
 
 
-def external_model() -> bool:
-    """Модель внешняя: openrouter/ или api_base не на этой машине. Без api_base LiteLLM ходит в облако провайдера, кроме ollama."""
-    model = os.environ.get("TZCHECK_LLM_MODEL", "")
+def external_model(model: str | None = None, base: str | None = None) -> bool:
+    """Модель внешняя: openrouter/ или api_base не на этой машине. Без api_base LiteLLM ходит в облако провайдера, кроме ollama.
+    model и base: фактические модель и адрес вызова (llm.call_target), по умолчанию общие TZCHECK_LLM_MODEL и TZCHECK_LLM_API_BASE."""
+    model = os.environ.get("TZCHECK_LLM_MODEL", "") if model is None else model
     if not model:
         return False
     if model.startswith("openrouter/"):
         return True
-    base = os.environ.get("TZCHECK_LLM_API_BASE", "").strip()
+    base = (os.environ.get("TZCHECK_LLM_API_BASE", "") if base is None else base).strip()
     if not base:
         return not model.startswith(("ollama/", "ollama_chat/"))
     return (urlparse(base if "//" in base else "//" + base).hostname or "").lower() not in LOCAL_HOSTS
