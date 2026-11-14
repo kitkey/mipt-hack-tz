@@ -388,19 +388,24 @@ def test_trace_file_only_via_api(tmp_path, monkeypatch, scripted):
     assert c.get("/api/runs/nope/trace").status_code == 404
 
 
-def test_pipeline_routes_low_confidence_to_review(tmp_path, stub):
-    """Ошибку, которую вторая проверка подтвердила с уверенностью ниже порога, ядро не снимает, а кладёт в «На проверку»."""
+def test_pipeline_routes_by_second_check(tmp_path, stub):
+    """Подтверждённое второй проверкой идёт в основной список, пониженное ею ядро не снимает, а кладёт в «На проверку»."""
     from docx import Document
     d = Document()
     d.add_paragraph("Срок поставки: в разумный срок.")
+    d.add_paragraph("Товар должен соответствовать ГОСТ 12345-67.")
     p = tmp_path / "a.docx"
     d.save(p)
     stub({"паспорт": {"passport": PASS["passport"], "roles": []},
-          "найти дефекты": {"findings": [{"block_id": "p1", "quote": "в разумный срок", "category": "Противоречие",
-                                          "severity": "high", "explanation": "Срок не определён.", "fix": "Указать число дней.", "confidence": 90}]},
-          "независимая вторая проверка": {"decisions": [{"n": 0, "decision": "keep", "reason": "срок не задан", "confidence": 88}]}})
+          "найти дефекты": {"findings": [{"block_id": "p1", "quote": "в разумный срок", "category": "Противоречие", "needs_review": True,
+                                          "severity": "high", "explanation": "Срок не определён.", "fix": "Указать число дней.", "confidence": 90},
+                                         {"block_id": "p2", "quote": "ГОСТ 12345-67", "category": "Стандарты (ГОСТ, поверка)",
+                                          "severity": "medium", "explanation": "Стандарт заменён.", "fix": "Указать действующий.", "confidence": 60}]},
+          "независимая вторая проверка": {"decisions": [{"n": 0, "decision": "keep", "reason": "срок не задан", "confidence": 88},
+                                                        {"n": 1, "decision": "lower", "reason": "статус стандарта вне комплекта", "confidence": 50}]}})
     r = pipeline.check(str(p), use_llm=True)
-    assert [(f["quote"], f["section"], f["status"]) for f in r["findings"]] == [("в разумный срок", "llm_review", "ошибка")]
-    assert r["stats"]["from_model"] == 1 and r["stats"]["by_status"] == {}
-    assert "уверенность второй проверки 88 %" in r["findings"][0]["evidence"]["блок отчёта"]
+    assert [(f["quote"], f["section"], f["status"]) for f in r["findings"]] == [("в разумный срок", "main", "ошибка"),
+                                                                              ("ГОСТ 12345-67", "llm_review", "ручная проверка")]
+    assert r["stats"]["from_model"] == 1 and r["stats"]["by_status"] == {"ошибка": 1}
+    assert r["findings"][1]["evidence"]["блок отчёта"] == "на проверку: вторая проверка: понижено: на ручную проверку"
     assert "«На проверку»" in r["summary"]
