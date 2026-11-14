@@ -240,6 +240,8 @@ def core_find(doc, scr, groups, rep) -> list[Finding]:
     cats = categories_for(groups)
     rep.start("core_find")
     found = core.find(doc, scr, cats)
+    rep.update(stage="полнота описания позиций")
+    found += core.complete(doc, scr, cats)
     rep.update(stage="сверка со справочниками")
     found += core.refs(doc, scr, cats)
     rep.update(stage="сверка с чек-листами ГОСТ")

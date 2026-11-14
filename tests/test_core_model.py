@@ -223,6 +223,26 @@ def test_second_check_can_use_its_own_model(monkeypatch):
     assert {c["model"] for c in doc.journal.calls} == {"stub/verify"}
 
 
+def test_completeness_pass_runs_per_position_and_feeds_common_path(stub, monkeypatch):
+    """Проход полноты: один вызов на позицию, замечание привязывается к строке и идёт общим путём; настройка его выключает."""
+    def answer(prompt):
+        assert "[t1r2]" in prompt and "pass|weak|fail" in prompt
+        return {"items": [{"name": "Стол рабочий", "verdict": "fail"}],
+                "findings": [{"block_id": "t1r3", "quote": "Высота", "category": "Неполнота или комплектность", "severity": "medium",
+                              "explanation": "Не указано значение высоты.", "fix": "Указать высоту.", "absent": True, "missing": "значение высоты",
+                              "confidence": 80},
+                             {"block_id": "t1r2", "quote": "Длина", "category": "Ограничение конкуренции", "severity": "low",
+                              "explanation": "x", "fix": "y", "confidence": 50}]} if "Стол" in prompt else {"items": [], "findings": []}
+    s, doc = _prep(stub, {"найти дефекты": {"findings": [], "lookups": []}, "полнота и проверяемость": answer})
+    core.find(doc, Scrubber(), CATS)
+    out = core.complete(doc, Scrubber(), CATS)
+    assert len(s.asked("полнота и проверяемость")) == len([u for u in doc.core_units if u.kind == "position"]) >= 1
+    assert [(f.block_id, f.quote, f.source, f._absent) for f in out] == [("t1r3", "Высота", "model:complete", True)]
+    assert core.complete(doc, Scrubber(), ["Противоречие"]) == []
+    monkeypatch.setenv("TZCHECK_COMPLETENESS", "0")
+    assert core.complete(doc, Scrubber(), CATS) == []
+
+
 def _finding(**kw):
     base = {"block_id": "t1r3", "quote": "Высота", "category": "Неполнота или комплектность", "severity": "high",
             "explanation": "Не указано значение высоты стола.", "fix": "Указать высоту.", "norm_ids": [], "confidence": 80}
