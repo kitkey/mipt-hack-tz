@@ -31,8 +31,9 @@ def _allowed(prompt: str) -> list[str]:
 
 
 class ScriptedModel:
-    def __init__(self, per_unit: int = 3, verify_score=90, find_score=60, replace=True):
+    def __init__(self, per_unit: int = 3, verify_score=90, find_score=60, replace=True, lower_every: int = 0):
         self.per_unit, self.verify_score, self.find_score, self.replace = per_unit, verify_score, find_score, replace
+        self.lower_every = lower_every  # вторая проверка понижает каждое lower_every-е замечание (0: подтверждает все)
         self.prompts = []
 
     def asked(self, key: str) -> list[str]:
@@ -65,7 +66,8 @@ class ScriptedModel:
             return {"findings": out, "lookups": []}
         if prompt.startswith("Задача: независимая вторая проверка"):
             ns = re.findall(r"^(\d+)\. \[", prompt.split("<<<ТЗ>>>", 1)[-1], re.M)
-            return {"decisions": [{"n": int(n), "decision": "keep", "reason": "по тексту", "confidence": self.verify_score} for n in ns]}
+            return {"decisions": [{"n": int(n), "decision": "lower" if self.lower_every and int(n) % self.lower_every == 1 else "keep",
+                                   "reason": "по тексту", "confidence": self.verify_score} for n in ns]}
         if "Верни JSON: {\"summary\"" in prompt:
             return {"summary": "Заключение заглушки."}
         return {"findings": [], "decisions": []}

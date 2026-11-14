@@ -214,24 +214,36 @@ def _reasoning_body(model: str, custom_base: bool) -> dict:
     return {}
 
 
-def _call(prompt: str, max_tokens: int = 4000, doc_flags: dict | None = None) -> dict:
+def stage_setting(name: str, stage: str = "") -> str:
+    """Настройка модели для шага ядра: TZCHECK_<ШАГ>_<ИМЯ> (TZCHECK_VERIFY_MODEL, TZCHECK_VERIFY_API_BASE, TZCHECK_VERIFY_API_KEY),
+    без неё общая TZCHECK_LLM_<ИМЯ>. Так вторую проверку можно отдать другой модели, чем поиск."""
+    own = os.environ.get(f"TZCHECK_{stage.upper()}_{name}", "") if stage else ""
+    return own or os.environ.get(f"TZCHECK_LLM_{name}", "")
+
+
+def _call(prompt: str, max_tokens: int = 4000, doc_flags: dict | None = None, stage: str = "") -> dict:
     """Все вызовы модели по тексту ТЗ идут сюда. doc_flags: явно или из _safe текущего потока.
+    stage: шаг ядра, для которого заданы свои настройки модели (stage_setting).
     Каждый вызов пишется в журнал прогона (journal_scope): промпт с маской ПД, сырой ответ, разбор, ошибка."""
     if not allow_external(doc_flags if doc_flags is not None else getattr(_flags, "value", None)):
-        _journal(prompt, os.environ.get("TZCHECK_LLM_MODEL", ""), 0.0, 0.0, None, "", None, f"внешняя отправка запрещена: {BLOCKED}")
+        _journal(prompt, stage_setting("MODEL", stage) or os.environ.get("TZCHECK_LLM_MODEL", ""), 0.0, 0.0, None, "", None, f"внешняя отправка запрещена: {BLOCKED}")
         raise ExternalBlocked(BLOCKED)
     import litellm
     kwargs = dict(
-        model=os.environ["TZCHECK_LLM_MODEL"],
+        model=stage_setting("MODEL", stage) or os.environ["TZCHECK_LLM_MODEL"],
         messages=[{"role": "system", "content": SYSTEM}, {"role": "user", "content": prompt}],
         temperature=float(os.environ.get("TZCHECK_LLM_TEMPERATURE", "0")),
         max_tokens=max(max_tokens, int(os.environ.get("TZCHECK_LLM_MAX_TOKENS", "24000"))),
         timeout=float(os.environ.get("TZCHECK_LLM_TIMEOUT", "900")),
     )
-    if os.environ.get("TZCHECK_LLM_API_BASE"):
-        kwargs["api_base"] = os.environ["TZCHECK_LLM_API_BASE"]
-    if os.environ.get("TZCHECK_LLM_API_KEY"):
-        kwargs["api_key"] = os.environ["TZCHECK_LLM_API_KEY"]
+    own = bool(stage and os.environ.get(f"TZCHECK_{stage.upper()}_MODEL"))
+    # у шага со своей моделью свой адрес и ключ; общий адрес к чужой модели не подставляется
+    base = os.environ.get(f"TZCHECK_{stage.upper()}_API_BASE", "") if own else os.environ.get("TZCHECK_LLM_API_BASE", "")
+    key = (os.environ.get(f"TZCHECK_{stage.upper()}_API_KEY", "") if own else "") or os.environ.get("TZCHECK_LLM_API_KEY", "")
+    if base:
+        kwargs["api_base"] = base
+    if key and (base or not own):
+        kwargs["api_key"] = key
     if os.environ.get("TZCHECK_LLM_JSON_MODE", "1") == "1":
         kwargs["response_format"] = {"type": "json_object"}
     extra = _reasoning_body(kwargs["model"], bool(kwargs.get("api_base")))
@@ -451,7 +463,7 @@ def verify_rules(doc: ParsedDoc, findings: list[Finding], scr: Scrubber) -> list
             continue
         dec, reason, score = decided[id(f)]
         f.evidence["вторая проверка"] = DEC_RU.get(dec, dec)
-        f.evidence["довод проверки"] = scr.restore(reason)[:300]
+        f.evidence["довод проверки"] = scr.restore(reason)
         confidence.set_model_score(f, score, confidence.STAGE_VERIFY)
         if dec == "reject":
             # модель на A/B снимала верные находки правил, поэтому замечание правила остаётся и уходит закупщику
@@ -472,7 +484,7 @@ def verify_new(doc: ParsedDoc, found: list[Finding], scr: Scrubber) -> list[Find
     for f in found:
         dec, reason, score = decided.get(id(f), ("", "", None))
         f.evidence["вторая проверка"] = DEC_RU.get(dec, "не проведена")
-        f.evidence["довод проверки"] = scr.restore(reason)[:300]
+        f.evidence["довод проверки"] = scr.restore(reason)
         if dec:
             confidence.set_model_score(f, score, confidence.STAGE_VERIFY)
         if dec == "confirm":
@@ -541,7 +553,7 @@ def recheck(doc: ParsedDoc, findings: list[Finding], scr: Scrubber, threshold: i
             continue
         dec, reason, score = decided[id(f)]
         f.evidence["повторная проверка"] = DEC_RU.get(dec, dec)
-        f.evidence["довод повторной проверки"] = scr.restore(reason)[:300]
+        f.evidence["довод повторной проверки"] = scr.restore(reason)
         confidence.set_model_score(f, score, confidence.STAGE_RECHECK)
         if dec == "reject" and not f.source.startswith("rule"):
             _rejected(doc).append(f)

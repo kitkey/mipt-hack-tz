@@ -53,14 +53,15 @@ def test_practice_only_for_customer_from_passport(scripted, monkeypatch, profile
     assert r["document"]["procurement"]["профиль заказчика"] == profile
 
 
-def test_findings_of_core_routed_by_own_fields_and_in_report(scripted):
-    """Основной список: «ошибка» с уверенностью второй проверки от 90 % и не «не указано»; остальное в разделе «На проверку»."""
+def test_findings_of_core_routed_by_second_check_and_in_report(scripted):
+    """Основной список: подтверждённое второй проверкой; пониженное ею идёт в раздел «На проверку»."""
+    scripted.lower_every = 2
     r = check(FIN, use_llm=True)
     main = [f for f in r["findings"] if f["section"] == "main"]
     review = [f for f in r["findings"] if f["section"] == "llm_review"]
     assert main and review and len(main) + len(review) == len(r["findings"])
-    assert all(f["status"] == "ошибка" and f["confidence_pct"] >= 90 for f in main)
-    assert all(f["evidence"]["блок отчёта"].startswith("на проверку: ") for f in review)
+    assert all(f["evidence"]["вторая проверка"] == "подтверждено" and not f["needs_review"] for f in main)
+    assert all(f["evidence"]["блок отчёта"].startswith("на проверку: вторая проверка: понижено") for f in review)
     assert r["stats"]["from_model"] == len(review) and r["verdict"]
     html = to_html(r)
     assert main[0]["quote"] in html and f"На проверку ({len(review)})" in html

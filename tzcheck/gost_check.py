@@ -7,12 +7,13 @@
 утверждённому пункту или по отсутствующему параметру уйти мимо проверки человеком."""
 import time
 
-from . import llm, passport, search, tables
+from . import chunks, llm, passport, search, tables
 from .ask import _scope, ask, pmap, unit_of, wrap
 from .model import Finding
 
 ITEMS_PER_CALL = 25
 CANDIDATES = 12
+TEXT_CHARS = 12000
 KIND_TITLES = {"order_param": "параметр заказа", "limit": "предел", "docs": "документ или маркировка"}
 STATUS_TITLES = {"approved": "утверждён человеком", "verified": "сверен моделью по тексту стандарта"}
 
@@ -67,7 +68,7 @@ def _targets(doc, scr) -> list[Target]:
         b0 = doc.block(p.block_ids[0]) if p.block_ids else None
         if b0 is None or not passport.checked(b0) or not p.name:
             continue
-        text = tables.render(doc, p, scr, limit=4000)
+        text = tables.render(doc, p, scr, limit=10 ** 6)
         desc = "; ".join(f"{c.name}: {c.value}" for c in p.chars[:20] if c.name)
         info = {"name": scr.scrub(p.name[:200]), "okpd2": p.okpd or "", "description": scr.scrub(desc[:600])}
         out.append(Target(f"позиция «{p.name[:100]}» [{p.id}]", info, list(p.block_ids), text, p))
@@ -88,7 +89,7 @@ def _item_line(n: int, it: dict) -> str:
     cond = f"; условие: {it['condition']}" if it.get("condition") else ""
     return (f"{n}. {it.get('designation')}, п. {it.get('clause')}; {KIND_TITLES.get(it.get('kind'), it.get('kind'))}; "
             f"{STATUS_TITLES.get(it.get('status'), it.get('status'))}; {it.get('param')}; {it.get('requirement') or ''}{lim}{cond}; "
-            f"«{str(it.get('quote') or '')[:300]}»")
+            f"«{str(it.get('quote') or '')}»")
 
 
 def _applicability_calls(doc, title: str) -> list[str]:
@@ -119,8 +120,25 @@ def items(doc, target: Target, gosts: list[str]) -> tuple[list, list]:
     return got, calls
 
 
-def _context(doc, scr, target: Target, part: list) -> tuple[str, list]:
-    """Текст цели и места ТЗ, найденные поиском по параметру и названиям каждого пункта."""
+def _texts(text: str) -> list[str]:
+    """Текст цели целиком; длиннее TEXT_CHARS идёт кусками по строкам с заголовком позиции в каждом, хвост не теряется."""
+    if len(text) <= TEXT_CHARS:
+        return [text]
+    head, *rows = text.split("\n")
+    out, cur = [], []
+    for row in rows:
+        for piece in chunks.lines(row, TEXT_CHARS):
+            if cur and sum(len(x) for x in cur) + len(piece) > TEXT_CHARS:
+                out.append("\n".join([head] + cur))
+                cur = []
+            cur.append(piece)
+    if cur:
+        out.append("\n".join([head] + cur))
+    return out
+
+
+def _context(doc, scr, target: Target, part: list, text: str) -> tuple[str, list]:
+    """Текст цели и места ТЗ, найденные поиском по параметру и названиям каждого пункта (выдержка вокруг слов запроса)."""
     idx = search.of(doc)
     own = set(target.block_ids)
     picked, seen = [], set(own)
@@ -128,12 +146,12 @@ def _context(doc, scr, target: Target, part: list) -> tuple[str, list]:
         query = " ".join([str(it.get("param") or "")] + [str(a) for a in it.get("aliases") or []])
         for b, _ in idx.top(query, 2, exclude=seen, only=passport.checked):
             seen.add(b.id)
-            picked.append(b)
+            picked.append((b, query))
         if len(picked) >= CANDIDATES:
             break
-    lines = [target.text] if target.text else []
-    lines += [f"[{b.id}] ({b.location()}) {scr.scrub(b.text[:600])}" for b in picked[:CANDIDATES]]
-    blocks = [doc.block(x) for x in target.block_ids if doc.block(x)] + picked[:CANDIDATES]
+    lines = [text] if text else []
+    lines += [f"[{b.id}] ({b.location()}) {scr.scrub(chunks.window(b.text, query, 600))}" for b, query in picked[:CANDIDATES]]
+    blocks = [doc.block(x) for x in target.block_ids if doc.block(x)] + [b for b, _ in picked[:CANDIDATES]]
     return "\n".join(lines), blocks
 
 
@@ -149,9 +167,9 @@ def check(doc, scr, cats: list) -> list[Finding]:
     def work(t: Target):
         got, appl = items(doc, t, gosts)
         out = []
-        for start in range(0, len(got), ITEMS_PER_CALL):
+        for start, own in ((s, x) for x in _texts(t.text) for s in range(0, len(got), ITEMS_PER_CALL)):
             part = got[start:start + ITEMS_PER_CALL]
-            text, blocks = _context(doc, scr, t, part)
+            text, blocks = _context(doc, scr, t, part, own)
             if not blocks:
                 continue
             prompt = PROMPT.format(passport=pline, data=wrap(text), items="\n".join(_item_line(n, it) for n, it in enumerate(part, 1)),

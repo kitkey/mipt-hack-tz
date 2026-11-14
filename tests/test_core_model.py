@@ -2,6 +2,7 @@
 привязывает цитату дословно и отдаёт модели кандидатов поиска."""
 import json
 import sys
+from types import SimpleNamespace
 
 import pytest
 from conftest import fake_litellm
@@ -101,6 +102,23 @@ def test_customer_profile_only_from_list(stub):
     assert passport.practice(doc) == ""
 
 
+def test_customer_profile_forced_or_switched_off_by_setting(stub, monkeypatch):
+    """TZCHECK_CUSTOMER задаёт профиль заказчика, которого модель не узнала, и выключает узнанный; практика идёт в запрос поиска."""
+    s = stub({"паспорт": PASS, "разметка шапки": HEADER, "найти дефекты": {"findings": [], "lookups": []}})
+    monkeypatch.setenv("TZCHECK_CUSTOMER", "mipt")
+    doc = spec_doc()
+    assert passport.detect(doc, Scrubber())["профиль заказчика"] == "mipt"
+    tables.build(doc, Scrubber())
+    core.find(doc, Scrubber(), CATS)
+    assert all("Практика закупщиков заказчика (МФТИ)" in p for p in s.asked("найти дефекты"))
+    stub({"паспорт": dict(PASS, passport=dict(PASS["passport"], customer_profile="mipt"))})
+    monkeypatch.setenv("TZCHECK_CUSTOMER", "none")
+    doc = spec_doc()
+    assert passport.detect(doc, Scrubber())["профиль заказчика"] == "" and passport.practice(doc) == ""
+    monkeypatch.setenv("TZCHECK_CUSTOMER", "unknown")
+    assert passport.detect(spec_doc(), Scrubber())["профиль заказчика"] == ""
+
+
 def test_header_markup_one_call_per_table_and_layout(stub):
     s = stub({"паспорт": PASS, "разметка шапки": HEADER})
     doc = spec_doc()
@@ -150,6 +168,45 @@ def test_whole_position_goes_to_model_not_fixed_chunk(stub):
     assert not any("[c1]" in p.split("<<<ТЗ>>>")[-1] for p in prompts)
 
 
+def test_find_prompt_defines_categories_and_asks_for_every_defect(stub):
+    """В запросе поиска у каждой проверяемой категории есть определение, и модель просят назвать каждый дефект строки отдельно."""
+    s = stub({"паспорт": PASS, "разметка шапки": HEADER, "найти дефекты": {"findings": [], "lookups": []}})
+    doc = spec_doc()
+    passport.detect(doc, Scrubber())
+    tables.build(doc, Scrubber())
+    core.find(doc, Scrubber(), ["Противоречие", "Гарантийные условия"])
+    p = s.asked("найти дефекты")[0]
+    notes = p.split("Что относится к категории:")[1].split("Нормы (id: суть):")[0]
+    assert "- Противоречие: " in notes and "- Гарантийные условия: " in notes and "Ограничение конкуренции" not in notes
+    assert "каждый назови отдельным замечанием со своей цитатой" in p
+    assert set(core.CATEGORIES) == set(core.CATEGORY_NOTES)
+
+
+def test_second_check_can_use_its_own_model(monkeypatch):
+    """TZCHECK_VERIFY_MODEL отдаёт вторую проверку другой модели: поиск идёт в общую, вторая проверка в свою, со своим адресом."""
+    seen = []
+
+    def completion(**kw):
+        seen.append((kw["model"], kw.get("api_base"), kw["messages"][-1]["content"].split(".")[0]))
+        text = json.dumps({"findings": [], "decisions": [], "lookups": []})
+        return SimpleNamespace(choices=[SimpleNamespace(finish_reason="stop", message=SimpleNamespace(content=text))], usage=None)
+    monkeypatch.setitem(sys.modules, "litellm", SimpleNamespace(completion=completion))
+    monkeypatch.setenv("TZCHECK_LLM_MODEL", "stub/find")
+    monkeypatch.setenv("TZCHECK_LLM_API_BASE", "http://common")
+    monkeypatch.setenv("TZCHECK_VERIFY_MODEL", "stub/verify")
+    monkeypatch.setenv("TZCHECK_VERIFY_API_BASE", "http://verify")
+    doc = spec_doc()
+    pipeline.start_core(doc)
+    from tzcheck.ask import ask
+    ask(doc, "Задача: найти дефекты. x", 100, "поиск дефектов", "find")
+    ask(doc, "Задача: независимая вторая проверка. x", 100, "вторая проверка", "verify")
+    assert [(m, b) for m, b, _ in seen] == [("stub/find", "http://common"), ("stub/verify", "http://verify")]
+    assert [c["model"] for c in doc.journal.calls] == ["stub/find", "stub/verify"]
+    monkeypatch.delenv("TZCHECK_VERIFY_API_BASE")
+    ask(doc, "Задача: независимая вторая проверка. x", 100, "вторая проверка", "verify")
+    assert seen[-1][:2] == ("stub/verify", None)
+
+
 def _finding(**kw):
     base = {"block_id": "t1r3", "quote": "Высота", "category": "Неполнота или комплектность", "severity": "high",
             "explanation": "Не указано значение высоты стола.", "fix": "Указать высоту.", "norm_ids": [], "confidence": 80}
@@ -194,12 +251,25 @@ def test_absent_claim_checked_against_whole_set(stub):
     assert found == [] and len(doc.llm_rejected) == 1
 
 
-def test_absent_claim_stated_elsewhere_is_lowered(stub):
+def test_absent_claim_stated_elsewhere_is_rejected(stub):
+    """«Не указано», которое нашлось в другой части комплекта, неверно: замечание снимается и остаётся в журнале снятых."""
     claim = _finding(block_id="t1r4", quote="Высота сиденья", explanation="Не указан гарантийный срок.", absent=True, missing="гарантийный срок")
     s, doc = _prep(stub, {"найти дефекты": lambda p: {"findings": [claim] if "Стул" in p else []},
                           "проверить утверждения": {"decisions": [{"n": 1, "decision": "other", "block_id": "p2", "reason": "есть"}]}})
     found = core.absent(doc, Scrubber(), core.find(doc, Scrubber(), CATS))
-    assert len(found) == 1 and found[0].severity == "low" and found[0].needs_review and "p2" in found[0].also_in
+    assert found == [] and len(doc.llm_rejected) == 1
+    assert doc.llm_rejected[0].evidence["проверка «не указано»"].startswith("указано в другой части комплекта: ")
+    assert "снято: указано в другой части комплекта" in doc.llm_rejected[0].trace[-1]["text"]
+
+
+def test_absent_claim_needs_shown_candidate_to_be_rejected(stub):
+    """Модель сослалась на место, которого ей не показывали: утверждение не снято, замечание идёт на ручную проверку."""
+    claim = _finding(block_id="t1r4", quote="Высота сиденья", explanation="Не указан гарантийный срок.", absent=True, missing="гарантийный срок")
+    s, doc = _prep(stub, {"найти дефекты": lambda p: {"findings": [claim] if "Стул" in p else []},
+                          "проверить утверждения": {"decisions": [{"n": 1, "decision": "same", "block_id": "t1r4", "reason": "есть"}]}})
+    found = core.absent(doc, Scrubber(), core.find(doc, Scrubber(), CATS))
+    assert len(found) == 1 and found[0].needs_review and doc.llm_rejected == []
+    assert found[0].evidence["проверка «не указано»"].startswith("не подтверждена")
 
 
 def test_absent_claim_confirmed_stays(stub):
@@ -208,6 +278,57 @@ def test_absent_claim_confirmed_stays(stub):
                           "проверить утверждения": {"decisions": [{"n": 1, "decision": "not_found", "reason": "нет"}]}})
     found = core.absent(doc, Scrubber(), core.find(doc, Scrubber(), CATS))
     assert len(found) == 1 and found[0].severity == "high"
+
+
+def test_distinct_findings_of_one_answer_on_one_quote_are_kept(stub):
+    """Два замечания одного ответа модели на одной цитате и в одной категории с разными доводами остаются оба: дублем считается
+    повтор довода или то же место из другого вызова."""
+    items = [_finding(explanation="Не указана высота стола."), _finding(explanation="Не указан допуск на высоту."),
+             _finding(explanation="Не указана высота стола.")]
+    s, doc = _prep(stub, {"найти дефекты": lambda p: {"findings": items if "Стол" in p else []}})
+    found = core.dedupe(core.find(doc, Scrubber(), CATS))
+    assert [f.explanation for f in found] == ["Не указана высота стола.", "Не указан допуск на высоту."]
+    kept = pipeline._collapse_repeats(found, doc)
+    assert len(kept) == 2 and not kept[0].also_in
+    other = core.find(doc, Scrubber(), CATS)[:1]
+    other[0].trace[0]["call"] = "c999"
+    assert len(core.dedupe(found + other)) == 2
+
+
+def test_verify_shows_part_once_with_places_from_whole_set(stub):
+    """Замечания одной позиции проверяются одним вызовом: позиция в запросе один раз, к доводу подобраны места комплекта."""
+    items = [_finding(), _finding(block_id="t1r2", quote="Длина", severity="low", category="Гарантийные условия",
+                                  explanation="Не указан гарантийный срок на стол.", norm_ids=["223-FZ-4-10-1"])]
+    seen = []
+
+    def verify(prompt):
+        seen.append(prompt)
+        return {"decisions": [{"n": 0, "decision": "keep", "reason": "значения нет", "confidence": 90},
+                              {"n": 1, "decision": "reject", "reason": "гарантия 12 месяцев в [p2]", "confidence": 5}]}
+    s, doc = _prep(stub, {"найти дефекты": lambda p: {"findings": items if "Стол" in p else []}, "независимая вторая проверка": verify})
+    out = core.verify(doc, Scrubber(), core.find(doc, Scrubber(), CATS))
+    assert len(seen) == 1 and seen[0].count("Характеристика: Длина") == 1
+    data = seen[0].split("<<<ТЗ>>>")[-1]
+    assert "Другие места комплекта:" in data and "[p2] (гарантия;" in data and "Гарантийный срок не менее 12 месяцев" in data
+    assert "Другие места по этому замечанию: " in data and "Нормы из замечаний:" in data and "223-ФЗ, ст. 4, ч. 10, п. 1" in data
+    assert [f.quote for f in out] == ["Высота"] and out[0].evidence["вторая проверка"] == "подтверждено"
+    assert doc.llm_rejected[0].evidence["довод проверки"] == "гарантия 12 месяцев в [p2]"
+
+
+def test_verify_sees_what_the_finding_stands_on(stub):
+    """Вторая проверка видит справочные записи и второе место, на которых стоит довод, а не только сам довод."""
+    def verify(prompt):
+        assert "Справочные записи: ОКПД 2 «31.01.12» для позиции «Стол рабочий»: в классификаторе «Мебель деревянная для офисов»" in prompt
+        assert "Второе место [c1] (проект договора): Количество столов по договору: 5 штук." in prompt
+        return {"decisions": [{"n": 0, "decision": "lower", "reason": "нужен классификатор", "confidence": 40},
+                              {"n": 1, "decision": "keep", "reason": "4 и 5 штук", "confidence": 95}]}
+    s, doc = _prep(stub, {"найти дефекты": lambda p: {"findings": [_finding(), _finding(block_id="t1r2", quote="Длина", category="Противоречие")]
+                                                   if "Стол" in p else []}, "независимая вторая проверка": verify})
+    found = core.find(doc, Scrubber(), CATS)
+    found[0]._records = ["ОКПД 2 «31.01.12» для позиции «Стол рабочий»: в классификаторе «Мебель деревянная для офисов»"]
+    found[1].evidence.update({"второй блок": "c1", "вторая цитата": "5 штук"})
+    out = core.verify(doc, Scrubber(), found)
+    assert [(f.needs_review, f.evidence["вторая проверка"]) for f in out] == [(True, "понижено, на проверку"), (False, "подтверждено")]
 
 
 def test_verify_can_reject_or_lower_but_not_raise(stub):
@@ -339,19 +460,24 @@ def test_trace_file_only_via_api(tmp_path, monkeypatch, scripted):
     assert c.get("/api/runs/nope/trace").status_code == 404
 
 
-def test_pipeline_routes_low_confidence_to_review(tmp_path, stub):
-    """Ошибку, которую вторая проверка подтвердила с уверенностью ниже порога, ядро не снимает, а кладёт в «На проверку»."""
+def test_pipeline_routes_by_second_check(tmp_path, stub):
+    """Подтверждённое второй проверкой идёт в основной список, пониженное ею ядро не снимает, а кладёт в «На проверку»."""
     from docx import Document
     d = Document()
     d.add_paragraph("Срок поставки: в разумный срок.")
+    d.add_paragraph("Товар должен соответствовать ГОСТ 12345-67.")
     p = tmp_path / "a.docx"
     d.save(p)
     stub({"паспорт": {"passport": PASS["passport"], "roles": []},
-          "найти дефекты": {"findings": [{"block_id": "p1", "quote": "в разумный срок", "category": "Противоречие",
-                                          "severity": "high", "explanation": "Срок не определён.", "fix": "Указать число дней.", "confidence": 90}]},
-          "независимая вторая проверка": {"decisions": [{"n": 0, "decision": "keep", "reason": "срок не задан", "confidence": 88}]}})
+          "найти дефекты": {"findings": [{"block_id": "p1", "quote": "в разумный срок", "category": "Противоречие", "needs_review": True,
+                                          "severity": "high", "explanation": "Срок не определён.", "fix": "Указать число дней.", "confidence": 90},
+                                         {"block_id": "p2", "quote": "ГОСТ 12345-67", "category": "Стандарты (ГОСТ, поверка)",
+                                          "severity": "medium", "explanation": "Стандарт заменён.", "fix": "Указать действующий.", "confidence": 60}]},
+          "независимая вторая проверка": {"decisions": [{"n": 0, "decision": "keep", "reason": "срок не задан", "confidence": 88},
+                                                        {"n": 1, "decision": "lower", "reason": "статус стандарта вне комплекта", "confidence": 50}]}})
     r = pipeline.check(str(p), use_llm=True)
-    assert [(f["quote"], f["section"], f["status"]) for f in r["findings"]] == [("в разумный срок", "llm_review", "ошибка")]
-    assert r["stats"]["from_model"] == 1 and r["stats"]["by_status"] == {}
-    assert "уверенность второй проверки 88 %" in r["findings"][0]["evidence"]["блок отчёта"]
+    assert [(f["quote"], f["section"], f["status"]) for f in r["findings"]] == [("в разумный срок", "main", "ошибка"),
+                                                                              ("ГОСТ 12345-67", "llm_review", "ручная проверка")]
+    assert r["stats"]["from_model"] == 1 and r["stats"]["by_status"] == {"ошибка": 1}
+    assert r["findings"][1]["evidence"]["блок отчёта"] == "на проверку: вторая проверка: понижено, на проверку"
     assert "«На проверку»" in r["summary"]

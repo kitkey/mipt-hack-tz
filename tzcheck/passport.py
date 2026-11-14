@@ -3,6 +3,7 @@
 Части режет разбор: смена файла, раздела (заголовка) или таблицы. Роль и паспорт определяет только модель;
 часть, которой модель роль не дала, наследует роль предыдущей части того же файла."""
 import json
+import os
 
 from . import customer
 from .ask import ask, wrap
@@ -103,6 +104,10 @@ def detect(doc, scr) -> dict:
                      "вид": str(p.get("kind") or ""), "предмет": scr.restore(str(p.get("subject") or "")),
                      "заказчик": scr.restore(str(p.get("customer") or ""))})
     prof = str(p.get("customer_profile") or "")
+    # TZCHECK_CUSTOMER: развёртывание у одного заказчика задаёт его профиль явно (id) или выключает практику (none)
+    forced = os.environ.get("TZCHECK_CUSTOMER", "").strip().lower()
+    if forced:
+        prof = "" if forced in ("none", "off", "0") else forced
     passport["профиль заказчика"] = prof if any(x["id"] == prof for x in customer.PROFILES) else ""
     roles = {}
     for r in data.get("roles") or []:

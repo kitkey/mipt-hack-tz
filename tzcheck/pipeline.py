@@ -72,9 +72,13 @@ def _collapse_repeats(findings: list[Finding], doc: ParsedDoc) -> list[Finding]:
             groups[key] = f
             out.append(f)
             continue
+        if f.block_id == first.block_id:
+            # другое замечание той же категории на той же цитате того же блока: дубли уже снял core.dedupe, это не повтор
+            out.append(f)
+            continue
         if SEV_ORDER.get(f.severity, 1) < SEV_ORDER.get(first.severity, 1):
             first.severity = f.severity  # при слиянии остаётся максимальный риск
-        if f.block_id != first.block_id and f.block_id not in first.also_in:
+        if f.block_id not in first.also_in:
             first.also_in.append(f.block_id)
             first.trace.append({"step": "repeats", "text": f"та же цитата ещё в блоке {f.block_id}: замечания объединены"})
     for f in out:
@@ -274,28 +278,42 @@ def run_core(doc, scr, groups, rep) -> tuple[list[Finding], list[str]]:
 
 
 def main_min_confidence() -> int:
+    """Необязательный порог уверенности второй проверки для основного списка; 0 (по умолчанию) порог выключает."""
     try:
-        return int(os.environ.get("TZCHECK_MAIN_MIN_CONFIDENCE", "90"))
+        return max(0, int(os.environ.get("TZCHECK_MAIN_MIN_CONFIDENCE", "0")))
     except ValueError:
-        return 90
+        return 0
+
+
+CONFIRMED = "подтверждено"
 
 
 def route(f: Finding) -> Finding:
-    """Раздел отчёта для замечания ядра по его собственным полям, без проверки текста кодом. В основной список идёт только то,
-    что модель назвала ошибкой (статус «ошибка»), вторая проверка подтвердила с уверенностью от TZCHECK_MAIN_MIN_CONFIDENCE
-    (по умолчанию 90) и что не держится на утверждении «не указано». Остальное идёт в раздел «на проверку», ничего не снимается."""
+    """Раздел отчёта для замечания ядра по решению второй проверки, без проверки текста кодом. В основной список идёт то, что
+    вторая проверка подтвердила по тексту. В раздел «на проверку» идёт остальное, ничего не снимается: пониженное (вывод зависит
+    от сведений вне комплекта), не проверенное, утверждение «не указано» (поиск по комплекту отсутствие не доказывает) и
+    замечание по пункту чеклиста ГОСТ, который не утвердил человек. Сомнение шага поиска (needs_review) подтверждение снимает."""
     if f.section != SECTION_MAIN or not f.source.startswith("model:"):
         return f
     why = []
-    if f.status != STATUS_ERROR:
-        why.append(f"статус «{status_title(f.status)}»")
-    if f.confidence_pct is None or f.confidence_pct < main_min_confidence():
-        why.append("нет оценки уверенности второй проверки" if f.confidence_pct is None
-                   else f"уверенность второй проверки {f.confidence_pct} % при пороге {main_min_confidence()} %")
+    verdict = str(f.evidence.get("вторая проверка") or "не проведена")
+    if verdict != CONFIRMED:
+        why.append(f"вторая проверка: {verdict}")
     if getattr(f, "_absent", False) or f.evidence.get("проверка «не указано»"):
         why.append("вывод «не указано»")
+    gost = f.evidence.get("пункт ГОСТ")
+    if f.needs_review and (f.source == "model:gost" or isinstance(gost, dict)):
+        why.append("пункт чеклиста ГОСТ не утверждён человеком" if isinstance(gost, dict) else "модель не указала пункт чеклиста ГОСТ")
+    floor = main_min_confidence()
+    if floor and (f.confidence_pct is None or f.confidence_pct < floor):
+        got = "нет оценки" if f.confidence_pct is None else f"{f.confidence_pct} %"
+        why.append(f"уверенность второй проверки {got}, порог основного списка {floor} %")
     if not why:
-        f.trace.append({"step": "route", "text": "основной список: ошибка, подтверждена второй проверкой с высокой уверенностью"})
+        if f.needs_review:
+            # вторая проверка видела часть целиком и места комплекта: её подтверждение снимает пометку шага поиска
+            f.needs_review, f.status = False, ""
+            f.finalize()
+        f.trace.append({"step": "route", "text": "основной список: вторая проверка подтвердила дефект по тексту"})
         return f
     f.section, f.needs_review = SECTION_LLM, True
     f.evidence["блок отчёта"] = "на проверку: " + "; ".join(why)
