@@ -104,10 +104,11 @@ def detect(doc, scr) -> dict:
                      "вид": str(p.get("kind") or ""), "предмет": scr.restore(str(p.get("subject") or "")),
                      "заказчик": scr.restore(str(p.get("customer") or ""))})
     prof = str(p.get("customer_profile") or "")
-    # TZCHECK_CUSTOMER: развёртывание у одного заказчика задаёт его профиль явно (id) или выключает практику (none)
+    # TZCHECK_CUSTOMER: по умолчанию практика заказчика выключена; auto = профиль называет модель по тексту ТЗ,
+    # id профиля = развёртывание у одного заказчика задаёт его явно
     forced = os.environ.get("TZCHECK_CUSTOMER", "").strip().lower()
-    if forced:
-        prof = "" if forced in ("none", "off", "0") else forced
+    if forced != "auto":
+        prof = "" if forced in ("", "none", "off", "0") else forced
     passport["профиль заказчика"] = prof if any(x["id"] == prof for x in customer.PROFILES) else ""
     roles = {}
     for r in data.get("roles") or []:

@@ -36,6 +36,7 @@ def test_failed_call_is_reported_not_raised(scripted, monkeypatch):
 
 @pytest.mark.parametrize("profile,shown", [("", False), ("mipt", True)])
 def test_practice_only_for_customer_from_passport(scripted, monkeypatch, profile, shown):
+    monkeypatch.setenv("TZCHECK_CUSTOMER", "auto")
     orig = scripted.__call__
 
     class Wrap:
@@ -65,3 +66,9 @@ def test_findings_of_core_routed_by_second_check_and_in_report(scripted):
     assert r["stats"]["from_model"] == len(review) and r["verdict"]
     html = to_html(r)
     assert main[0]["quote"] in html and f"На проверку ({len(review)})" in html
+
+
+def test_practice_is_off_by_default(scripted, monkeypatch):
+    from tzcheck import passport
+    monkeypatch.delenv("TZCHECK_CUSTOMER", raising=False)
+    assert passport.customer.detect("Московский физико-технический институт") is None

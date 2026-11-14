@@ -19,8 +19,8 @@ PROFILES = load()
 
 def detect(text: str) -> dict | None:
     forced = os.environ.get("TZCHECK_CUSTOMER", "").strip().lower()
-    if forced in ("none", "off", "0"):
+    if forced in ("", "none", "off", "0"):
         return None
-    if forced:
+    if forced != "auto":
         return next((p for p in PROFILES if p["id"] == forced), None)
     return next((p for p in PROFILES if any(rx.search(text) for rx in p["_rx"])), None)
