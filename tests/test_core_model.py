@@ -240,6 +240,21 @@ def test_absent_claim_confirmed_stays(stub):
     assert len(found) == 1 and found[0].severity == "high"
 
 
+def test_distinct_findings_of_one_answer_on_one_quote_are_kept(stub):
+    """Два замечания одного ответа модели на одной цитате и в одной категории с разными доводами остаются оба: дублем считается
+    повтор довода или то же место из другого вызова."""
+    items = [_finding(explanation="Не указана высота стола."), _finding(explanation="Не указан допуск на высоту."),
+             _finding(explanation="Не указана высота стола.")]
+    s, doc = _prep(stub, {"найти дефекты": lambda p: {"findings": items if "Стол" in p else []}})
+    found = core.dedupe(core.find(doc, Scrubber(), CATS))
+    assert [f.explanation for f in found] == ["Не указана высота стола.", "Не указан допуск на высоту."]
+    kept = pipeline._collapse_repeats(found, doc)
+    assert len(kept) == 2 and not kept[0].also_in
+    other = core.find(doc, Scrubber(), CATS)[:1]
+    other[0].trace[0]["call"] = "c999"
+    assert len(core.dedupe(found + other)) == 2
+
+
 def test_verify_shows_part_once_with_places_from_whole_set(stub):
     """Замечания одной позиции проверяются одним вызовом: позиция в запросе один раз, к доводу подобраны места комплекта."""
     items = [_finding(), _finding(block_id="t1r2", quote="Длина", severity="low", category="Гарантийные условия",

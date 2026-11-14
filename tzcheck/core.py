@@ -797,10 +797,19 @@ def verify(doc, scr, findings: list[Finding]) -> list[Finding]:
     return out
 
 
+def _distinct(a: Finding, b: Finding) -> bool:
+    """Два замечания одного ответа модели с разными доводами: модель сама развела их как разные дефекты одной строки."""
+    ca = a.trace[0].get("call") if a.trace else ""
+    cb = b.trace[0].get("call") if b.trace else ""
+    return bool(ca) and ca == cb and _norm(a.explanation).lower() != _norm(b.explanation).lower()
+
+
 def dedupe(findings: list[Finding]) -> list[Finding]:
+    """Дубль: то же место и категория, одна цитата вложена в другую (поиск и справочники назвали одно и то же, либо модель
+    повторила замечание дословно). Разные замечания одного ответа модели на одной цитате остаются оба."""
     out = []
     for f in findings:
-        dup = next((x for x in out if x.block_id == f.block_id and x.category == f.category
+        dup = next((x for x in out if x.block_id == f.block_id and x.category == f.category and not _distinct(x, f)
                     and (x.quote.lower() in f.quote.lower() or f.quote.lower() in x.quote.lower())), None)
         if dup is None:
             out.append(f)

@@ -67,7 +67,10 @@ def _collapse_repeats(findings: list[Finding], doc: ParsedDoc) -> list[Finding]:
         if first is None:
             groups[key] = f
             out.append(f)
-        elif f.block_id != first.block_id and f.block_id not in first.also_in:
+        elif f.block_id == first.block_id:
+            # другое замечание той же категории на той же цитате того же блока: дубли уже снял core.dedupe, это не повтор
+            out.append(f)
+        elif f.block_id not in first.also_in:
             first.also_in.append(f.block_id)
             first.trace.append({"step": "repeats", "text": f"та же цитата ещё в блоке {f.block_id}: замечания объединены"})
     for f in out:
