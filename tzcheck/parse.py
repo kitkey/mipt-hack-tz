@@ -27,12 +27,24 @@ class Block:
     page: int | None = None
     source: str = ""
     automatic_numbering: bool = False
+    # роль фрагмента в комплекте (tzcheck.roles): req, spec, terms, warranty, contract, form, ktru, service
+    role: str = ""
+    # строка таблицы по сетке столбцов: текст каждой колонки сетки, продолжение объединения по горизонтали и по вертикали
+    grid: list[str] = field(default_factory=list)
+    hmerge: list[bool] = field(default_factory=list)
+    vmerge: list[bool] = field(default_factory=list)
+    # строка вложенной таблицы: id строки внешней таблицы, в ячейке которой она стоит
+    parent: str = ""
+    nested: int = 0
 
     def location(self) -> str:
         where = [f"файл «{self.source}»"] if self.source else []
         if self.section:
             where.append(f"раздел «{self.section[:80]}»")
-        if self.kind == "row":
+        if self.kind == "row" and self.parent:
+            outer = self.parent.rsplit("r", 1)[-1].split("n")[0]
+            where.append(f"таблица {self.table + 1}, строка {outer}, вложенная таблица {self.nested}, строка {self.row + 1}")
+        elif self.kind == "row":
             where.append(f"таблица {self.table + 1}, строка {self.row + 1}")
         elif self.kind != "heading":
             where.append(f"абзац {self.id.rsplit('_', 1)[-1].lstrip('ph')}")
@@ -74,17 +86,34 @@ def _iter_body(doc: DocxDocument):
 
 
 def _row_cells(row) -> list[str]:
+    """Ячейки строки без повторов объединённой по горизонтали ячейки; пустые и одинаковые соседние ячейки сохраняются."""
     out = []
     prev_tc = None
     for cell in row.cells:
         if cell._tc is prev_tc:
             continue
         prev_tc = cell._tc
-        text = " ".join(cell.text.split())
-        if out and text == out[-1]:
-            continue
-        out.append(text)
+        out.append(" ".join(cell.text.split()))
     return out
+
+
+def _row_grid(row, prev_tcs: list) -> tuple[list[str], list[bool], list[bool], list]:
+    """Строка по сетке столбцов: текст, продолжение по горизонтали, продолжение по вертикали (тот же w:tc, что в строке выше)."""
+    try:
+        before = int(row.grid_cols_before or 0)
+    except Exception:
+        before = 0
+    texts, hm, vm, tcs = [""] * before, [False] * before, [False] * before, [None] * before
+    prev = None
+    for cell in row.cells:
+        k = len(texts)
+        tc = cell._tc
+        texts.append(chr(10).join(" ".join(line.split()) for line in cell.text.splitlines() if line.strip()))
+        hm.append(tc is prev)
+        vm.append(tc is not prev and k < len(prev_tcs) and prev_tcs[k] is tc)
+        tcs.append(tc)
+        prev = tc
+    return texts, hm, vm, tcs
 
 
 class _Numbering:
@@ -116,6 +145,32 @@ def _is_heading(p: Paragraph, text: str, num: "_Numbering") -> bool:
     return bool(runs) and all(r.bold for r in runs) and len(text) < 120
 
 
+def _emit_table(table, blocks: list, section: str, ti: int, parent: Block | None = None, nested: int = 0) -> None:
+    """Строки таблицы в блоки. Вложенная таблица идёт сразу после строки, в ячейке которой стоит, с номером внешней таблицы
+    и ссылкой на эту строку (parent): нумерация внешних таблиц от вложенных не сдвигается."""
+    prev_tcs: list = []
+    inner = 0
+    for ri, row in enumerate(table.rows):
+        cells = _row_cells(row)
+        above = {id(t) for t in prev_tcs if t is not None}
+        grid, hm, vm, tcs = _row_grid(row, prev_tcs)
+        prev_tcs = tcs
+        text = " | ".join(c for c in cells if c)
+        bid = f"{parent.id}n{nested}r{ri + 1}" if parent else f"t{ti + 1}r{ri + 1}"
+        block = Block(bid, "row", text, section, ti, ri, cells, grid=grid, hmerge=hm, vmerge=vm,
+                      parent=parent.id if parent else "", nested=nested)
+        if text:
+            blocks.append(block)
+        seen = set()
+        for cell in row.cells:
+            if id(cell._tc) in above or id(cell._tc) in seen:
+                continue
+            seen.add(id(cell._tc))
+            for sub in cell.tables:
+                inner += 1
+                _emit_table(sub, blocks, section, ti, block, inner)
+
+
 def parse_docx(path: str) -> ParsedDoc:
     try:
         d = docx.Document(path)
@@ -138,12 +193,7 @@ def parse_docx(path: str) -> ParsedDoc:
                 blocks.append(Block(f"p{pi}", "para", text, section))
             blocks[-1].automatic_numbering = bool(item._p.xpath("./w:pPr/w:numPr"))
         else:
-            for ri, row in enumerate(item.rows):
-                cells = _row_cells(row)
-                text = " | ".join(c for c in cells if c)
-                if not text:
-                    continue
-                blocks.append(Block(f"t{ti + 1}r{ri + 1}", "row", text, section, ti, ri, cells))
+            _emit_table(item, blocks, section, ti)
             ti += 1
     if not blocks:
         raise ParseError("в документе нет текста")
@@ -353,19 +403,24 @@ def _rows_fill_vmerge(page, table, vocab: set) -> list[list]:
     """Ячейка, объединённая по вертикали, повторяется в каждой строке, которую накрывает, как в разборе docx."""
     out, origin = [], {}
     carry: dict = {}
+    flags = []
     for row in table.rows:
         texts = _row_cells_pdf(page, row, vocab)
         top = row.bbox[1]
         carry = {}
+        vm = [False] * len(texts)
         for k, c in enumerate(row.cells):
             if c is not None:
                 origin[k] = (c, texts[k])
             elif k in origin and origin[k][0][1] < top - 1 and origin[k][0][3] > top + 1:
                 texts[k] = origin[k][1]
+                vm[k] = True
                 if texts[k]:
                     carry[k] = texts[k]
         out.append(texts)
+        flags.append(vm)
     _rows_fill_vmerge.carry = carry
+    _rows_fill_vmerge.vmerge = flags
     return out
 
 
@@ -382,16 +437,17 @@ def _apply_carry(rows: list, carry: dict) -> dict:
 
 
 def _compact(cells: list) -> list[str]:
-    out = []
-    for c in cells:
-        if c is None:
-            continue
-        if out and c == out[-1] and c:
-            continue
-        out.append(c)
+    """Ячейки строки PDF без закрытых объединением (None); пустые и одинаковые соседние ячейки сохраняются."""
+    out = [c for c in cells if c is not None]
     while out and not out[-1]:
         out.pop()
     return out
+
+
+def _grid_pdf(cells: list, vm: list | None) -> tuple[list[str], list[bool], list[bool]]:
+    vm = list(vm or [])
+    vm += [False] * (len(cells) - len(vm))
+    return [c or "" for c in cells], [c is None and not v for c, v in zip(cells, vm)], vm[:len(cells)]
 
 
 def _continues(prev: list, cur: list) -> bool:
@@ -428,8 +484,12 @@ def _find_tables(page) -> list:
     return keep
 
 
+_VMERGE: dict = {}
+
+
 def parse_pdf(path: str) -> ParsedDoc:
     import pymupdf
+    _VMERGE.clear()
     try:
         pdf = pymupdf.open(path)
     except Exception as e:
@@ -485,8 +545,11 @@ def parse_pdf(path: str) -> ParsedDoc:
                 first = False
                 continue
             first = False
-            rows = [(c, pno) for c in _rows_fill_vmerge(page, obj, vocab)]
+            filled = _rows_fill_vmerge(page, obj, vocab)
+            rows = [(c, pno) for c in filled]
             page_carry = _rows_fill_vmerge.carry
+            for c, vm in zip(filled, _rows_fill_vmerge.vmerge):
+                _VMERGE[id(c)] = vm
             rows = [(c, p) for c, p in rows if any(c)]
             if not rows:
                 continue
@@ -520,11 +583,12 @@ def parse_pdf(path: str) -> ParsedDoc:
             else:
                 blocks.append(Block(f"p{pi}", "para", text, section, page=pno))
             continue
-        for ri, (cells, rpage) in enumerate(obj["rows"]):
-            cells = _compact(cells)
+        for ri, (raw, rpage) in enumerate(obj["rows"]):
+            cells = _compact(raw)
+            grid, hm, vm = _grid_pdf(raw, _VMERGE.get(id(raw)))
             text = " | ".join(c for c in cells if c)
             if text:
-                blocks.append(Block(f"t{ti + 1}r{ri + 1}", "row", text, section, ti, ri, cells, page=rpage))
+                blocks.append(Block(f"t{ti + 1}r{ri + 1}", "row", text, section, ti, ri, cells, page=rpage, grid=grid, hmerge=hm, vmerge=vm))
         ti += 1
     if not blocks:
         from . import ocr
@@ -581,7 +645,8 @@ def parse(path: str) -> ParsedDoc:
                 for ri, row in enumerate(sheet.iter_rows(values_only=True)):
                     cells = [str(v).strip() if v is not None else "" for v in row]
                     if any(cells):
-                        blocks.append(Block(f"t{ti+1}r{ri+1}", "row", " | ".join(c for c in cells if c), sheet.title, ti, ri, cells))
+                        blocks.append(Block(f"t{ti+1}r{ri+1}", "row", " | ".join(c for c in cells if c), sheet.title, ti, ri, cells,
+                                            grid=list(cells), hmerge=[False] * len(cells), vmerge=[False] * len(cells)))
             book.close()
         except Exception as e:
             raise ParseError("XLSX повреждён и не открывается") from e

@@ -92,7 +92,7 @@ def test_rules_without_model_have_no_number():
 def test_prompts_ask_for_confidence():
     for p in (llm.CHUNK_PROMPT, llm.VERIFY_PROMPT, llm.CROSS_PROMPT):
         assert '"confidence": целое 0-100' in p
-        p.format(blocks="", known="", title="", fields="", categories="", norms="", items="", facts="", subject="")
+        p.format(blocks="", known="", title="", fields="", categories="", norms="", items="", facts="", subject="", practice="")
 
 
 def test_model_scores_flow_to_findings(stub):
