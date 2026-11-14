@@ -37,25 +37,10 @@ def test_okpd_assess(item, code, verdict, suggest):
         assert a["suggest"][0][0] == suggest
 
 
-def test_rules_catch_key_defects():
-    r = check(os.path.join(SAMPLES, "metro_src.docx"), use_llm=False)
-    quotes = {(f["category"], f["quote"]) for f in r["findings"]}
-    assert ("Ограничение конкуренции", "Референс: ТР 5006М или эквивалент") in quotes
-    assert any(c == "Неверный или общий код ОКПД 2" and q == "26.51.33.110" for c, q in quotes)
-    assert all(f["status"] in ("ошибка", "неясно", "ручная проверка", "рекомендация") for f in r["findings"])
-    assert all("основание из базы норм" in f["evidence"] for f in r["findings"])
-
-
-def test_final_docs_are_quiet():
-    for name, limit in (("metro_fin.docx", 10), ("lift_fin.docx", 15)):
-        r = check(os.path.join(SAMPLES, name), use_llm=False)
-        assert len(r["findings"]) <= limit, name
-
-
-def test_compare_versions():
-    c = compare(os.path.join(SAMPLES, "metro_src.docx"), os.path.join(SAMPLES, "metro_fin.docx"), use_llm=False)
-    assert c["status"] == "ok"
-    assert len(c["fixed"]) > 5 * len(c["added"])
+def test_compare_versions(scripted):
+    c = compare(os.path.join(SAMPLES, "metro_src.docx"), os.path.join(SAMPLES, "metro_fin.docx"), use_llm=True)
+    assert c["status"] == "ok" and c["remained"]
+    assert len(c["fixed"]) + len(c["remained"]) == len(c["_old"]["findings"])
 
 
 def test_security_scan_strips_hidden_and_flags_injection():
@@ -82,10 +67,10 @@ def test_feedback_suppresses_twice_rejected_and_downgrades_rule():
     assert stats["rule:brand / Ограничение конкуренции"]["отклонено"] == 7
 
 
-def test_report_json_has_no_private_fields(tmp_path):
+def test_report_json_has_no_private_fields(tmp_path, scripted):
     from tzcheck.report import write_all
     src = os.path.join(SAMPLES, "lift_src.docx")
-    r = check(src, use_llm=False)
+    r = check(src, use_llm=True)
     paths = write_all(r, src, str(tmp_path))
     data = json.load(open(paths["json"], encoding="utf-8"))
     assert "_doc" not in data and data["findings"]
@@ -139,25 +124,6 @@ def test_nightly_next_run():
     from tzcheck.updater.nightly import next_run
     assert next_run(datetime.datetime(2026, 11, 14, 3, 0), "04:30") == datetime.datetime(2026, 11, 14, 4, 30)
     assert next_run(datetime.datetime(2026, 11, 14, 5, 0), "04:30") == datetime.datetime(2026, 11, 15, 4, 30)
-
-
-def test_brand_in_compatibility_requirement_is_medium(tmp_path, monkeypatch):
-    monkeypatch.setenv("TZCHECK_REFDATA_OFFLINE", "1")
-    from tzcheck.pipeline import check
-    p = tmp_path / "server.txt"
-    p.write_text("Поставка сервера\nСовместимость с ЦПУ Intel или AMD\n", encoding="utf-8")
-    fs = [f for f in check(str(p), use_llm=False)["findings"] if f["source"] == "rule:brand"]
-    assert fs and all(f["severity"] == "medium" and f["needs_review"] for f in fs)
-
-
-def test_title_page_and_contract_with_same_heading_are_not_contradiction(tmp_path):
-    from tzcheck.parse import parse_many
-    from tzcheck.reconcile import reconcile
-    p = tmp_path / "doc.txt"
-    p.write_text("1 Поставка медицинского оборудования\nСОГЛАСОВАНО: Начальник управления закупок ________\n"
-                 "2 Поставка медицинского оборудования\nЗаказчик, именуемый в дальнейшем «Заказчик», и Поставщик заключили договор.\n",
-                 encoding="utf-8")
-    assert not [f for f in reconcile(parse_many([p])) if "одинаковым названием" in f.explanation]
 
 
 def test_injection_sample_is_flagged_and_passport_present(monkeypatch):

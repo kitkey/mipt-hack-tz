@@ -327,7 +327,8 @@ class Search:
     def idf(self, w):
         return math.log(1 + (self.n - self.df[w] + 0.5) / (self.df[w] + 0.5))
 
-    def scores(self, query: str, allowed=None) -> dict[int, float]:
+    def scores(self, query: str, allowed=None, min_match: int | None = None) -> dict[int, float]:
+        """min_match: сколько слов запроса длиной от 4 букв должно совпасть; по умолчанию до трёх."""
         q = set(tokens(query))
         out: dict[int, float] = {}
         matched: Counter = Counter()
@@ -340,7 +341,8 @@ class Search:
                 out[i] = out.get(i, 0.0) + idf * f * 2.2 / (f + 1.2 * (0.25 + 0.75 * self.length[i] / max(1, self.avg)))
                 if len(w) >= 4 and not w.isdigit():
                     matched[i] += 1
-        return {i: s for i, s in out.items() if matched[i] >= min(3, max(1, len([w for w in q if len(w) >= 4])))}
+        need = min(3, max(1, len([w for w in q if len(w) >= 4]))) if min_match is None else min_match
+        return {i: s for i, s in out.items() if matched[i] >= need}
 
     def allowed(self, documents=None, articles=None):
         if documents is None and articles is None:

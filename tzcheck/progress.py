@@ -1,6 +1,6 @@
 """Ход проверки по шагам конвейера для интерфейса (задачи /api/jobs, поток SSE).
 
-Шаги те же, что в pipeline.check и graph.check_graph (поле steps результата), плюс finish (_finish: профили ГОСТ,
+Шаги те же, что в pipeline.check и graph.check_graph (поле steps результата), плюс finish (_finish:
 решения закупщиков, уверенность, заключение). Обработчик progress получает события-словари; сбой обработчика
 проверку не ломает. Сырые рассуждения модели сюда не попадают: передаются только счётчики."""
 import time
@@ -8,14 +8,12 @@ import time
 STEP_TITLES = {
     "parse": "Разбор документа",
     "security": "Поиск скрытых символов и инструкций для ИИ",
-    "rules": "Проверка правилами",
-    "llm_verify_rules": "Модель перепроверяет спорные замечания правил",
-    "llm_find": "Модель ищет замечания по фрагментам документа",
-    "llm_verify_new": "Независимая перепроверка находок модели",
-    "llm_recheck": "Повторная проверка замечаний с низкой уверенностью",
-    "reconcile": "Сверка требований между разделами",
-    "reconcile_llm": "Модель сверяет похожие требования",
-    "finish": "Итог: профили ГОСТ, решения закупщиков, уверенность, заключение",
+    "passport": "Модель: паспорт закупки и роли разделов",
+    "tables": "Модель: разметка шапок таблиц, раскладка позиций",
+    "core_find": "Модель ищет дефекты по позициям и разделам",
+    "core_cross": "Модель сверяет позиции и условия между частями комплекта",
+    "core_verify": "Независимая вторая проверка замечаний",
+    "finish": "Итог: решения закупщиков, уверенность, заключение",
     # шаги задачи вокруг конвейера (tzcheck.jobs)
     "check_old": "Проверка прошлого документа",
     "req_pairing": "Сопоставление требований двух документов",
@@ -28,14 +26,11 @@ def now_iso() -> str:
 
 
 def plan_steps(orchestrator: str, use_llm: bool, groups=None) -> list[str]:
-    """Шаги, которые конвейер выполнит при этих настройках; llm_recheck у графа условный и может быть пропущен."""
+    """Шаги, которые конвейер выполнит при этих настройках (у обоих оркестраторов одинаковые)."""
     logic = groups is None or "logic" in groups
-    steps = ["parse", "security", "rules"]
+    steps = ["parse", "security"]
     if use_llm:
-        steps += ["llm_verify_rules", "llm_find", "llm_verify_new"] + (["llm_recheck"] if orchestrator == "graph" else [])
-    steps.append("reconcile")
-    if use_llm and logic:
-        steps.append("reconcile_llm")
+        steps += ["passport", "tables", "core_find"] + (["core_cross"] if logic else []) + ["core_verify"]
     return steps + ["finish"]
 
 

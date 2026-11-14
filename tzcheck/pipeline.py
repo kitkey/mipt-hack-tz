@@ -4,43 +4,19 @@ import time
 import unicodedata
 from collections import Counter
 
-from . import confidence, feedback, llm, replacements
+from . import confidence, core, feedback, llm, passport, replacements, tables
 from . import progress as prog
-from .checks import categories_for, group_names, group_stats, is_full, only_groups, parse_checks, partial_note, rules_for, verdict_code
+from .checks import categories_for, group_names, group_stats, is_full, only_groups, parse_checks, partial_note, verdict_code
 from .model import SECTION_LLM, SECTION_MAIN, SECTION_UNCHECKED, STATUS_REVIEW, Finding, from_model
 from .norms import NORMS, apply_editions
 from .parse import ParseError, ParsedDoc, parse, parse_many
-from .reconcile import build_graph, reconcile, reconcile_semantic
 from .pii import Scrubber
-from .rules import run_rules
 
 SEV_ORDER = {"high": 0, "medium": 1, "low": 2}
 HIDDEN_RE = re.compile("[​-‏‪-‮⁠-⁤⁦-⁩﻿\U000e0000-\U000e007f]")
 INJECTION_RE = re.compile(
     r"(?:ignore|disregard)\s+(?:all\s+|the\s+)?(?:previous|above)\s+instructions|игнорируй\w*\s+(?:все\s+)?(?:предыдущ|инструкц)|"
     r"ты\s+(?:теперь|должен)\s+(?:ответить|написать|считать)|system\s*prompt|не\s+сообщай\s+об\s+ошибк|ответь,?\s+что\s+ошибок\s+нет", re.I)
-
-
-def _overlap(a: Finding, b: Finding) -> bool:
-    if a.block_id != b.block_id or not a.quote.strip() or not b.quote.strip():
-        return False
-    qa, qb = a.quote.lower(), b.quote.lower()
-    return qa in qb or qb in qa or (a.category == b.category and len(set(qa.split()) & set(qb.split())) >= 3)
-
-
-def _merge(rule: list[Finding], extra: list[Finding]) -> list[Finding]:
-    out = list(rule)
-    for f in extra:
-        dup = next((x for x in out if _overlap(x, f)), None)
-        if dup is None:
-            out.append(f)
-        elif "llm" in f.source and dup.source.startswith("rule") and dup.category == f.category:
-            dup.evidence["подтверждено моделью"] = f.explanation[:300]
-            if f.confidence_pct is not None and dup.confidence_pct is None:
-                dup.confidence_pct, dup.confidence_basis = f.confidence_pct, f.confidence_basis
-            if len(f.fix) > len(dup.fix):
-                dup.fix = f.fix
-    return out
 
 
 def _places(n: int) -> str:
@@ -185,61 +161,75 @@ def check(path: str, use_llm: bool | None = None, orchestrator: str | None = Non
     doc.warnings.extend(security)
     rep.done("security", warnings=len(security))
     scr = Scrubber()
-    rep.start("rules")
-    findings = _collapse_repeats(only_groups(run_rules(doc, rules_for(groups)), groups), doc)
-    doc.candidates = only_groups(getattr(doc, "candidates", []) or [], groups)
-    rep.done("rules", findings=len(findings))
-    mode = "rules"
-    logic = "logic" in groups
     if use_llm:
-        mode = "rules+llm"
-        doc.llm_deadline = time.time() + llm.doc_budget()
-        rep.start("llm_verify_rules", candidates=sum(1 for f in findings if f.needs_review))
-        findings = llm.verify_rules(doc, findings, scr)
-        rep.done("llm_verify_rules", findings=len(findings))
-        rep.start("llm_find")
-        found = llm.analyze(doc, findings, scr)
-        if logic:
-            rep.update(stage="сверка частей документа между собой")
-            found += llm.cross_check(doc, scr)
-        found = only_groups(found + candidates(doc), groups)
-        rep.done("llm_find", found=len(found))
-        rep.start("llm_verify_new", candidates=len(found))
-        kept = llm.verify_new(doc, found, scr)
-        findings = _merge(findings, kept)
-        findings = _collapse_repeats(findings, doc)
-        rep.done("llm_verify_new", confirmed=len(kept), findings=len(findings))
-    rep.start("reconcile")
-    rec = only_groups(reconcile(doc), groups)
-    findings.extend(rec)
-    rep.done("reconcile", found=len(rec))
-    if use_llm and logic:
-        rep.start("reconcile_llm")
-        sem = reconcile_semantic(doc, scr)
-        findings.extend(sem)
-        rep.done("reconcile_llm", found=len(sem))
-    steps = ["parse", "security", "rules"] + (["llm_verify_rules", "llm_find", "llm_verify_new", "reconcile"] + (["reconcile_llm"] if logic else []) if use_llm else ["reconcile"])
+        findings, steps = run_core(doc, scr, groups, rep)
+        mode = "model"
+    else:
+        findings, steps, mode = [], [], "format"
+    steps = ["parse", "security"] + steps
     return _finish(doc, paths, findings, scr, use_llm, mode, t0, "linear", steps, groups=groups, rep=rep)
 
 
-def candidates(doc: ParsedDoc) -> list[Finding]:
-    """Кандидаты правил, которые в основной список не идут (латиница с цифрой как модель): с моделью они проходят ту же
-    вторую проверку, что находки модели, и подтверждённые попадают в блок модели."""
-    out = []
-    for f in getattr(doc, "candidates", []) or []:
-        f.source = "llm:rule_candidate"
-        f.evidence["кандидат правила"] = f"{f.rule_id}: в основной список не входит, выводится только после подтверждения моделью"
-        out.append(f)
-    return out
+NO_MODEL = "Модель не настроена: проверено только оформление и безопасность (разбор файлов, скрытые символы, инструкции для ИИ). Содержательной проверки требований не было."
+
+
+def start_core(doc):
+    doc.llm_deadline = time.time() + llm.doc_budget()
+    doc.model_calls, doc.model_dropped, doc.llm_rejected = {}, [], []
+
+
+def core_passport(doc, scr, rep):
+    rep.start("passport")
+    p = passport.detect(doc, scr)
+    rep.done("passport", law=p.get("закон"), customer=p.get("заказчик"))
+    rep.start("tables")
+    m = tables.build(doc, scr)
+    rep.done("tables", tables=sum(t.marked for t in m.tables), positions=len(m.positions))
+
+
+def core_find(doc, scr, groups, rep) -> list[Finding]:
+    cats = categories_for(groups)
+    rep.start("core_find")
+    found = core.find(doc, scr, cats)
+    rep.update(stage="справочные записи по обозначениям, которые назвала модель")
+    found += core.refs(doc, scr, cats)
+    rep.update(stage="проверка «не указано» по всему комплекту")
+    found = core.absent(doc, scr, found)
+    rep.done("core_find", found=len(found))
+    return found
+
+
+def core_cross(doc, scr, groups, rep) -> list[Finding]:
+    rep.start("core_cross")
+    found = core.cross(doc, scr, categories_for(groups))
+    rep.done("core_cross", found=len(found))
+    return found
+
+
+def core_verify(doc, scr, groups, found, rep) -> list[Finding]:
+    found = only_groups(core.dedupe(found), groups)
+    rep.start("core_verify", candidates=len(found))
+    kept = core.verify(doc, scr, found)
+    rep.done("core_verify", confirmed=len(kept))
+    return _collapse_repeats(kept, doc)
+
+
+def run_core(doc, scr, groups, rep) -> tuple[list[Finding], list[str]]:
+    """Ядро проверки: паспорт и роли, разметка таблиц, поиск дефектов, сверка частей, вторая проверка. Решения принимает модель."""
+    start_core(doc)
+    core_passport(doc, scr, rep)
+    found = core_find(doc, scr, groups, rep)
+    steps = ["passport", "tables", "core_find"]
+    if "logic" in groups:
+        found += core_cross(doc, scr, groups, rep)
+        steps.append("core_cross")
+    return core_verify(doc, scr, groups, found, rep), steps + ["core_verify"]
 
 
 def _finish(doc, paths, findings, scr, use_llm, mode, t0, orchestrator, steps, groups=None, rep=None) -> dict:
-    from .gost_profiles import safe_apply
     groups = parse_checks(groups)
     rep = prog.reporter(rep)
     rep.start("finish")
-    # проверка по профилям ГОСТ из ТЗ: профиль из кэша, с моделью собирается при первой встрече стандарта
-    findings = safe_apply(doc, findings, build_missing=use_llm and "standards" in groups)
     findings = only_groups(findings, groups)
     findings = feedback.apply(findings)
     apply_editions()  # редакции законов из локальной копии на момент проверки: обновление подхватывается без перезапуска
@@ -287,6 +277,8 @@ def _finish(doc, paths, findings, scr, use_llm, mode, t0, orchestrator, steps, g
     partial = partial_note(groups)
     if partial:
         summary = partial + " " + summary
+    if not use_llm:
+        summary = NO_MODEL
     if unchecked:
         summary += f" Отдельным блоком «Не проверено»: {_remarks(len(unchecked))} о сведениях, которых нет в переданных файлах; в вердикт они не входят."
     if extra:
@@ -303,7 +295,11 @@ def _finish(doc, paths, findings, scr, use_llm, mode, t0, orchestrator, steps, g
     res = {
         "file": doc.name, "status": "ok", "mode": mode, "orchestrator": orchestrator, "steps": steps, "seconds": round(time.time() - t0, 1),
         "model": os.environ.get("TZCHECK_LLM_MODEL", "") if use_llm else "",
-        "document": {"format": doc.source_format, "files": [os.path.basename(os.fspath(p)) for p in paths], "blocks": len(doc.blocks), "fields": doc.fields, "requirement_graph": build_graph(doc).to_dict()},
+        "document": {"format": doc.source_format, "files": [os.path.basename(os.fspath(p)) for p in paths], "blocks": len(doc.blocks), "fields": doc.fields,
+                     "procurement": getattr(doc, "passport", None) or {}, "passport_source": getattr(doc, "passport_source", ""),
+                     "roles": dict(Counter(b.role or "не определена" for b in doc.blocks)) if use_llm else {},
+                     "tables": tables.of(doc).to_dict() if use_llm else {}},
+        "model_calls": getattr(doc, "model_calls", {}), "model_dropped": getattr(doc, "model_dropped", []),
         "warnings": doc.warnings, "pii_masked": scr.summary(),
         "stats": {"by_category": dict(cats), "by_severity": dict(sev), "by_status": dict(statuses), "needs_review": review,
                   "confidence": {"оценено моделью": sum(f.confidence_pct is not None for f in findings),

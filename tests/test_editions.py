@@ -141,17 +141,6 @@ def test_annotate_says_honestly_when_text_missing(env):
     assert "нет ни в корпусе" in f.evidence["новая редакция"]
 
 
-def test_check_gost_runs_edition_check(env, monkeypatch):
-    from tzcheck import rules
-    both_editions(env[0])
-    doc = tz("Кнопки вызова на этажах | высота установки от 900 до 1100 мм от уровня пола")
-    out = rules.check_gost(doc)
-    main = next(f for f in out if f.source == "rule:gost")
-    assert "сравнение редакций" in main.evidence and any(f.source == "rule:gost-edition" for f in out)
-    monkeypatch.setenv("TZCHECK_EDITIONS", "0")
-    assert not any(f.source == "rule:gost-edition" for f in rules.check_gost(doc))
-
-
 class Response:
     def __init__(self, body):
         self.content = body.encode("utf8")

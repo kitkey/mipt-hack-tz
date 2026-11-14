@@ -12,7 +12,6 @@ from docx.oxml import OxmlElement
 import pytest
 
 from tzcheck import feedback, history, llm, rag, replacements, req_compare, revisions
-from tzcheck.checks import rule_groups
 from tzcheck.norms import CATEGORIES, CATEGORY_GROUP, CHECK_GROUPS, categories_for, parse_checks
 from tzcheck.parse import parse
 from tzcheck.pipeline import check
@@ -33,40 +32,13 @@ def isolated(tmp_path, monkeypatch):
     monkeypatch.delenv("TZCHECK_LLM_MODEL", raising=False)
 
 
-class Stub:
-    """Заглушка модели: записывает промпты, находок не возвращает, всё подтверждает."""
-
-    def __init__(self):
-        self.prompts = []
-
-    def __call__(self, prompt, max_tokens=4000):
-        self.prompts.append(prompt)
-        if prompt.startswith("Кандидаты в ошибки"):
-            return {"decisions": [{"n": int(n), "decision": "confirm", "reason": "ок", "confidence": 90}
-                                  for n in re.findall(r"^(\d+)\. \[", prompt, re.M)]}
-        if "Верни JSON: {\"summary\"" in prompt:
-            return {"summary": "Заключение заглушки."}
-        return {"findings": []}
-
-
-@pytest.fixture
-def stub(monkeypatch):
-    s = Stub()
-    monkeypatch.setenv("TZCHECK_LLM_MODEL", "stub/model")
-    monkeypatch.setenv("TZCHECK_LLM_WORKERS", "1")
-    monkeypatch.setattr(llm, "_call", s)
-    return s
-
-
-# ---------- 1. группы ----------
-
 def test_every_category_has_group():
     assert set(CATEGORY_GROUP) == set(CATEGORIES)
     assert set(CATEGORY_GROUP.values()) == set(CHECK_GROUPS.values())
 
 
-def test_findings_have_group_and_group_stats():
-    r = check(LIFT, use_llm=False)
+def test_findings_have_group_and_group_stats(scripted):
+    r = check(LIFT, use_llm=True)
     main = [f for f in r["findings"] if f["section"] == "main"]
     assert all(f["group"] == CATEGORY_GROUP[f["category"]] for f in r["findings"])
     assert sum(r["stats"]["by_group"].values()) == len(main)
@@ -87,20 +59,17 @@ def test_parse_checks():
         parse_checks("design")
 
 
-def test_default_checks_change_nothing():
-    a, b = check(LIFT, use_llm=False), check(LIFT, use_llm=False, checks=["logic", "standards", "risks"])
+def test_default_checks_change_nothing(scripted):
+    a, b = check(LIFT, use_llm=True), check(LIFT, use_llm=True, checks=["logic", "standards", "risks"])
     key = lambda r: [(f["id"], f["category"], f["quote"]) for f in r["findings"]]
     assert key(a) == key(b)
 
 
 @pytest.mark.parametrize("keys", [["logic"], ["standards"], ["risks"], ["logic", "risks"]])
-def test_partial_check_keeps_only_selected_groups(keys):
-    full = check(METRO, use_llm=False)
-    part = check(METRO, use_llm=False, checks=keys)
+def test_partial_check_keeps_only_selected_groups(scripted, keys):
+    part = check(METRO, use_llm=True, checks=keys)
     names = {CHECK_GROUPS[k] for k in keys}
     assert part["findings"] and {f["group"] for f in part["findings"]} <= names
-    expected = sorted((f["category"], f["quote"]) for f in full["findings"] if f["group"] in names)
-    assert sorted((f["category"], f["quote"]) for f in part["findings"]) == expected
     assert part["full_check"] is False and part["checks"] == keys
     assert part["summary"].startswith("Проверка неполная") and "Вывод о готовности ТЗ к публикации" in part["verdict"]
     assert part["verdict_code"] != "clean"
@@ -115,34 +84,22 @@ def test_partial_check_without_findings_is_not_publishable(tmp_path):
         assert r["verdict_code"] == "partial"
 
 
-def test_rule_groups_cover_what_rules_produce():
-    """Правило пропускается при выборе групп, только если в его коде нет категорий выбранной группы:
-    проверка, что фактически выданные категории есть в коде правила."""
-    from tzcheck import rules
-    for path in (LIFT, METRO):
-        doc = parse(path)
-        for fn in rules.ALL_RULES:
-            g = rule_groups(fn)
-            if g is None:
-                continue
-            produced = {CATEGORY_GROUP.get(f.category) for f in fn(doc)}
-            assert produced <= g, (fn.__name__, produced, g)
+def _offered(prompt: str) -> list[str]:
+    part = prompt.split("по группам:\n", 1)[1].split("\n\n", 1)[0]
+    return [c.strip() for line in part.splitlines() for c in line.split(":", 1)[1].split(";")]
 
 
-def test_prompt_categories_limited_to_selected_groups(stub):
+def test_prompt_categories_limited_to_selected_groups(scripted):
     check(LIFT, use_llm=True, checks=["risks"])
-    find = [p for p in stub.prompts if "Найди проблемы, которые мешают закупке" in p]
-    assert find
-    line = next(l for l in find[0].splitlines() if l.startswith("Категории (только эти):"))
-    assert line == "Категории (только эти): " + "; ".join(categories_for(["risks"]))
-    # сверка частей документа даёт только «Противоречие» и «Предмет закупки»: без логики не вызывается
-    assert not any(p.startswith("Ниже ключевые факты из разных частей") for p in stub.prompts)
+    find = scripted.asked("найти дефекты")
+    assert find and all(sorted(_offered(p)) == sorted(categories_for(["risks"])) for p in find)
+    # сверка частей даёт только «Противоречие» и «Предмет закупки»: без логики не вызывается
+    assert not scripted.asked("сверка частей")
 
 
-def test_full_prompt_categories_unchanged(stub):
+def test_full_prompt_categories_unchanged(scripted):
     check(LIFT, use_llm=True)
-    find = [p for p in stub.prompts if "Найди проблемы, которые мешают закупке" in p]
-    assert ("Категории (только эти): " + "; ".join(CATEGORIES)) in find[0]
+    assert sorted(_offered(scripted.asked("найти дефекты")[0])) == sorted(CATEGORIES)
 
 
 # ---------- 3. ход по шагам ----------
@@ -167,23 +124,23 @@ def test_progress_rules_only():
     assert parse_done["details"]["blocks"] == r["document"]["blocks"] and parse_done["title"] == "Разбор документа"
 
 
-def test_progress_with_model_reports_fragments(stub):
+def test_progress_with_model(scripted):
     ev = []
     r = check(LIFT, use_llm=True, progress=ev.append)
     order, state = _steps(ev)
     assert order == r["steps"] + ["finish"]
-    ticks = [e["details"] for e in ev if e["event"] == "step_progress" and e["step"] == "llm_find" and "fragment" in e["details"]]
-    assert ticks and ticks[-1]["fragment"] == ticks[-1]["fragments"]
-    assert all(set(e.get("details", {})) <= {"blocks", "files", "warnings", "findings", "candidates", "found", "confirmed", "fragment",
-                                              "fragments", "stage", "batch", "batches", "items", "model", "unchecked"} for e in ev if "details" in e)
+    assert all(state[s] == "step_done" for s in order)
+    stages = [e["details"].get("stage") for e in ev if e["event"] == "step_progress" and e["step"] == "core_find"]
+    assert any("не указано" in (x or "") for x in stages)
+    assert all(set(e.get("details", {})) <= {"blocks", "files", "warnings", "findings", "candidates", "found", "confirmed", "stage", "law",
+                                              "customer", "tables", "positions", "model", "unchecked"} for e in ev if "details" in e)
 
 
-def test_progress_graph_marks_recheck(stub):
+def test_progress_graph_with_model(scripted):
     ev = []
     r = check(LIFT, use_llm=True, orchestrator="graph", progress=ev.append)
     order, state = _steps(ev)
-    assert "llm_recheck" in order and state.get("llm_recheck") in ("step_done", "step_skipped")
-    assert [s for s in order if state.get(s) == "step_done"] == [s for s in r["steps"]]
+    assert order == r["steps"] and [s for s in order if state.get(s) == "step_done"] == r["steps"]
 
 
 def test_check_without_progress_still_works():
@@ -193,20 +150,13 @@ def test_check_without_progress_still_works():
 
 # ---------- 4. правки в режиме рецензирования ----------
 
-def test_replacements_only_deterministic():
-    r = check(LIFT, use_llm=False)
-    by_rule = {}
-    for f in r["findings"]:
-        if f["replacement"]:
-            by_rule.setdefault(f["rule_id"], []).append((f["quote"], f["replacement"]))
-    assert ("105 календарных дней", "105 (сто пять) календарных дней") in by_rule["days.in_words"]
-    assert ("ГОСТ 53782-2010", "ГОСТ Р 53782-2010") in by_rule["gost.missing_R"]
-    assert ("с момента заключения", "с даты заключения") in by_rule["days.start_wording"]
-    for f in r["findings"]:
-        if f["replacement"]:
-            assert f["section"] == "main" and not f["source"].startswith("llm")
-        if f["fix"].lower().startswith(("добав", "указать", "перечисл")):
-            assert not f["replacement"], f
+def test_replacement_comes_from_model_and_only_in_main(scripted):
+    r = check(LIFT, use_llm=True)
+    with_rep = [f for f in r["findings"] if f["replacement"]]
+    assert with_rep and all(f["replacement"].endswith(" УТОЧНЕНО") and f["section"] == "main" for f in with_rep)
+    scripted.replace = False
+    r = check(LIFT, use_llm=True)
+    assert not any(f["replacement"] for f in r["findings"])
 
 
 def test_add_equivalent_replacement():
@@ -245,27 +195,29 @@ def _reject(path) -> str:
     return "\n".join(p.text for p in d.paragraphs)
 
 
-def test_revisions_docx(tmp_path):
-    r = check(LIFT, use_llm=False)
+def test_revisions_docx(tmp_path, scripted):
+    r = check(LIFT, use_llm=True)
     out = revisions.write(r, LIFT, str(tmp_path))
     main = out["main"]
     assert main["path"] and main["path"].endswith("lift_src.revisions.docx")
     expected = {f["id"] for f in r["findings"] if f["replacement"]}
-    assert set(main["applied"]) == expected and not main["skipped"]
+    # цитата, которая в DOCX разорвана полем или стоит в ячейке с переносами, пропускается с причиной
+    assert main["applied"] and set(main["applied"]) | set(main["skipped"]) == expected
     d = docx.Document(main["path"])
     ins = list(d.element.body.iter(W + "ins"))
     dels = list(d.element.body.iter(W + "del"))
     assert ins and dels and all(e.get(W + "author") == "Проверка ТЗ" for e in ins + dels)
     assert len(list(d.comments)) == len(main["applied"])
     accepted, rejected = _accept(main["path"]), _reject(main["path"])
-    assert "105 (сто пять) календарных дней" in accepted and "ГОСТ Р 53782-2010" in accepted and "ГОСТ 34441-2024" in accepted
-    assert "с даты заключения Договора" in accepted
+    for f in r["findings"]:
+        if f["id"] in main["applied"]:
+            assert f["replacement"] in accepted
     original = "\n".join(p.text for p in docx.Document(LIFT).paragraphs)
     assert rejected == original
 
 
-def test_revisions_skip_when_nothing_to_change(tmp_path):
-    r = check(LIFT, use_llm=False)
+def test_revisions_skip_when_nothing_to_change(tmp_path, scripted):
+    r = check(LIFT, use_llm=True)
     for f in r["findings"]:
         f["replacement"] = ""
     assert revisions.write(r, LIFT, str(tmp_path)) == {}
@@ -294,8 +246,8 @@ def test_requirements_pairing_ignores_renumbering():
     assert req["counts"]["unchanged"] == len(old) and not req["changed"] and a.public()["kind"] == "позиция"
 
 
-def test_requirements_summary_marks_repeats():
-    old, new = check(LIFT, use_llm=False), check(LIFT_FIN, use_llm=False)
+def test_requirements_summary_marks_repeats(scripted):
+    old, new = check(LIFT, use_llm=True), check(LIFT_FIN, use_llm=True)
     req = req_compare.compare_requirements(old["_doc"], new["_doc"])
     s = req_compare.summarize(old, new, req)
     assert s["repeated"] and all(x["old_finding_id"] for x in s["repeated"])
@@ -330,14 +282,14 @@ def _upload(path):
     return (os.path.basename(path), open(path, "rb"), "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
 
 
-def test_job_flow_sse_and_history(client):
-    r = client.post("/api/jobs", data={"use_llm": "0", "user": "Иванова", "checks": "standards"}, files={"file": _upload(LIFT)})
+def test_job_flow_sse_and_history(client, scripted):
+    r = client.post("/api/jobs", data={"use_llm": "1", "user": "Иванова", "checks": "standards"}, files={"file": _upload(LIFT)})
     assert r.status_code == 202, r.text
     job_id = r.json()["job_id"]
     j = _wait(client, job_id)
     assert j["status"] == "done", j
     ids = [s["id"] for s in j["steps"]]
-    assert ids == ["parse", "security", "rules", "reconcile", "finish", "report"]
+    assert ids == ["parse", "security", "passport", "tables", "core_find", "core_verify", "finish", "report"]
     assert all(s["status"] == "done" and s["started_at"] and s["finished_at"] for s in j["steps"])
     assert "блоков разобрано" in j["steps"][0]["text"]
     res = j["result"]
@@ -358,11 +310,11 @@ def test_job_flow_sse_and_history(client):
     assert full["findings"] == res["findings"]
 
 
-def test_history_picks_up_old_runs(client):
+def test_history_picks_up_old_runs(client, scripted):
     from tzcheck import api
     old = os.path.join(api.STORE, "0123456789ab")
     os.makedirs(old)
-    r = check(LIFT, use_llm=False)
+    r = check(LIFT, use_llm=True)
     data = {k: v for k, v in r.items() if not k.startswith("_") and k not in ("checks", "check_groups", "full_check", "verdict", "verdict_code")}
     for f in data["findings"]:
         f.pop("group")
@@ -378,18 +330,18 @@ def test_history_picks_up_old_runs(client):
     assert client.get("/api/runs/nope").status_code == 404
 
 
-def test_old_api_check_still_works(client):
-    r = client.post("/api/check?use_llm=false", files={"file": _upload(LIFT)})
+def test_old_api_check_still_works(client, scripted):
+    r = client.post("/api/check?use_llm=true", files={"file": _upload(LIFT)})
     assert r.status_code == 200
     j = r.json()
     assert j["status"] == "ok" and j["findings"] and j["run_id"] and "summary" in j and "stats" in j
-    r = client.post("/check", data={"use_llm": "0", "checks": ["risks"], "user": "Петров"}, files={"file": _upload(LIFT)})
+    r = client.post("/check", data={"use_llm": "1", "checks": ["risks"], "user": "Петров"}, files={"file": _upload(LIFT)})
     assert r.status_code == 200 and "Проверка неполная" in r.text and "<b>Риски:" in r.text
     assert "lift_src.revisions.docx" in r.text and "предлагаемыми правками" in r.text
 
 
-def test_requirements_compare_api(client):
-    r = client.post("/api/requirements_compare", data={"user": "Иванова"}, files={"old": _upload(LIFT), "new": _upload(LIFT_FIN)})
+def test_requirements_compare_api(client, scripted):
+    r = client.post("/api/requirements_compare", data={"user": "Иванова", "use_llm": "1"}, files={"old": _upload(LIFT), "new": _upload(LIFT_FIN)})
     assert r.status_code == 200, r.text
     j = r.json()
     assert j["requirements"]["counts"]["changed"] >= 5 and j["findings_summary"]["repeated"]
@@ -474,4 +426,4 @@ def test_norms_upload_search_delete(client, corpus):
 def test_meta(client):
     m = client.get("/api/meta").json()
     assert [g["key"] for g in m["groups"]] == ["logic", "standards", "risks"]
-    assert sum(len(g["categories"]) for g in m["groups"]) == len(CATEGORIES) and m["steps"]["llm_find"]
+    assert sum(len(g["categories"]) for g in m["groups"]) == len(CATEGORIES) and m["steps"]["core_find"]
