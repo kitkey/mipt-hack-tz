@@ -11,7 +11,8 @@ from docx.table import Table
 from docx.text.paragraph import Paragraph
 
 HEADING_RE = re.compile(r"^\s*(\d{1,2}(?:\.\d{1,2}){0,3})\.?\s+[А-ЯЁA-Z]")
-OKPD_RE = re.compile(r"\b\d{2}\.\d{2}(?:\.\d{1,2}){0,2}(?:\.\d{3})?\b")
+# границы по цифрам и точкам: код не вырезается из кода КОЗ («11.203.03.01.10.01.016») и из даты
+OKPD_RE = re.compile(r"(?<![\d.])\d{2}\.\d{2}(?:\.\d{1,2}){0,2}(?:\.\d{3})?(?![.\d])")
 
 
 @dataclass

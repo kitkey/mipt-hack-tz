@@ -17,6 +17,8 @@ from tzcheck import refdata
 ROOT = Path(__file__).resolve().parents[2]
 CORPUS = Path(os.environ.get("TZCHECK_RAG_CORPUS", ROOT / "data" / "norm_corpus"))
 INDEX = CORPUS / "index.json"
+# тексты новых редакций (<data>/norm_texts) дополняют только основной корпус, а не корпус, переданный явно (тесты, замеры)
+MAIN_CORPUS = CORPUS
 INDEX_VERSION = 2
 WORD = re.compile(r"[а-яёa-z]+|\d+(?:[.\-/]\d+)*", re.I)
 DESIGNATION = re.compile(
@@ -170,11 +172,57 @@ def _iter_docs(corpus: Path):
             yield p, d
 
 
+def texts_dir() -> Path:
+    """Тексты новых редакций, скачанные обновлятором (tzcheck/updater/gost_texts.py); в репозиторий не входят."""
+    return Path(refdata.data_dir()) / "norm_texts"
+
+
+def custom_dir() -> Path:
+    """Внутренние стандарты заказчика, загруженные через /api/norms (tzcheck/norms_admin.py); в репозиторий не входят."""
+    return Path(os.environ.get("TZCHECK_NORMS_CUSTOM_DIR") or Path(refdata.data_dir()) / "norm_custom")
+
+
+def with_texts(corpus=None) -> bool:
+    try:
+        return Path(corpus or CORPUS).resolve() == Path(MAIN_CORPUS).resolve()
+    except OSError:
+        return False
+
+
+def corpus_dirs(corpus=None) -> list[Path]:
+    return [Path(corpus or CORPUS)] + ([texts_dir(), custom_dir()] if with_texts(corpus) else [])
+
+
+def iter_all_docs(corpus=None):
+    for folder in corpus_dirs(corpus):
+        yield from _iter_docs(folder)
+
+
+def texts_signature() -> list:
+    """Состав сохранённых текстов редакций: по нему видно, что индекс надо пересобрать."""
+    out = []
+    # внутренние стандарты заказчика идут в подпись с префиксом custom/: пока их нет, подпись прежняя
+    for folder, prefix in ((texts_dir(), ""), (custom_dir(), "custom/")):
+        try:
+            names = sorted(os.listdir(folder))
+        except OSError:
+            continue
+        for n in names:
+            if n.endswith((".json", ".json.gz")) and n != "manifest.json":
+                st = os.stat(folder / n)
+                out.append([prefix + n, st.st_size, int(st.st_mtime)])
+    return out
+
+
+def _signature_path(index: Path) -> Path:
+    return index.with_name(index.name + ".sources")
+
+
 def build(corpus=None, index=None) -> int:
     corpus = Path(corpus or CORPUS)
     index = Path(index or corpus / "index.json")
     rows, seen = [], set()
-    for _, d in _iter_docs(corpus):
+    for _, d in iter_all_docs(corpus):
         key = norm_document(d["document"])
         if key in seen:
             continue
@@ -191,22 +239,49 @@ def build(corpus=None, index=None) -> int:
         for row in chunks(d):
             if d.get("replaced_by"):
                 row["replaced_by"] = d["replaced_by"]
+            if d.get("replaces"):
+                row["replaces"] = d["replaces"]
+            if d.get("customer"):  # внутренний стандарт заказчика (norms_admin): пометка заказчика в каждом пункте
+                row["customer"] = d["customer"]
+                row["internal"] = True
             rows.append(row)
     for row in rows:
         row["tokens"] = tokens(row["document"] + " " + row["number"] + " " + row["title"] + " " + row["text"])
     index.parent.mkdir(parents=True, exist_ok=True)
     index.write_text(json.dumps({"version": INDEX_VERSION, "rows": rows}, ensure_ascii=False), encoding="utf8")
+    _signature_path(index).write_text(json.dumps(texts_signature() if with_texts(corpus) else None), encoding="utf8")
     return len(rows)
 
 
+def index_fresh(index=None) -> bool:
+    index = Path(index or INDEX)
+    if not index.exists():
+        return False
+    try:
+        saved = json.loads(_signature_path(index).read_text(encoding="utf8"))
+    except (OSError, ValueError):
+        saved = []
+    if saved is None:  # индекс собран по корпусу без текстов редакций
+        return True
+    return saved == texts_signature()
+
+
 def ensure_index() -> bool:
-    """Индекс BM25 не хранится в репозитории: собирается шагом Docker-сборки или при первой проверке с TZCHECK_RAG=1."""
-    if INDEX.exists():
+    """Индекс BM25 не хранится в репозитории: собирается шагом Docker-сборки или при первой проверке с TZCHECK_RAG=1.
+    Если обновлятор добавил или обновил тексты редакций, индекс пересобирается (10-20 с)."""
+    if not INDEX.exists():
+        try:
+            return build() > 0
+        except Exception:
+            return False
+    if index_fresh():
         return True
     try:
-        return build() > 0
+        build(index=INDEX)
+        _searcher.cache_clear()
     except Exception:
-        return False
+        pass
+    return True
 
 
 def mentioned_documents(text: str, rows) -> set[str]:
@@ -232,9 +307,11 @@ class Search:
     """BM25 (k1=1.2, b=0.75) по леммам pymorphy3."""
     name = "bm25"
 
-    def __init__(self, path=None):
-        data = json.loads(Path(path or INDEX).read_text(encoding="utf8"))
-        self.rows = data["rows"]
+    def __init__(self, path=None, rows=None):
+        self.rows = rows if rows is not None else json.loads(Path(path or INDEX).read_text(encoding="utf8"))["rows"]
+        for r in self.rows:
+            if "tokens" not in r:
+                r["tokens"] = tokens(r["document"] + " " + r["number"] + " " + r.get("title", "") + " " + r["text"])
         self.freq = [Counter(r["tokens"]) for r in self.rows]
         self.length = [sum(x.values()) for x in self.freq]
         self.avg = sum(self.length) / max(1, len(self.length))
@@ -315,8 +392,8 @@ def best_quote(text: str, query: str, limit: int = 450) -> str:
 def corpus_has_quote(hit: dict, quote: str) -> bool:
     """Цитата сверяется с исходным документом корпуса, а не только с индексом."""
     source_id = hit["id"].split(":", 1)[0]
-    direct = [p for p in (CORPUS / (source_id + ".json"), CORPUS / (source_id + ".json.gz")) if p.exists()]
-    candidates = direct[:1] or _doc_files(CORPUS)
+    direct = [p for folder in corpus_dirs() for p in (folder / (source_id + ".json"), folder / (source_id + ".json.gz")) if p.exists()]
+    candidates = direct[:1] or [p for folder in corpus_dirs() for p in _doc_files(folder)]
     for path in candidates:
         try:
             doc = _read_doc(path)
@@ -339,7 +416,7 @@ def _searcher(mode: str, model: str):
     if mode != "bm25":
         try:
             from .models import HybridSearch
-            return HybridSearch(model, mode=mode)
+            return HybridSearch(model, mode=mode, index=INDEX)
         except Exception:
             pass
     return Search(INDEX)
@@ -454,14 +531,37 @@ OPEN_CATEGORIES = ("Стандарты (ГОСТ, поверка)", "Огран�
 
 
 def open_search_allowed(search) -> bool:
-    """Открытый поиск по корпусу (без статьи в norm_ids и без обозначения в тексте). TZCHECK_RAG_OPEN=auto: только
-    в гибридном режиме, где на 99 правках точность приложенного пункта 12 из 13; на одном BM25 было 3 из 4."""
-    v = os.environ.get("TZCHECK_RAG_OPEN", "auto").lower()
+    """Открытый поиск по корпусу (без статьи в norm_ids и без обозначения в тексте). По умолчанию выключен: на 77 правках
+    закупщиков он находит верный пункт в 12 случаях (гибрид) и в 3 (BM25), а вопрос без ответа от вопроса с ответом
+    по оценке не отличает. TZCHECK_RAG_OPEN=1 включает его всегда, auto только в гибридном режиме."""
+    v = os.environ.get("TZCHECK_RAG_OPEN", "0").lower()
     if v in ("1", "on", "true"):
         return True
     if v in ("0", "off", "false"):
         return False
     return getattr(search, "mode", "bm25") in ("hybrid", "rerank")
+
+
+def _new_edition_clause(f, ev) -> None:
+    """Пункт нормы взят из заменённого стандарта: тот же пункт в новой редакции и что в нём изменилось (editions.counterpart)."""
+    if "пункт новой редакции" in f.evidence:
+        return
+    try:
+        from . import editions
+        cp = editions.counterpart(ev["document"], ev["number"], ev.get("quote", ""))
+    except Exception:
+        return
+    if not cp:
+        return
+    if cp.get("status") == "no_text":
+        f.evidence["пункт новой редакции"] = cp["line"]
+    elif cp.get("status") == "removed":
+        f.evidence["пункт новой редакции"] = f"в {cp['new_document']} пункта {ev['number']} нет: исключён или перенесён, сверить вручную"
+    elif cp.get("new"):
+        f.evidence["пункт новой редакции"] = cp["label"] + (" (без изменений)" if cp["status"] == "same" else "")
+        f.evidence["цитата новой редакции"] = cp["quote"]
+        if cp.get("change"):
+            f.evidence["изменение пункта"] = cp["change"]
 
 
 def enrich(findings) -> None:
@@ -496,5 +596,6 @@ def enrich(findings) -> None:
         if ev["status"].lower().startswith(("заменён", "заменен", "отменён", "отменен", "утратил")):
             f.evidence["стандарт заменён"] = ev.get("replaced_by") or "да, см. сведения Росстандарта"
             f.needs_review = True
+            _new_edition_clause(f, ev)
         if ev["how"].startswith("поиском"):
             f.needs_review = True

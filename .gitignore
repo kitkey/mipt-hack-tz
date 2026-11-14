@@ -15,6 +15,7 @@ demo/out/
 tzcheck/data/raw/
 tzcheck/data/cache/
 tzcheck/data/updates/.lock
+tzcheck/data/control/
 
 # документы ЕИС и производные от них: публичные, но с контактами сотрудников заказчиков
 data_raw/*
@@ -43,6 +44,7 @@ eval/models_ab/*.run
 data/norm_corpus/*.json
 !data/norm_corpus/manifest.json
 data/norm_corpus/index.json
+data/norm_corpus/index.json.sources
 data/norm_corpus/vectors/
 # опыты разработки с внешними судьями: в решении не используются
 eval/judge/
@@ -55,3 +57,9 @@ eval/rag/eis_documents/
 *.stackdump
 eval/models_ab/switch_to_gemma.sh
 !eval/rag/REPORT.md
+data/pii-model-cache/
+eval/pii/work/
+!eval/pii/REPORT.md
+# тексты новых редакций стандартов (обновлятор gost_texts): права на перепубликацию не подтверждены, в репозитории
+# только список источников tzcheck/data/norm_texts.json; тексты скачивает python -m tzcheck.updater --only gost_texts
+tzcheck/data/norm_texts/

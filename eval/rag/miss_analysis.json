@@ -1,0 +1,2330 @@
+{
+ "summary": {
+  "questions": 77,
+  "distinct_queries": 69,
+  "prod_reason": {
+   "категория вне открытого поиска": 40,
+   "выдача: первый не эталон": 1,
+   "стандарт назван, поиск внутри документа нашёл": 2,
+   "ниже порога отказа": 24,
+   "нашёл": 10
+  },
+  "search_reason": {
+   "top2-5": 4,
+   "top1": 14,
+   "эталон вне топ-10": 7,
+   "документ в топ-10, пункт ниже": 18,
+   "эталон закон, в топ-10 только ГОСТ/СП": 34
+  },
+  "by_gold": {
+   "[[\"ГОСТ Р 53782-2010\", null], [\"ТР ТС 011/2011\", null]]": 1,
+   "[[\"ГК РФ часть вторая\", \"Статья 722\"], [\"ГК РФ часть вторая\", \"Статья 724\"], [\"ГК РФ часть вторая\", \"Статья 755\"], [\"ГК РФ часть вторая\", \"Статья 756\"]]": 1,
+   "[[\"ГОСТ Р 53782-2010\", null]]": 1,
+   "[[\"ГОСТ Р 53783-2010\", null]]": 1,
+   "[[\"223-ФЗ\", \"Статья 3, ч. 6.1\"], [\"223-ФЗ\", \"Статья 4, ч. 10\"]]": 33,
+   "[[\"223-ФЗ\", \"Статья 3, ч. 6.1\"]]": 21,
+   "[[\"102-ФЗ\", \"Статья 13, ч. 1\"], [\"102-ФЗ\", \"Статья 9, ч. 1\"]]": 14,
+   "[[\"223-ФЗ\", \"Статья 3, ч. 8\"]]": 2,
+   "[[\"ГОСТ 6507-90\", null]]": 1,
+   "[[\"ГК РФ часть вторая\", \"Статья 471\"], [\"ГК РФ часть вторая\", \"Статья 470\"]]": 1,
+   "[[\"ГК РФ часть вторая\", \"Статья 475\"], [\"ГК РФ часть вторая\", \"Статья 470\"]]": 1
+  },
+  "hit@1": {
+   "bm25": 6,
+   "dense": 6,
+   "hybrid": 14
+  },
+  "hit@5": {
+   "bm25": 9,
+   "dense": 15,
+   "hybrid": 18
+  },
+  "hit@100": {
+   "bm25": 25,
+   "dense": 22,
+   "hybrid": 25
+  },
+  "top1_documents": [
+   [
+    "ГОСТ 27570.0-87",
+    12
+   ],
+   [
+    "102-ФЗ",
+    10
+   ],
+   [
+    "ГК РФ часть вторая",
+    6
+   ],
+   [
+    "ГОСТ 33984.1-2023",
+    4
+   ],
+   [
+    "ГОСТ 33984.1-2016",
+    4
+   ],
+   [
+    "223-ФЗ",
+    3
+   ],
+   [
+    "ГОСТ 6507-90",
+    3
+   ],
+   [
+    "СП 54.13330.2016",
+    3
+   ],
+   [
+    "СП 70.13330.2012",
+    3
+   ],
+   [
+    "СП 76.13330.2016",
+    3
+   ],
+   [
+    "СП 31-110-2003",
+    3
+   ],
+   [
+    "ГОСТ Р 53783-2010",
+    2
+   ],
+   [
+    "СП 73.13330.2016",
+    2
+   ],
+   [
+    "ГОСТ Р 2.601-2019",
+    2
+   ],
+   [
+    "ГОСТ 166-89",
+    2
+   ]
+  ]
+ },
+ "rows": [
+  {
+   "id": "L-004",
+   "category": "Предмет закупки или наименование",
+   "gold": [
+    [
+     "ГОСТ Р 53782-2010",
+     null
+    ],
+    [
+     "ТР ТС 011/2011",
+     null
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": 14,
+   "dense": 10,
+   "hybrid": 2,
+   "bm25_doc": 14,
+   "hybrid_doc": 2,
+   "hybrid_top1": [
+    "ГОСТ 33984.1-2023",
+    "5.1.1"
+   ],
+   "gate": 0.656,
+   "law_rows_in_top10": 1,
+   "gold_is_law": false,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "top2-5"
+  },
+  {
+   "id": "L-008",
+   "category": "Гарантийные условия",
+   "gold": [
+    [
+     "ГК РФ часть вторая",
+     "Статья 722"
+    ],
+    [
+     "ГК РФ часть вторая",
+     "Статья 724"
+    ],
+    [
+     "ГК РФ часть вторая",
+     "Статья 755"
+    ],
+    [
+     "ГК РФ часть вторая",
+     "Статья 756"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": true,
+   "bm25": 6,
+   "dense": 1,
+   "hybrid": 4,
+   "bm25_doc": 1,
+   "hybrid_doc": 1,
+   "hybrid_top1": [
+    "ГК РФ часть вторая",
+    "Статья 725, п. 2"
+   ],
+   "gate": 0.664,
+   "law_rows_in_top10": 10,
+   "gold_is_law": true,
+   "prod_reason": "выдача: первый не эталон",
+   "search_reason": "top2-5"
+  },
+  {
+   "id": "L-009",
+   "category": "Стандарты (ГОСТ, поверка)",
+   "gold": [
+    [
+     "ГОСТ Р 53782-2010",
+     null
+    ]
+   ],
+   "mentioned": [
+    "ГОСТ Р 53782-2010"
+   ],
+   "open_category": true,
+   "bm25": 1,
+   "dense": 1,
+   "hybrid": 1,
+   "bm25_doc": 1,
+   "hybrid_doc": 1,
+   "hybrid_top1": [
+    "ГОСТ Р 53782-2010",
+    "2"
+   ],
+   "gate": 0.527,
+   "law_rows_in_top10": 0,
+   "gold_is_law": false,
+   "prod_reason": "стандарт назван, поиск внутри документа нашёл",
+   "search_reason": "top1"
+  },
+  {
+   "id": "L-010",
+   "category": "Стандарты (ГОСТ, поверка)",
+   "gold": [
+    [
+     "ГОСТ Р 53783-2010",
+     null
+    ]
+   ],
+   "mentioned": [
+    "ГОСТ Р 53783-2010"
+   ],
+   "open_category": true,
+   "bm25": 1,
+   "dense": 1,
+   "hybrid": 1,
+   "bm25_doc": 1,
+   "hybrid_doc": 1,
+   "hybrid_top1": [
+    "ГОСТ Р 53783-2010",
+    "5.12.1"
+   ],
+   "gate": 0.472,
+   "law_rows_in_top10": 0,
+   "gold_is_law": false,
+   "prod_reason": "стандарт назван, поиск внутри документа нашёл",
+   "search_reason": "top1"
+  },
+  {
+   "id": "M-012",
+   "category": "Некорректная характеристика",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ],
+    [
+     "223-ФЗ",
+     "Статья 4, ч. 10"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": 17,
+   "dense": 48,
+   "hybrid": 23,
+   "bm25_doc": 17,
+   "hybrid_doc": 17,
+   "hybrid_top1": [
+    "ГК РФ часть вторая",
+    "Статья 510, п. 2"
+   ],
+   "gate": 0.628,
+   "law_rows_in_top10": 10,
+   "gold_is_law": true,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "эталон вне топ-10"
+  },
+  {
+   "id": "M-013",
+   "category": "Ограничение конкуренции",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": true,
+   "bm25": 1,
+   "dense": null,
+   "hybrid": 6,
+   "bm25_doc": 1,
+   "hybrid_doc": 6,
+   "hybrid_top1": [
+    "ГОСТ Р ЕН 361-2008",
+    "6"
+   ],
+   "gate": 0.584,
+   "law_rows_in_top10": 2,
+   "gold_is_law": true,
+   "prod_reason": "ниже порога отказа",
+   "search_reason": "документ в топ-10, пункт ниже"
+  },
+  {
+   "id": "M-014",
+   "category": "Ограничение конкуренции",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": true,
+   "bm25": 1,
+   "dense": 1,
+   "hybrid": 1,
+   "bm25_doc": 1,
+   "hybrid_doc": 1,
+   "hybrid_top1": [
+    "223-ФЗ",
+    "Статья 3, ч. 6.1"
+   ],
+   "gate": 0.599,
+   "law_rows_in_top10": 5,
+   "gold_is_law": true,
+   "prod_reason": "ниже порога отказа",
+   "search_reason": "top1"
+  },
+  {
+   "id": "M-015",
+   "category": "Ограничение конкуренции",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": true,
+   "bm25": 3,
+   "dense": null,
+   "hybrid": 8,
+   "bm25_doc": 3,
+   "hybrid_doc": 8,
+   "hybrid_top1": [
+    "ГОСТ 27570.0-87",
+    "25.1"
+   ],
+   "gate": 0.613,
+   "law_rows_in_top10": 1,
+   "gold_is_law": true,
+   "prod_reason": "ниже порога отказа",
+   "search_reason": "документ в топ-10, пункт ниже"
+  },
+  {
+   "id": "M-016",
+   "category": "Лишнее в ТЗ",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": null,
+   "hybrid_doc": null,
+   "hybrid_top1": [
+    "ГОСТ 27570.0-87",
+    "13.2"
+   ],
+   "gate": 0.535,
+   "law_rows_in_top10": 0,
+   "gold_is_law": true,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "эталон закон, в топ-10 только ГОСТ/СП"
+  },
+  {
+   "id": "M-019",
+   "category": "Неполнота или комплектность",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ],
+    [
+     "223-ФЗ",
+     "Статья 4, ч. 10"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": null,
+   "hybrid_doc": null,
+   "hybrid_top1": [
+    "ГОСТ 6507-90",
+    "1.5"
+   ],
+   "gate": 0.606,
+   "law_rows_in_top10": 0,
+   "gold_is_law": true,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "эталон закон, в топ-10 только ГОСТ/СП"
+  },
+  {
+   "id": "M-020",
+   "category": "Неполнота или комплектность",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ],
+    [
+     "223-ФЗ",
+     "Статья 4, ч. 10"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": 62,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": 32,
+   "hybrid_doc": 64,
+   "hybrid_top1": [
+    "ГОСТ 27570.0-87",
+    "2.2.17"
+   ],
+   "gate": 0.529,
+   "law_rows_in_top10": 3,
+   "gold_is_law": true,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "эталон вне топ-10"
+  },
+  {
+   "id": "M-021",
+   "category": "Неполнота или комплектность",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ],
+    [
+     "223-ФЗ",
+     "Статья 4, ч. 10"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": null,
+   "hybrid_doc": null,
+   "hybrid_top1": [
+    "СП 51.13330.2011",
+    "13.3"
+   ],
+   "gate": 0.486,
+   "law_rows_in_top10": 0,
+   "gold_is_law": true,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "эталон закон, в топ-10 только ГОСТ/СП"
+  },
+  {
+   "id": "M-022",
+   "category": "Неполнота или комплектность",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ],
+    [
+     "223-ФЗ",
+     "Статья 4, ч. 10"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": null,
+   "hybrid_doc": null,
+   "hybrid_top1": [
+    "ГОСТ 33984.1-2016",
+    "5.10.6.3.2"
+   ],
+   "gate": 0.576,
+   "law_rows_in_top10": 0,
+   "gold_is_law": true,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "эталон закон, в топ-10 только ГОСТ/СП"
+  },
+  {
+   "id": "M-023",
+   "category": "Некорректная характеристика",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ],
+    [
+     "223-ФЗ",
+     "Статья 4, ч. 10"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": null,
+   "hybrid_doc": null,
+   "hybrid_top1": [
+    "ГОСТ 27570.0-87",
+    "5.3.1"
+   ],
+   "gate": 0.597,
+   "law_rows_in_top10": 0,
+   "gold_is_law": true,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "эталон закон, в топ-10 только ГОСТ/СП"
+  },
+  {
+   "id": "M-024",
+   "category": "Ограничение конкуренции",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": true,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": null,
+   "hybrid_doc": null,
+   "hybrid_top1": [
+    "ГОСТ 33984.1-2016",
+    "5.12.1.1.2"
+   ],
+   "gate": 0.536,
+   "law_rows_in_top10": 0,
+   "gold_is_law": true,
+   "prod_reason": "ниже порога отказа",
+   "search_reason": "эталон закон, в топ-10 только ГОСТ/СП"
+  },
+  {
+   "id": "M-025",
+   "category": "Лишнее в ТЗ",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": 65,
+   "hybrid_doc": 20,
+   "hybrid_top1": [
+    "СП 73.13330.2016",
+    "2"
+   ],
+   "gate": 0.523,
+   "law_rows_in_top10": 0,
+   "gold_is_law": true,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "эталон закон, в топ-10 только ГОСТ/СП"
+  },
+  {
+   "id": "M-026",
+   "category": "Ограничение конкуренции",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": true,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": null,
+   "hybrid_doc": null,
+   "hybrid_top1": [
+    "СП 54.13330.2016",
+    "7.1.13"
+   ],
+   "gate": 0.434,
+   "law_rows_in_top10": 0,
+   "gold_is_law": true,
+   "prod_reason": "ниже порога отказа",
+   "search_reason": "эталон закон, в топ-10 только ГОСТ/СП"
+  },
+  {
+   "id": "M-027",
+   "category": "Ограничение конкуренции",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": true,
+   "bm25": 3,
+   "dense": null,
+   "hybrid": 6,
+   "bm25_doc": 3,
+   "hybrid_doc": 6,
+   "hybrid_top1": [
+    "ГОСТ Р 53783-2010",
+    "8"
+   ],
+   "gate": 0.578,
+   "law_rows_in_top10": 1,
+   "gold_is_law": true,
+   "prod_reason": "ниже порога отказа",
+   "search_reason": "документ в топ-10, пункт ниже"
+  },
+  {
+   "id": "M-029",
+   "category": "Неполнота или комплектность",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ],
+    [
+     "223-ФЗ",
+     "Статья 4, ч. 10"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": null,
+   "hybrid_doc": null,
+   "hybrid_top1": [
+    "СП 70.13330.2012",
+    "5.16.16"
+   ],
+   "gate": 0.652,
+   "law_rows_in_top10": 0,
+   "gold_is_law": true,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "эталон закон, в топ-10 только ГОСТ/СП"
+  },
+  {
+   "id": "M-030",
+   "category": "Неполнота или комплектность",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ],
+    [
+     "223-ФЗ",
+     "Статья 4, ч. 10"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": null,
+   "hybrid_doc": null,
+   "hybrid_top1": [
+    "ГОСТ 33984.1-2023",
+    "5.3.6.2.2"
+   ],
+   "gate": 0.547,
+   "law_rows_in_top10": 0,
+   "gold_is_law": true,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "эталон закон, в топ-10 только ГОСТ/СП"
+  },
+  {
+   "id": "M-031",
+   "category": "Неполнота или комплектность",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ],
+    [
+     "223-ФЗ",
+     "Статья 4, ч. 10"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": 3,
+   "hybrid_doc": 6,
+   "hybrid_top1": [
+    "ГОСТ 33984.1-2023",
+    "5.12.1.5.2"
+   ],
+   "gate": 0.56,
+   "law_rows_in_top10": 1,
+   "gold_is_law": true,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "документ в топ-10, пункт ниже"
+  },
+  {
+   "id": "M-032",
+   "category": "Неполнота или комплектность",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ],
+    [
+     "223-ФЗ",
+     "Статья 4, ч. 10"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": null,
+   "hybrid_doc": null,
+   "hybrid_top1": [
+    "ГОСТ 33984.1-2016",
+    "5.10.6.2"
+   ],
+   "gate": 0.534,
+   "law_rows_in_top10": 1,
+   "gold_is_law": true,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "эталон вне топ-10"
+  },
+  {
+   "id": "M-033",
+   "category": "Некорректная характеристика",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ],
+    [
+     "223-ФЗ",
+     "Статья 4, ч. 10"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": null,
+   "hybrid_doc": null,
+   "hybrid_top1": [
+    "ГОСТ 6507-90",
+    "2.1.1.3"
+   ],
+   "gate": 0.628,
+   "law_rows_in_top10": 0,
+   "gold_is_law": true,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "эталон закон, в топ-10 только ГОСТ/СП"
+  },
+  {
+   "id": "M-034",
+   "category": "Стандарты (ГОСТ, поверка)",
+   "gold": [
+    [
+     "102-ФЗ",
+     "Статья 13, ч. 1"
+    ],
+    [
+     "102-ФЗ",
+     "Статья 9, ч. 1"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": true,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": null,
+   "hybrid_doc": 31,
+   "hybrid_top1": [
+    "ГОСТ ISO 13485-2017",
+    "7.6"
+   ],
+   "gate": 0.524,
+   "law_rows_in_top10": 0,
+   "gold_is_law": true,
+   "prod_reason": "ниже порога отказа",
+   "search_reason": "эталон закон, в топ-10 только ГОСТ/СП"
+  },
+  {
+   "id": "M-035",
+   "category": "Стандарты (ГОСТ, поверка)",
+   "gold": [
+    [
+     "102-ФЗ",
+     "Статья 13, ч. 1"
+    ],
+    [
+     "102-ФЗ",
+     "Статья 9, ч. 1"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": true,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": null,
+   "hybrid_doc": null,
+   "hybrid_top1": [
+    "СП 76.13330.2016",
+    "6.77.1"
+   ],
+   "gate": 0.548,
+   "law_rows_in_top10": 0,
+   "gold_is_law": true,
+   "prod_reason": "ниже порога отказа",
+   "search_reason": "эталон закон, в топ-10 только ГОСТ/СП"
+  },
+  {
+   "id": "M-036",
+   "category": "Некорректная характеристика",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ],
+    [
+     "223-ФЗ",
+     "Статья 4, ч. 10"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": null,
+   "hybrid_doc": null,
+   "hybrid_top1": [
+    "ГОСТ 33984.1-2023",
+    "5.9.2.6"
+   ],
+   "gate": 0.553,
+   "law_rows_in_top10": 0,
+   "gold_is_law": true,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "эталон закон, в топ-10 только ГОСТ/СП"
+  },
+  {
+   "id": "M-037",
+   "category": "Неполнота или комплектность",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ],
+    [
+     "223-ФЗ",
+     "Статья 4, ч. 10"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": null,
+   "hybrid_doc": null,
+   "hybrid_top1": [
+    "ГОСТ 33984.1-2016",
+    "5.10.6.2"
+   ],
+   "gate": 0.518,
+   "law_rows_in_top10": 0,
+   "gold_is_law": true,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "эталон закон, в топ-10 только ГОСТ/СП"
+  },
+  {
+   "id": "M-038",
+   "category": "Ограничение конкуренции",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": true,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": 38,
+   "hybrid_doc": 76,
+   "hybrid_top1": [
+    "СП 54.13330.2016",
+    "7.1.13"
+   ],
+   "gate": 0.486,
+   "law_rows_in_top10": 0,
+   "gold_is_law": true,
+   "prod_reason": "ниже порога отказа",
+   "search_reason": "эталон закон, в топ-10 только ГОСТ/СП"
+  },
+  {
+   "id": "M-039",
+   "category": "Лишнее в ТЗ",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": 41,
+   "hybrid_doc": 85,
+   "hybrid_top1": [
+    "ГОСТ 27570.0-87",
+    "9.2"
+   ],
+   "gate": 0.54,
+   "law_rows_in_top10": 0,
+   "gold_is_law": true,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "эталон закон, в топ-10 только ГОСТ/СП"
+  },
+  {
+   "id": "M-040",
+   "category": "Ограничение конкуренции",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": true,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": 2,
+   "hybrid_doc": 4,
+   "hybrid_top1": [
+    "ГОСТ Р 2.601-2019",
+    "8.1"
+   ],
+   "gate": 0.552,
+   "law_rows_in_top10": 1,
+   "gold_is_law": true,
+   "prod_reason": "ниже порога отказа",
+   "search_reason": "документ в топ-10, пункт ниже"
+  },
+  {
+   "id": "M-041",
+   "category": "Ограничение конкуренции",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": true,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": 2,
+   "hybrid_doc": 4,
+   "hybrid_top1": [
+    "ГОСТ 24297-2013",
+    "6.5"
+   ],
+   "gate": 0.563,
+   "law_rows_in_top10": 1,
+   "gold_is_law": true,
+   "prod_reason": "ниже порога отказа",
+   "search_reason": "документ в топ-10, пункт ниже"
+  },
+  {
+   "id": "M-042",
+   "category": "Ограничение конкуренции",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": true,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": 2,
+   "hybrid_doc": 4,
+   "hybrid_top1": [
+    "ГОСТ 27570.0-87",
+    "7.14"
+   ],
+   "gate": 0.572,
+   "law_rows_in_top10": 1,
+   "gold_is_law": true,
+   "prod_reason": "ниже порога отказа",
+   "search_reason": "документ в топ-10, пункт ниже"
+  },
+  {
+   "id": "M-043",
+   "category": "Ограничение конкуренции",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": true,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": 2,
+   "hybrid_doc": 4,
+   "hybrid_top1": [
+    "ГОСТ Р 2.601-2019",
+    "6.25"
+   ],
+   "gate": 0.547,
+   "law_rows_in_top10": 1,
+   "gold_is_law": true,
+   "prod_reason": "ниже порога отказа",
+   "search_reason": "документ в топ-10, пункт ниже"
+  },
+  {
+   "id": "M-044",
+   "category": "Ограничение конкуренции",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": true,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": 2,
+   "hybrid_doc": 4,
+   "hybrid_top1": [
+    "ГОСТ 166-89",
+    "2.26.3"
+   ],
+   "gate": 0.572,
+   "law_rows_in_top10": 1,
+   "gold_is_law": true,
+   "prod_reason": "ниже порога отказа",
+   "search_reason": "документ в топ-10, пункт ниже"
+  },
+  {
+   "id": "M-045",
+   "category": "Ограничение конкуренции",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": true,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": 4,
+   "hybrid_doc": 8,
+   "hybrid_top1": [
+    "ГОСТ 27570.0-87",
+    "7.2"
+   ],
+   "gate": 0.546,
+   "law_rows_in_top10": 1,
+   "gold_is_law": true,
+   "prod_reason": "ниже порога отказа",
+   "search_reason": "документ в топ-10, пункт ниже"
+  },
+  {
+   "id": "M-046",
+   "category": "Ограничение конкуренции",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": true,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": 2,
+   "hybrid_doc": 4,
+   "hybrid_top1": [
+    "ГОСТ 8.417-2024",
+    "8.13"
+   ],
+   "gate": 0.56,
+   "law_rows_in_top10": 1,
+   "gold_is_law": true,
+   "prod_reason": "ниже порога отказа",
+   "search_reason": "документ в топ-10, пункт ниже"
+  },
+  {
+   "id": "M-047",
+   "category": "Ограничение конкуренции",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": true,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": 2,
+   "hybrid_doc": 4,
+   "hybrid_top1": [
+    "ГОСТ 8.417-2024",
+    "8.13"
+   ],
+   "gate": 0.58,
+   "law_rows_in_top10": 1,
+   "gold_is_law": true,
+   "prod_reason": "ниже порога отказа",
+   "search_reason": "документ в топ-10, пункт ниже"
+  },
+  {
+   "id": "M-048",
+   "category": "Ограничение конкуренции",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": true,
+   "bm25": 6,
+   "dense": null,
+   "hybrid": 13,
+   "bm25_doc": 6,
+   "hybrid_doc": 8,
+   "hybrid_top1": [
+    "ГОСТ 14192-96",
+    "8.8"
+   ],
+   "gate": 0.47,
+   "law_rows_in_top10": 1,
+   "gold_is_law": true,
+   "prod_reason": "ниже порога отказа",
+   "search_reason": "документ в топ-10, пункт ниже"
+  },
+  {
+   "id": "M-049",
+   "category": "Ограничение конкуренции",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": true,
+   "bm25": 1,
+   "dense": 31,
+   "hybrid": 4,
+   "bm25_doc": 1,
+   "hybrid_doc": 4,
+   "hybrid_top1": [
+    "ГОСТ 34581-2019",
+    "2"
+   ],
+   "gate": 0.574,
+   "law_rows_in_top10": 1,
+   "gold_is_law": true,
+   "prod_reason": "ниже порога отказа",
+   "search_reason": "top2-5"
+  },
+  {
+   "id": "M-051",
+   "category": "Лишнее в ТЗ",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 8"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": null,
+   "dense": 79,
+   "hybrid": null,
+   "bm25_doc": 2,
+   "hybrid_doc": 1,
+   "hybrid_top1": [
+    "223-ФЗ",
+    "Статья 3, ч. 6.1"
+   ],
+   "gate": 0.528,
+   "law_rows_in_top10": 4,
+   "gold_is_law": true,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "документ в топ-10, пункт ниже"
+  },
+  {
+   "id": "M-052",
+   "category": "Стандарты (ГОСТ, поверка)",
+   "gold": [
+    [
+     "102-ФЗ",
+     "Статья 13, ч. 1"
+    ],
+    [
+     "102-ФЗ",
+     "Статья 9, ч. 1"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": true,
+   "bm25": 6,
+   "dense": 2,
+   "hybrid": 1,
+   "bm25_doc": 3,
+   "hybrid_doc": 1,
+   "hybrid_top1": [
+    "102-ФЗ",
+    "Статья 9, ч. 1"
+   ],
+   "gate": 0.662,
+   "law_rows_in_top10": 8,
+   "gold_is_law": true,
+   "prod_reason": "нашёл",
+   "search_reason": "top1"
+  },
+  {
+   "id": "M-053",
+   "category": "Стандарты (ГОСТ, поверка)",
+   "gold": [
+    [
+     "102-ФЗ",
+     "Статья 13, ч. 1"
+    ],
+    [
+     "102-ФЗ",
+     "Статья 9, ч. 1"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": true,
+   "bm25": 6,
+   "dense": 2,
+   "hybrid": 1,
+   "bm25_doc": 3,
+   "hybrid_doc": 1,
+   "hybrid_top1": [
+    "102-ФЗ",
+    "Статья 9, ч. 1"
+   ],
+   "gate": 0.662,
+   "law_rows_in_top10": 8,
+   "gold_is_law": true,
+   "prod_reason": "нашёл",
+   "search_reason": "top1"
+  },
+  {
+   "id": "M-054",
+   "category": "Стандарты (ГОСТ, поверка)",
+   "gold": [
+    [
+     "102-ФЗ",
+     "Статья 13, ч. 1"
+    ],
+    [
+     "102-ФЗ",
+     "Статья 9, ч. 1"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": true,
+   "bm25": 6,
+   "dense": 2,
+   "hybrid": 1,
+   "bm25_doc": 3,
+   "hybrid_doc": 1,
+   "hybrid_top1": [
+    "102-ФЗ",
+    "Статья 9, ч. 1"
+   ],
+   "gate": 0.662,
+   "law_rows_in_top10": 8,
+   "gold_is_law": true,
+   "prod_reason": "нашёл",
+   "search_reason": "top1"
+  },
+  {
+   "id": "M-055",
+   "category": "Стандарты (ГОСТ, поверка)",
+   "gold": [
+    [
+     "102-ФЗ",
+     "Статья 13, ч. 1"
+    ],
+    [
+     "102-ФЗ",
+     "Статья 9, ч. 1"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": true,
+   "bm25": 6,
+   "dense": 2,
+   "hybrid": 1,
+   "bm25_doc": 3,
+   "hybrid_doc": 1,
+   "hybrid_top1": [
+    "102-ФЗ",
+    "Статья 9, ч. 1"
+   ],
+   "gate": 0.662,
+   "law_rows_in_top10": 8,
+   "gold_is_law": true,
+   "prod_reason": "нашёл",
+   "search_reason": "top1"
+  },
+  {
+   "id": "M-056",
+   "category": "Стандарты (ГОСТ, поверка)",
+   "gold": [
+    [
+     "102-ФЗ",
+     "Статья 13, ч. 1"
+    ],
+    [
+     "102-ФЗ",
+     "Статья 9, ч. 1"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": true,
+   "bm25": 6,
+   "dense": 2,
+   "hybrid": 1,
+   "bm25_doc": 3,
+   "hybrid_doc": 1,
+   "hybrid_top1": [
+    "102-ФЗ",
+    "Статья 9, ч. 1"
+   ],
+   "gate": 0.662,
+   "law_rows_in_top10": 8,
+   "gold_is_law": true,
+   "prod_reason": "нашёл",
+   "search_reason": "top1"
+  },
+  {
+   "id": "M-057",
+   "category": "Стандарты (ГОСТ, поверка)",
+   "gold": [
+    [
+     "102-ФЗ",
+     "Статья 13, ч. 1"
+    ],
+    [
+     "102-ФЗ",
+     "Статья 9, ч. 1"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": true,
+   "bm25": 6,
+   "dense": 2,
+   "hybrid": 1,
+   "bm25_doc": 3,
+   "hybrid_doc": 1,
+   "hybrid_top1": [
+    "102-ФЗ",
+    "Статья 9, ч. 1"
+   ],
+   "gate": 0.662,
+   "law_rows_in_top10": 8,
+   "gold_is_law": true,
+   "prod_reason": "нашёл",
+   "search_reason": "top1"
+  },
+  {
+   "id": "M-058",
+   "category": "Стандарты (ГОСТ, поверка)",
+   "gold": [
+    [
+     "102-ФЗ",
+     "Статья 13, ч. 1"
+    ],
+    [
+     "102-ФЗ",
+     "Статья 9, ч. 1"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": true,
+   "bm25": 6,
+   "dense": 2,
+   "hybrid": 1,
+   "bm25_doc": 3,
+   "hybrid_doc": 1,
+   "hybrid_top1": [
+    "102-ФЗ",
+    "Статья 9, ч. 1"
+   ],
+   "gate": 0.662,
+   "law_rows_in_top10": 8,
+   "gold_is_law": true,
+   "prod_reason": "нашёл",
+   "search_reason": "top1"
+  },
+  {
+   "id": "M-059",
+   "category": "Стандарты (ГОСТ, поверка)",
+   "gold": [
+    [
+     "102-ФЗ",
+     "Статья 13, ч. 1"
+    ],
+    [
+     "102-ФЗ",
+     "Статья 9, ч. 1"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": true,
+   "bm25": 6,
+   "dense": 2,
+   "hybrid": 1,
+   "bm25_doc": 3,
+   "hybrid_doc": 1,
+   "hybrid_top1": [
+    "102-ФЗ",
+    "Статья 9, ч. 1"
+   ],
+   "gate": 0.662,
+   "law_rows_in_top10": 8,
+   "gold_is_law": true,
+   "prod_reason": "нашёл",
+   "search_reason": "top1"
+  },
+  {
+   "id": "M-060",
+   "category": "Стандарты (ГОСТ, поверка)",
+   "gold": [
+    [
+     "102-ФЗ",
+     "Статья 13, ч. 1"
+    ],
+    [
+     "102-ФЗ",
+     "Статья 9, ч. 1"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": true,
+   "bm25": 6,
+   "dense": 2,
+   "hybrid": 1,
+   "bm25_doc": 3,
+   "hybrid_doc": 1,
+   "hybrid_top1": [
+    "102-ФЗ",
+    "Статья 9, ч. 1"
+   ],
+   "gate": 0.662,
+   "law_rows_in_top10": 8,
+   "gold_is_law": true,
+   "prod_reason": "нашёл",
+   "search_reason": "top1"
+  },
+  {
+   "id": "M-061",
+   "category": "Стандарты (ГОСТ, поверка)",
+   "gold": [
+    [
+     "102-ФЗ",
+     "Статья 13, ч. 1"
+    ],
+    [
+     "102-ФЗ",
+     "Статья 9, ч. 1"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": true,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": 1,
+   "hybrid_doc": 4,
+   "hybrid_top1": [
+    "СП 73.13330.2016",
+    "3"
+   ],
+   "gate": 0.536,
+   "law_rows_in_top10": 3,
+   "gold_is_law": true,
+   "prod_reason": "ниже порога отказа",
+   "search_reason": "документ в топ-10, пункт ниже"
+  },
+  {
+   "id": "M-062",
+   "category": "Стандарты (ГОСТ, поверка)",
+   "gold": [
+    [
+     "102-ФЗ",
+     "Статья 13, ч. 1"
+    ],
+    [
+     "102-ФЗ",
+     "Статья 9, ч. 1"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": true,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": null,
+   "hybrid_doc": 15,
+   "hybrid_top1": [
+    "ГОСТ 27570.0-87",
+    "22.9"
+   ],
+   "gate": 0.567,
+   "law_rows_in_top10": 0,
+   "gold_is_law": true,
+   "prod_reason": "ниже порога отказа",
+   "search_reason": "эталон закон, в топ-10 только ГОСТ/СП"
+  },
+  {
+   "id": "M-063",
+   "category": "Стандарты (ГОСТ, поверка)",
+   "gold": [
+    [
+     "102-ФЗ",
+     "Статья 13, ч. 1"
+    ],
+    [
+     "102-ФЗ",
+     "Статья 9, ч. 1"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": true,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": null,
+   "hybrid_doc": 10,
+   "hybrid_top1": [
+    "СП 71.13330.2017",
+    "10.7"
+   ],
+   "gate": 0.5,
+   "law_rows_in_top10": 1,
+   "gold_is_law": true,
+   "prod_reason": "ниже порога отказа",
+   "search_reason": "документ в топ-10, пункт ниже"
+  },
+  {
+   "id": "M-065",
+   "category": "Неполнота или комплектность",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ],
+    [
+     "223-ФЗ",
+     "Статья 4, ч. 10"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": null,
+   "hybrid_doc": null,
+   "hybrid_top1": [
+    "ГОСТ 27570.0-87",
+    "15.2"
+   ],
+   "gate": 0.527,
+   "law_rows_in_top10": 0,
+   "gold_is_law": true,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "эталон закон, в топ-10 только ГОСТ/СП"
+  },
+  {
+   "id": "M-066",
+   "category": "Неполнота или комплектность",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ],
+    [
+     "223-ФЗ",
+     "Статья 4, ч. 10"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": null,
+   "hybrid_doc": null,
+   "hybrid_top1": [
+    "ГОСТ 32489-2013",
+    "3.1.3"
+   ],
+   "gate": 0.558,
+   "law_rows_in_top10": 0,
+   "gold_is_law": true,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "эталон закон, в топ-10 только ГОСТ/СП"
+  },
+  {
+   "id": "M-067",
+   "category": "Неполнота или комплектность",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ],
+    [
+     "223-ФЗ",
+     "Статья 4, ч. 10"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": null,
+   "hybrid_doc": null,
+   "hybrid_top1": [
+    "ГОСТ Р 51870-2014",
+    "10.7"
+   ],
+   "gate": 0.489,
+   "law_rows_in_top10": 0,
+   "gold_is_law": true,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "эталон закон, в топ-10 только ГОСТ/СП"
+  },
+  {
+   "id": "M-068",
+   "category": "Некорректная характеристика",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ],
+    [
+     "223-ФЗ",
+     "Статья 4, ч. 10"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": null,
+   "hybrid_doc": null,
+   "hybrid_top1": [
+    "СП 31-110-2003",
+    "3"
+   ],
+   "gate": 0.491,
+   "law_rows_in_top10": 0,
+   "gold_is_law": true,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "эталон закон, в топ-10 только ГОСТ/СП"
+  },
+  {
+   "id": "M-069",
+   "category": "Ограничение конкуренции",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": true,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": null,
+   "hybrid_doc": null,
+   "hybrid_top1": [
+    "ГОСТ 34756-2021",
+    "5.2.1.2"
+   ],
+   "gate": 0.577,
+   "law_rows_in_top10": 0,
+   "gold_is_law": true,
+   "prod_reason": "ниже порога отказа",
+   "search_reason": "эталон закон, в топ-10 только ГОСТ/СП"
+  },
+  {
+   "id": "M-070",
+   "category": "Неполнота или комплектность",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ],
+    [
+     "223-ФЗ",
+     "Статья 4, ч. 10"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": null,
+   "hybrid_doc": null,
+   "hybrid_top1": [
+    "СП 70.13330.2012",
+    "8.2.3"
+   ],
+   "gate": 0.495,
+   "law_rows_in_top10": 0,
+   "gold_is_law": true,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "эталон закон, в топ-10 только ГОСТ/СП"
+  },
+  {
+   "id": "M-071",
+   "category": "Некорректная характеристика",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ],
+    [
+     "223-ФЗ",
+     "Статья 4, ч. 10"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": null,
+   "hybrid_doc": null,
+   "hybrid_top1": [
+    "ГОСТ 27570.0-87",
+    "22.7"
+   ],
+   "gate": 0.526,
+   "law_rows_in_top10": 1,
+   "gold_is_law": true,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "эталон вне топ-10"
+  },
+  {
+   "id": "M-073",
+   "category": "Неполнота или комплектность",
+   "gold": [
+    [
+     "ГОСТ 6507-90",
+     null
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": 1,
+   "dense": 1,
+   "hybrid": 1,
+   "bm25_doc": 1,
+   "hybrid_doc": 1,
+   "hybrid_top1": [
+    "ГОСТ 6507-90",
+    "1.2"
+   ],
+   "gate": 0.602,
+   "law_rows_in_top10": 0,
+   "gold_is_law": false,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "top1"
+  },
+  {
+   "id": "M-074",
+   "category": "Неполнота или комплектность",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ],
+    [
+     "223-ФЗ",
+     "Статья 4, ч. 10"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": null,
+   "hybrid_doc": null,
+   "hybrid_top1": [
+    "СП 70.13330.2012",
+    "9.17.5"
+   ],
+   "gate": 0.451,
+   "law_rows_in_top10": 0,
+   "gold_is_law": true,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "эталон закон, в топ-10 только ГОСТ/СП"
+  },
+  {
+   "id": "M-075",
+   "category": "Неполнота или комплектность",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ],
+    [
+     "223-ФЗ",
+     "Статья 4, ч. 10"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": null,
+   "hybrid_doc": null,
+   "hybrid_top1": [
+    "ГОСТ 27570.0-87",
+    "2"
+   ],
+   "gate": 0.501,
+   "law_rows_in_top10": 0,
+   "gold_is_law": true,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "эталон закон, в топ-10 только ГОСТ/СП"
+  },
+  {
+   "id": "M-076",
+   "category": "Неполнота или комплектность",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ],
+    [
+     "223-ФЗ",
+     "Статья 4, ч. 10"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": null,
+   "hybrid_doc": null,
+   "hybrid_top1": [
+    "ГОСТ 12.4.107-2012",
+    "2"
+   ],
+   "gate": 0.538,
+   "law_rows_in_top10": 0,
+   "gold_is_law": true,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "эталон закон, в топ-10 только ГОСТ/СП"
+  },
+  {
+   "id": "M-077",
+   "category": "Некорректная характеристика",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ],
+    [
+     "223-ФЗ",
+     "Статья 4, ч. 10"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": null,
+   "hybrid_doc": null,
+   "hybrid_top1": [
+    "102-ФЗ",
+    "Статья 13, ч. 7"
+   ],
+   "gate": 0.516,
+   "law_rows_in_top10": 2,
+   "gold_is_law": true,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "эталон вне топ-10"
+  },
+  {
+   "id": "M-078",
+   "category": "Неполнота или комплектность",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ],
+    [
+     "223-ФЗ",
+     "Статья 4, ч. 10"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": null,
+   "hybrid_doc": null,
+   "hybrid_top1": [
+    "ГОСТ 166-89",
+    "2.2"
+   ],
+   "gate": 0.483,
+   "law_rows_in_top10": 0,
+   "gold_is_law": true,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "эталон закон, в топ-10 только ГОСТ/СП"
+  },
+  {
+   "id": "M-079",
+   "category": "Неполнота или комплектность",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ],
+    [
+     "223-ФЗ",
+     "Статья 4, ч. 10"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": null,
+   "hybrid_doc": 45,
+   "hybrid_top1": [
+    "СП 31-110-2003",
+    "10"
+   ],
+   "gate": 0.493,
+   "law_rows_in_top10": 0,
+   "gold_is_law": true,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "эталон закон, в топ-10 только ГОСТ/СП"
+  },
+  {
+   "id": "M-080",
+   "category": "Неполнота или комплектность",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ],
+    [
+     "223-ФЗ",
+     "Статья 4, ч. 10"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": null,
+   "hybrid_doc": null,
+   "hybrid_top1": [
+    "ГОСТ 8.417-2002",
+    "8.12"
+   ],
+   "gate": 0.481,
+   "law_rows_in_top10": 0,
+   "gold_is_law": true,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "эталон закон, в топ-10 только ГОСТ/СП"
+  },
+  {
+   "id": "M-081",
+   "category": "Неполнота или комплектность",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ],
+    [
+     "223-ФЗ",
+     "Статья 4, ч. 10"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": 21,
+   "hybrid_doc": 44,
+   "hybrid_top1": [
+    "ГОСТ 27570.0-87",
+    "2"
+   ],
+   "gate": 0.571,
+   "law_rows_in_top10": 0,
+   "gold_is_law": true,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "эталон закон, в топ-10 только ГОСТ/СП"
+  },
+  {
+   "id": "M-082",
+   "category": "Неполнота или комплектность",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ],
+    [
+     "223-ФЗ",
+     "Статья 4, ч. 10"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": null,
+   "hybrid_doc": null,
+   "hybrid_top1": [
+    "СП 76.13330.2016",
+    "6.13.10"
+   ],
+   "gate": 0.531,
+   "law_rows_in_top10": 0,
+   "gold_is_law": true,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "эталон закон, в топ-10 только ГОСТ/СП"
+  },
+  {
+   "id": "M-084",
+   "category": "Неполнота или комплектность",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ],
+    [
+     "223-ФЗ",
+     "Статья 4, ч. 10"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": null,
+   "hybrid_doc": null,
+   "hybrid_top1": [
+    "СП 31-110-2003",
+    "8.4"
+   ],
+   "gate": 0.553,
+   "law_rows_in_top10": 0,
+   "gold_is_law": true,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "эталон закон, в топ-10 только ГОСТ/СП"
+  },
+  {
+   "id": "M-085",
+   "category": "Некорректная характеристика",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ],
+    [
+     "223-ФЗ",
+     "Статья 4, ч. 10"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": 4,
+   "dense": 17,
+   "hybrid": 3,
+   "bm25_doc": 4,
+   "hybrid_doc": 3,
+   "hybrid_top1": [
+    "ГК РФ часть вторая",
+    "Статья 474, п. 1"
+   ],
+   "gate": 0.653,
+   "law_rows_in_top10": 5,
+   "gold_is_law": true,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "top2-5"
+  },
+  {
+   "id": "M-086",
+   "category": "Неполнота или комплектность",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ],
+    [
+     "223-ФЗ",
+     "Статья 4, ч. 10"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": 7,
+   "dense": 97,
+   "hybrid": 23,
+   "bm25_doc": 7,
+   "hybrid_doc": 23,
+   "hybrid_top1": [
+    "ГК РФ часть вторая",
+    "Статья 502, п. 1"
+   ],
+   "gate": 0.562,
+   "law_rows_in_top10": 6,
+   "gold_is_law": true,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "эталон вне топ-10"
+  },
+  {
+   "id": "M-088",
+   "category": "Неполнота или комплектность",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 8"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": 67,
+   "dense": 66,
+   "hybrid": 18,
+   "bm25_doc": 1,
+   "hybrid_doc": 1,
+   "hybrid_top1": [
+    "223-ФЗ",
+    "Статья 3, ч. 6"
+   ],
+   "gate": 0.533,
+   "law_rows_in_top10": 10,
+   "gold_is_law": true,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "документ в топ-10, пункт ниже"
+  },
+  {
+   "id": "M-089",
+   "category": "Гарантийные условия",
+   "gold": [
+    [
+     "ГК РФ часть вторая",
+     "Статья 471"
+    ],
+    [
+     "ГК РФ часть вторая",
+     "Статья 470"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": true,
+   "bm25": null,
+   "dense": 1,
+   "hybrid": 1,
+   "bm25_doc": 1,
+   "hybrid_doc": 1,
+   "hybrid_top1": [
+    "ГК РФ часть вторая",
+    "Статья 471, п. 1"
+   ],
+   "gate": 0.661,
+   "law_rows_in_top10": 5,
+   "gold_is_law": true,
+   "prod_reason": "нашёл",
+   "search_reason": "top1"
+  },
+  {
+   "id": "M-090",
+   "category": "Гарантийные условия",
+   "gold": [
+    [
+     "ГК РФ часть вторая",
+     "Статья 475"
+    ],
+    [
+     "ГК РФ часть вторая",
+     "Статья 470"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": true,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": 5,
+   "hybrid_doc": 1,
+   "hybrid_top1": [
+    "ГК РФ часть вторая",
+    "Статья 715, п. 3"
+   ],
+   "gate": 0.567,
+   "law_rows_in_top10": 7,
+   "gold_is_law": true,
+   "prod_reason": "ниже порога отказа",
+   "search_reason": "документ в топ-10, пункт ниже"
+  },
+  {
+   "id": "M-091",
+   "category": "Неполнота или комплектность",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ],
+    [
+     "223-ФЗ",
+     "Статья 4, ч. 10"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": 51,
+   "hybrid_doc": null,
+   "hybrid_top1": [
+    "СП 76.13330.2016",
+    "7.18"
+   ],
+   "gate": 0.52,
+   "law_rows_in_top10": 0,
+   "gold_is_law": true,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "эталон закон, в топ-10 только ГОСТ/СП"
+  },
+  {
+   "id": "M-092",
+   "category": "Неполнота или комплектность",
+   "gold": [
+    [
+     "223-ФЗ",
+     "Статья 3, ч. 6.1"
+    ],
+    [
+     "223-ФЗ",
+     "Статья 4, ч. 10"
+    ]
+   ],
+   "mentioned": [],
+   "open_category": false,
+   "bm25": null,
+   "dense": null,
+   "hybrid": null,
+   "bm25_doc": 21,
+   "hybrid_doc": 46,
+   "hybrid_top1": [
+    "СП 54.13330.2016",
+    "4.12"
+   ],
+   "gate": 0.585,
+   "law_rows_in_top10": 1,
+   "gold_is_law": true,
+   "prod_reason": "категория вне открытого поиска",
+   "search_reason": "эталон вне топ-10"
+  }
+ ]
+}

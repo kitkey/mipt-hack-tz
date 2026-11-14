@@ -1,0 +1,460 @@
+{
+ "source": "gost_texts",
+ "title": "Тексты действующих редакций стандартов (для сверки ТЗ с новой редакцией)",
+ "date": "2026-11-14",
+ "runs": [
+  {
+   "at": "2026-11-14T13:14:19+00:00",
+   "via": "texts",
+   "via_title": "meganorm.ru → браузер → docs.cntd.ru → protect.gost.ru",
+   "errors": [],
+   "http_errors": [],
+   "version_before": null,
+   "status": "updated",
+   "source_url": "https://meganorm.ru/mega_doc/norm/",
+   "version_after": "2026-11-14",
+   "notes": [
+    "пар «заменён → заменяющий»: 10; скачано текстов 14, не найдено 0, оставлено прежних 2"
+   ],
+   "counts": {
+    "before": 2,
+    "after": 16,
+    "added": 14,
+    "removed": 0,
+    "changed": 0
+   },
+   "added": [
+    {
+     "key": "ГОСТ 2.601-2013",
+     "record": {
+      "designation": "ГОСТ 2.601-2013",
+      "ok": true,
+      "role": "old",
+      "replaces": null,
+      "id": "ed-gost-2-601-2013",
+      "file": "ed-gost-2-601-2013.json.gz",
+      "source": "https://meganorm.ru/mega_doc/norm/gost_gosudarstvennyj-standart/10/gost_2_601-2013_mezhgosudarstvennyy_standart_edinaya_sistema.html",
+      "via": "meganorm",
+      "via_title": "meganorm.ru, страница документа (HTML)",
+      "characters": 84192,
+      "clauses": 120,
+      "blocks": 568,
+      "status": "Утратил силу в РФ",
+      "edition_date": "01.06.2014",
+      "retrieved": "2026-11-14",
+      "sha256": "37f0f27a2b211c875cf9f8dd8483e8917426cc532972f4fd2875e55e072f6f0b",
+      "errors": []
+     }
+    },
+    {
+     "key": "ГОСТ 33605-2015",
+     "record": {
+      "designation": "ГОСТ 33605-2015",
+      "ok": true,
+      "role": "old",
+      "replaces": null,
+      "id": "ed-gost-33605-2015",
+      "file": "ed-gost-33605-2015.json.gz",
+      "source": "https://meganorm.ru/mega_doc/norm/gost_gosudarstvennyj-standart/9/gost_33605-2015_mezhgosudarstvennyy_standart_lifty_terminy_i.html",
+      "via": "meganorm",
+      "via_title": "meganorm.ru, страница документа (HTML)",
+      "characters": 45432,
+      "clauses": 18,
+      "blocks": 256,
+      "status": "Заменён",
+      "edition_date": "01.01.2017",
+      "retrieved": "2026-11-14",
+      "sha256": "5c20c4e25027d567cc6c19032d36520e5fae8d046b758059c39778a87d2832ac",
+      "errors": []
+     }
+    },
+    {
+     "key": "ГОСТ 33605-2021",
+     "record": {
+      "designation": "ГОСТ 33605-2021",
+      "ok": true,
+      "role": "new",
+      "replaces": "ГОСТ 33605-2015",
+      "id": "ed-gost-33605-2021",
+      "file": "ed-gost-33605-2021.json.gz",
+      "source": "https://meganorm.ru/mega_doc/norm/gost_gosudarstvennyj-standart/0/gost_33605-2021_mezhgosudarstvennyy_standart_lifty_terminy_i.html",
+      "via": "meganorm",
+      "via_title": "meganorm.ru, страница документа (HTML)",
+      "characters": 45248,
+      "clauses": 10,
+      "blocks": 254,
+      "status": "Действует",
+      "edition_date": "01.06.2022",
+      "retrieved": "2026-11-14",
+      "sha256": "12071c51e02e01a79652a5b1bed741370ea5ed6118c10344d2e5514a9edb91f9",
+      "errors": []
+     }
+    },
+    {
+     "key": "ГОСТ 33652-2015",
+     "record": {
+      "designation": "ГОСТ 33652-2015",
+      "ok": true,
+      "role": "new",
+      "replaces": "ГОСТ Р 51631-2008",
+      "id": "ed-gost-33652-2015",
+      "file": "ed-gost-33652-2015.json.gz",
+      "source": "https://meganorm.ru/mega_doc/norm/gost_gosudarstvennyj-standart/9/gost_33652-2015_EN_81-70_2003_mezhgosudarstvennyy_standart.html",
+      "via": "meganorm",
+      "via_title": "meganorm.ru, страница документа (HTML)",
+      "characters": 44751,
+      "clauses": 56,
+      "blocks": 298,
+      "status": "Отменён",
+      "edition_date": "01.01.2017",
+      "retrieved": "2026-11-14",
+      "sha256": "c11a8f2a74ce903cf329fbf7a6411517bdf062fc5b732bb9f7825ef0cefc5a39",
+      "errors": []
+     }
+    },
+    {
+     "key": "ГОСТ 33984.1-2016",
+     "record": {
+      "designation": "ГОСТ 33984.1-2016",
+      "ok": true,
+      "role": "old",
+      "replaces": null,
+      "id": "ed-gost-33984-1-2016",
+      "file": "ed-gost-33984-1-2016.json.gz",
+      "source": "https://meganorm.ru/mega_doc/norm/gost_gosudarstvennyj-standart/9/gost_33984_1-2016_EN_81-20_2014_mezhgosudarstvennyy_standart.html",
+      "via": "meganorm",
+      "via_title": "meganorm.ru, страница документа (HTML)",
+      "characters": 361181,
+      "clauses": 819,
+      "blocks": 2713,
+      "status": "Заменён",
+      "edition_date": "01.11.2018",
+      "retrieved": "2026-11-14",
+      "sha256": "c15968f9892bf90d07f4a5980cc0b9b9fe42fd24b8a7a0af4a8aedb491efed1f",
+      "errors": []
+     }
+    },
+    {
+     "key": "ГОСТ 33984.1-2023",
+     "record": {
+      "designation": "ГОСТ 33984.1-2023",
+      "ok": true,
+      "role": "new",
+      "replaces": "ГОСТ 33984.1-2016",
+      "id": "ed-gost-33984-1-2023",
+      "file": "ed-gost-33984-1-2023.json.gz",
+      "source": "https://meganorm.ru/mega_doc/norm/gost_gosudarstvennyj-standart/0/gost_33984_1-2023_mezhgosudarstvennyy_standart_lifty_lifty.html",
+      "via": "meganorm",
+      "via_title": "meganorm.ru, страница документа (HTML)",
+      "characters": 365258,
+      "clauses": 638,
+      "blocks": 2682,
+      "status": "Действует",
+      "edition_date": "01.11.2024",
+      "retrieved": "2026-11-14",
+      "sha256": "c53ecf1809a46e52054aef3aa5bf6cd992bb9f1bd77b93bea6fe2e4b0990f6e3",
+      "errors": []
+     }
+    },
+    {
+     "key": "ГОСТ 34305-2017",
+     "record": {
+      "designation": "ГОСТ 34305-2017",
+      "ok": true,
+      "role": "new",
+      "replaces": "ГОСТ Р 52382-2010",
+      "id": "ed-gost-34305-2017",
+      "file": "ed-gost-34305-2017.json.gz",
+      "source": "https://meganorm.ru/mega_doc/norm/gost_gosudarstvennyj-standart/1/gost_34305-2017_EN_81-72_2015_mezhgosudarstvennyy_standart.html",
+      "via": "meganorm",
+      "via_title": "meganorm.ru, страница документа (HTML)",
+      "characters": 31034,
+      "clauses": 51,
+      "blocks": 206,
+      "status": "Действует",
+      "edition_date": "01.03.2019",
+      "retrieved": "2026-11-14",
+      "sha256": "7826371c1cf61afb0946920641eecc50204cb828fdc123eebde94f7ef97c72e9",
+      "errors": []
+     }
+    },
+    {
+     "key": "ГОСТ 8.417-2002",
+     "record": {
+      "designation": "ГОСТ 8.417-2002",
+      "ok": true,
+      "role": "old",
+      "replaces": null,
+      "id": "ed-gost-8-417-2002",
+      "file": "ed-gost-8-417-2002.json.gz",
+      "source": "https://meganorm.ru/mega_doc/norm/gost_gosudarstvennyj-standart/10/gost_8_417-2002_mezhgosudarstvennyy_standart.html",
+      "via": "meganorm",
+      "via_title": "meganorm.ru, страница документа (HTML)",
+      "characters": 46405,
+      "clauses": 57,
+      "blocks": 239,
+      "status": "Заменён",
+      "edition_date": "01.09.2003",
+      "retrieved": "2026-11-14",
+      "sha256": "00d818208b240cad391ee726b82a55543f47a665f71c61a2e29962af87bee9b0",
+      "errors": []
+     }
+    },
+    {
+     "key": "ГОСТ 8.417-2024",
+     "record": {
+      "designation": "ГОСТ 8.417-2024",
+      "ok": true,
+      "role": "new",
+      "replaces": "ГОСТ 8.417-2002",
+      "id": "ed-gost-8-417-2024",
+      "file": "ed-gost-8-417-2024.json.gz",
+      "source": "https://meganorm.ru/mega_doc/norm/gost_gosudarstvennyj-standart/12/gost_8_417-2024_mezhgosudarstvennyy_standart.html",
+      "via": "meganorm",
+      "via_title": "meganorm.ru, страница документа (HTML)",
+      "characters": 46725,
+      "clauses": 58,
+      "blocks": 234,
+      "status": "Действует",
+      "edition_date": "30.09.2024",
+      "retrieved": "2026-11-14",
+      "sha256": "b6c44a2187b498e4c070dd8c4fdaa024d27744706ebb6a8db6b3228ee6e57d3d",
+      "errors": []
+     }
+    },
+    {
+     "key": "ГОСТ Р 2.601-2019",
+     "record": {
+      "designation": "ГОСТ Р 2.601-2019",
+      "ok": true,
+      "role": "new",
+      "replaces": "ГОСТ 2.601-2013",
+      "id": "ed-gost-r-2-601-2019",
+      "file": "ed-gost-r-2-601-2019.json.gz",
+      "source": "https://meganorm.ru/mega_doc/norm/gost-r_gosudarstvennyj-standart/2/gost_r_2_601-2019_natsionalnyy_standart_rossiyskoy.html",
+      "via": "meganorm",
+      "via_title": "meganorm.ru, страница документа (HTML)",
+      "characters": 87132,
+      "clauses": 102,
+      "blocks": 574,
+      "status": "Действует",
+      "edition_date": "01.02.2020",
+      "retrieved": "2026-11-14",
+      "sha256": "1c4bc69a78f12df5859917333c59bf658bcbc3dbbca0d30e9f1de383e59697ab",
+      "errors": []
+     }
+    },
+    {
+     "key": "ГОСТ Р 51631-2008",
+     "record": {
+      "designation": "ГОСТ Р 51631-2008",
+      "ok": true,
+      "role": "old",
+      "replaces": null,
+      "id": "ed-gost-r-51631-2008",
+      "file": "ed-gost-r-51631-2008.json.gz",
+      "source": "https://meganorm.ru/mega_doc/norm/gost-r_gosudarstvennyj-standart/6/gost_r_51631-2008_en_81-70_2003_natsionalnyy_standart.html",
+      "via": "meganorm",
+      "via_title": "meganorm.ru, страница документа (HTML)",
+      "characters": 50664,
+      "clauses": 51,
+      "blocks": 516,
+      "status": "Отменён",
+      "edition_date": "01.07.2009",
+      "retrieved": "2026-11-14",
+      "sha256": "a99395a91bb945f3a16f7b856d64b8ee61031a396c3a210c14c1ad3f8e78d9b2",
+      "errors": []
+     }
+    },
+    {
+     "key": "ГОСТ Р 52382-2010",
+     "record": {
+      "designation": "ГОСТ Р 52382-2010",
+      "ok": true,
+      "role": "old",
+      "replaces": null,
+      "id": "ed-gost-r-52382-2010",
+      "file": "ed-gost-r-52382-2010.json.gz",
+      "source": "https://meganorm.ru/mega_doc/norm/gost-r_gosudarstvennyj-standart/5/gost_r_52382-2010_en_81-72_2003_natsionalnyy_standart.html",
+      "via": "meganorm",
+      "via_title": "meganorm.ru, страница документа (HTML)",
+      "characters": 26641,
+      "clauses": 53,
+      "blocks": 194,
+      "status": "Отменён",
+      "edition_date": "14.10.2010",
+      "retrieved": "2026-11-14",
+      "sha256": "bdbb8bf59a279030da6bb92e1bb4bc115b64762ab95a630f3ce5143aa18ef1d9",
+      "errors": []
+     }
+    },
+    {
+     "key": "ГОСТ Р 55964-2022",
+     "record": {
+      "designation": "ГОСТ Р 55964-2022",
+      "ok": true,
+      "role": "new",
+      "replaces": "ГОСТ Р 55964-2014",
+      "id": "ed-gost-r-55964-2022",
+      "file": "ed-gost-r-55964-2022.json.gz",
+      "source": "https://meganorm.ru/mega_doc/norm/gost-r_gosudarstvennyj-standart/0/gost_r_55964-2022_natsionalnyy_standart_rossiyskoy.html",
+      "via": "meganorm",
+      "via_title": "meganorm.ru, страница документа (HTML)",
+      "characters": 54944,
+      "clauses": 82,
+      "blocks": 353,
+      "status": "Действует",
+      "edition_date": "01.01.2023",
+      "retrieved": "2026-11-14",
+      "sha256": "c60d5f1e7960f0d354d8344c2e5053253ba175ea88c5b0d342c581599556b223",
+      "errors": []
+     }
+    },
+    {
+     "key": "СП 54.13330.2022",
+     "record": {
+      "designation": "СП 54.13330.2022",
+      "ok": true,
+      "role": "new",
+      "replaces": "СП 54.13330.2016",
+      "id": "ed-sp-54-13330-2022",
+      "file": "ed-sp-54-13330-2022.json.gz",
+      "source": "https://meganorm.ru/mega_doc/norm/nomenklatura/0/sp_54_13330_2022_svod_pravil_zdaniya_zhilye_mnogokvartirnye.html",
+      "via": "meganorm",
+      "via_title": "meganorm.ru, страница документа (HTML)",
+      "characters": 141238,
+      "clauses": 245,
+      "blocks": 706,
+      "status": "Действует",
+      "edition_date": "14.06.2022",
+      "retrieved": "2026-11-14",
+      "sha256": "48000ccb82d0e5813434638d8967975e482567d9c03feab735a2359c2b96b476",
+      "errors": []
+     }
+    }
+   ],
+   "removed": [],
+   "changed": [],
+   "lines": [
+    "ГОСТ 2.601-2013: текст получен (meganorm.ru, страница документа (HTML), 84192 знаков, пунктов 120)",
+    "ГОСТ 33605-2015: текст получен (meganorm.ru, страница документа (HTML), 45432 знаков, пунктов 18)",
+    "ГОСТ 33605-2021: текст получен (meganorm.ru, страница документа (HTML), 45248 знаков, пунктов 10)",
+    "ГОСТ 33652-2015: текст получен (meganorm.ru, страница документа (HTML), 44751 знаков, пунктов 56)",
+    "ГОСТ 33984.1-2016: текст получен (meganorm.ru, страница документа (HTML), 361181 знаков, пунктов 819)",
+    "ГОСТ 33984.1-2023: текст получен (meganorm.ru, страница документа (HTML), 365258 знаков, пунктов 638)",
+    "ГОСТ 34305-2017: текст получен (meganorm.ru, страница документа (HTML), 31034 знаков, пунктов 51)",
+    "ГОСТ 8.417-2002: текст получен (meganorm.ru, страница документа (HTML), 46405 знаков, пунктов 57)",
+    "ГОСТ 8.417-2024: текст получен (meganorm.ru, страница документа (HTML), 46725 знаков, пунктов 58)",
+    "ГОСТ Р 2.601-2019: текст получен (meganorm.ru, страница документа (HTML), 87132 знаков, пунктов 102)",
+    "ГОСТ Р 51631-2008: текст получен (meganorm.ru, страница документа (HTML), 50664 знаков, пунктов 51)",
+    "ГОСТ Р 52382-2010: текст получен (meganorm.ru, страница документа (HTML), 26641 знаков, пунктов 53)",
+    "ГОСТ Р 55964-2022: текст получен (meganorm.ru, страница документа (HTML), 54944 знаков, пунктов 82)",
+    "СП 54.13330.2022: текст получен (meganorm.ru, страница документа (HTML), 141238 знаков, пунктов 245)"
+   ],
+   "seconds": 92.6,
+   "mode": "daily"
+  },
+  {
+   "at": "2026-11-14T13:40:51+00:00",
+   "via": "texts",
+   "via_title": "meganorm.ru → браузер → docs.cntd.ru → protect.gost.ru",
+   "errors": [],
+   "http_errors": [],
+   "version_before": "2026-11-14",
+   "status": "updated",
+   "source_url": "https://meganorm.ru/mega_doc/norm/",
+   "version_after": "2026-11-14",
+   "notes": [
+    "пар «заменён → заменяющий»: 11; скачано текстов 0, не найдено 1, оставлено прежних 10",
+    "ГОСТ 33652-2019: meganorm.ru, страница документа (HTML): нет сохранённого ответа для https://meganorm.ru/mega_doc/norm/gost_gosudarstvennyj-standart/1/gost_33652-2019_EN_81-70_2018_mezhgosudarstvennyy_standart.html (режим --offline); docs.cntd.ru, полный текст: нет сохранённого ответа для https://docs.cntd.ru/search (режим --offline); protect.gost.ru, просмотр страниц и OCR: нет сохранённого ответа для https://protect.gost.ru/gost (режим --offline)"
+   ],
+   "counts": {
+    "before": 16,
+    "after": 17,
+    "added": 1,
+    "removed": 0,
+    "changed": 0
+   },
+   "added": [
+    {
+     "key": "ГОСТ 33652-2019",
+     "record": {
+      "designation": "ГОСТ 33652-2019",
+      "ok": false,
+      "role": "new",
+      "replaces": "ГОСТ 33652-2015",
+      "errors": [
+       "meganorm.ru, страница документа (HTML): нет сохранённого ответа для https://meganorm.ru/mega_doc/norm/gost_gosudarstvennyj-standart/1/gost_33652-2019_EN_81-70_2018_mezhgosudarstvennyy_standart.html (режим --offline)",
+       "docs.cntd.ru, полный текст: нет сохранённого ответа для https://docs.cntd.ru/search (режим --offline)",
+       "protect.gost.ru, просмотр страниц и OCR: нет сохранённого ответа для https://protect.gost.ru/gost (режим --offline)"
+      ],
+      "retrieved": "2026-11-14",
+      "note": "текст редакции в открытых источниках не найден"
+     }
+    }
+   ],
+   "removed": [],
+   "changed": [],
+   "lines": [
+    "ГОСТ 33652-2019: текст не найден (meganorm.ru, страница документа (HTML): нет сохранённого ответа для https://meganorm.ru/mega_doc/norm/gost_gosudarstvennyj-standart/1/gost_33652-2019_EN_81-70_2018_mezhgosudarstvennyy_standart.html (режим --offline); docs.cntd.ru, полный текст: нет сохранённого ответа для https://docs.cntd.ru/search (режим --offline))"
+   ],
+   "seconds": 0.5,
+   "mode": "offline"
+  },
+  {
+   "at": "2026-11-14T13:47:24+00:00",
+   "via": "texts",
+   "via_title": "meganorm.ru → браузер → docs.cntd.ru → protect.gost.ru",
+   "errors": [],
+   "http_errors": [],
+   "version_before": "2026-11-14",
+   "status": "updated",
+   "source_url": "https://meganorm.ru/mega_doc/norm/",
+   "version_after": "2026-11-14",
+   "notes": [
+    "пар «заменён → заменяющий»: 11; скачано текстов 1, не найдено 0, оставлено прежних 10"
+   ],
+   "counts": {
+    "before": 17,
+    "after": 17,
+    "added": 0,
+    "removed": 0,
+    "changed": 1
+   },
+   "added": [],
+   "removed": [],
+   "changed": [
+    {
+     "key": "ГОСТ 33652-2019",
+     "fields": {
+      "ok": [
+       false,
+       true
+      ],
+      "source": [
+       null,
+       "https://meganorm.ru/mega_doc/norm/gost_gosudarstvennyj-standart/1/gost_33652-2019_EN_81-70_2018_mezhgosudarstvennyy_standart.html"
+      ],
+      "sha256": [
+       null,
+       "177b7a4068cdefaf7b81eda91cb6bce6966ccc0b9a71ba5756db04b06ccd0313"
+      ],
+      "status": [
+       null,
+       "Действует"
+      ],
+      "edition_date": [
+       null,
+       "01.06.2020"
+      ]
+     }
+    }
+   ],
+   "lines": [
+    "ГОСТ 33652-2019: текст получен: «False» → «True»; источник: «—» → «https://meganorm.ru/mega_doc/norm/gost_gosudarstvennyj-standart/1/gost_33652-2019_EN_81-70_2018_mezhgosudarstvennyy_standart.html»; контрольная сумма: «—» → «177b7a4068cdefaf7b81eda91cb6bce6966ccc0b9a71ba5756db04b06ccd0313»; статус: «—» → «Действует»; дата введения: «—» → «01.06.2020»"
+   ],
+   "seconds": 350.0,
+   "mode": "daily"
+  }
+ ]
+}

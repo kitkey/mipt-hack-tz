@@ -88,13 +88,58 @@ def build(model: str, device: str | None = None, batch: int | None = None, duty:
             time.sleep((time.time() - t) * (1 / duty - 1))
         if (k // batch) % 100 == 0:
             print(model, k + len(ids), "/", len(order), f"{time.time() - t_start:.0f} c", flush=True)
-    name = out / model_key(model)
-    np.save(str(name) + ".npy", vecs)
-    Path(str(name) + ".json").write_text(json.dumps({"fingerprint": fingerprint(), "model": model, "count": len(texts),
-                                                     "max_seq_length": MAX_SEQ, "seconds": round(time.time() - t_start, 1),
-                                                     "device": device}), encoding="utf8")
+    _save(model, vecs, [row_key(model, t) for t in texts], {"seconds": round(time.time() - t_start, 1), "device": device})
     print("saved", model, len(texts), f"{time.time() - t_start:.0f} c", flush=True)
     return len(texts)
+
+
+def row_key(model: str, text: str) -> str:
+    return hashlib.sha1((model + "\n" + text).encode("utf8")).hexdigest()[:20]
+
+
+def _save(model: str, vecs, keys: list[str], extra: dict, index=None):
+    import numpy as np
+    out = vector_dir()
+    out.mkdir(parents=True, exist_ok=True)
+    name = out / model_key(model)
+    np.save(str(name) + ".npy", vecs)
+    Path(str(name) + ".keys.json").write_text(json.dumps(keys), encoding="utf8")
+    Path(str(name) + ".json").write_text(json.dumps({"fingerprint": fingerprint(index), "model": model, "count": len(keys),
+                                                     "max_seq_length": MAX_SEQ, **extra}), encoding="utf8")
+
+
+def vectors_exist(model: str = DEFAULT_MODEL) -> bool:
+    return Path(str(vector_dir() / model_key(model)) + ".npy").exists()
+
+
+def refresh(model: str = DEFAULT_MODEL, enc=None, index=None) -> int:
+    """Векторы после пересборки индекса: фрагменты с тем же текстом берутся из прошлой сборки, кодируются только новые
+    (тексты редакций от обновлятора). Без файла ключей прошлой сборки нужна полная сборка. Возвращает число закодированных."""
+    import numpy as np
+    name = vector_dir() / model_key(model)
+    keys_path = Path(str(name) + ".keys.json")
+    if not keys_path.exists():
+        raise ValueError("у прошлой сборки векторов нет ключей фрагментов: нужна полная сборка tzcheck.rag.models build")
+    old_keys = json.loads(keys_path.read_text(encoding="utf8"))
+    old = np.load(str(name) + ".npy")
+    pos = {k: i for i, k in enumerate(old_keys)}
+    rows = Search(index or INDEX).rows
+    texts = [prefix(model) + doc_text(r) for r in rows]
+    keys = [row_key(model, t) for t in texts]
+    missing = [i for i, k in enumerate(keys) if k not in pos]
+    vecs = np.zeros((len(rows), old.shape[1]), dtype="float32")
+    for i, k in enumerate(keys):
+        if k in pos:
+            vecs[i] = old[pos[k]]
+    t0 = time.time()
+    if missing:
+        enc = enc or encoder(model)
+        batch = int(os.environ.get("TZCHECK_RAG_BATCH", "8"))
+        for s in range(0, len(missing), batch):
+            ids = missing[s:s + batch]
+            vecs[ids] = enc.encode([texts[i] for i in ids], batch_size=batch, normalize_embeddings=True, show_progress_bar=False)
+    _save(model, vecs, keys, {"seconds": round(time.time() - t0, 1), "device": _device(), "refreshed": len(missing)}, index)
+    return len(missing)
 
 
 def load_vectors(model: str, index=None):
@@ -124,8 +169,15 @@ class HybridSearch:
         self.lex = Search(index or INDEX)
         self.rows = self.lex.rows
         self.model_name = model
-        self.vectors = load_vectors(model, index)
         self.encoder = encoder(model)
+        try:
+            self.vectors = load_vectors(model, index)
+        except ValueError:
+            # индекс пересобран (например, добавлены тексты новых редакций): дополнить векторы новыми фрагментами
+            if os.environ.get("TZCHECK_RAG_VECTORS_UPDATE", "auto") == "0":
+                raise
+            refresh(model, self.encoder, index)
+            self.vectors = load_vectors(model, index)
         self.cross = cross_encoder() if self.mode == "rerank" else None
         self.refuse_threshold = REFUSE.get(self.mode, 0.5)
         self.name = self.mode

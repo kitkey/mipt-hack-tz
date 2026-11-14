@@ -1,0 +1,23 @@
+{
+ "source": "gost_texts",
+ "title": "Тексты действующих редакций стандартов (для сверки ТЗ с новой редакцией)",
+ "file": "norm_texts.json",
+ "via": "texts",
+ "via_title": "meganorm.ru → браузер → docs.cntd.ru → protect.gost.ru",
+ "chain": [
+  "texts",
+  "keep"
+ ],
+ "source_url": "https://meganorm.ru/mega_doc/norm/",
+ "source_version": "2026-11-14",
+ "fetched_at": "2026-11-14T13:47:24+00:00",
+ "checked_at": "2026-11-14T13:47:24+00:00",
+ "records_count": 17,
+ "sha256": "d8dddd8f0a75e54e73635f57e92c140fe12d12e0a92c3cbc45e6b8c919fdc941",
+ "last_status": "ok",
+ "last_errors": [],
+ "notes": [
+  "пар «заменён → заменяющий»: 11; скачано текстов 1, не найдено 0, оставлено прежних 10"
+ ],
+ "pairs": 11
+}

@@ -3,6 +3,7 @@ x-build: &build
   args:
     WITH_OCR: ${WITH_OCR:-0}
     WITH_RAG: ${WITH_RAG:-0}
+    WITH_PII_NER: ${WITH_PII_NER:-0}
     WITH_BROWSER: ${WITH_BROWSER:-0}
 
 services:
@@ -18,9 +19,13 @@ services:
       TZ: MSK-3
       TZCHECK_REFDATA_OFFLINE: ${TZCHECK_REFDATA_OFFLINE:-1}
       TZCHECK_RAG: ${TZCHECK_RAG:-0}
+      # слой NER для маскирования ПД перед моделью, нужен образ с WITH_PII_NER=1
+      TZCHECK_PII_NER: ${TZCHECK_PII_NER:-0}
       # OCR включён, если образ собран с WITH_OCR=1; без PaddleOCR в образе выключен сам
       TZCHECK_OCR: auto
       HF_HUB_OFFLINE: ${HF_HUB_OFFLINE:-1}
+      # вкладка «Справочники» не обновляет сама, а передаёт запрос и расписание сервису updater через том refdata (/refdata/control)
+      TZCHECK_UPDATE_RUNNER: updater
     volumes:
       - runs:/data/runs
       - refdata:/refdata
@@ -38,7 +43,10 @@ services:
         required: false
     environment:
       TZ: MSK-3
+      # значения по умолчанию; расписание с вкладки «Справочники» лежит в /refdata/control/schedule.json и важнее них
       TZCHECK_UPDATE_AT: ${TZCHECK_UPDATE_AT:-04:30}
+      TZCHECK_UPDATE_FULL_WEEKDAY: ${TZCHECK_UPDATE_FULL_WEEKDAY:-6}
+      TZCHECK_UPDATE_ENABLED: ${TZCHECK_UPDATE_ENABLED:-1}
     volumes:
       - refdata:/refdata
     healthcheck:

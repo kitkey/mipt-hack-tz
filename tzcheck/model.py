@@ -6,6 +6,7 @@ STATUS_REVIEW = "ручная проверка"
 STATUS_ADVICE = "рекомендация"
 SECTION_MAIN = "main"
 SECTION_LLM = "llm_review"
+SECTION_UNCHECKED = "unchecked"
 
 
 def from_model(source: str) -> bool:
@@ -33,8 +34,15 @@ class Finding:
     confidence_pct: int | None = None
     confidence_basis: str = ""
     section: str = SECTION_MAIN
+    rule_id: str = ""
+    confirmed_by: str = ""
+    group: str = ""
+    # точный текст, которым заменяется цитата (правка в режиме рецензирования); пусто, если замена не детерминирована
+    replacement: str = ""
 
     def finalize(self):
+        from .norms import group_of
+        self.group = group_of(self.category)
         if not self.status:
             if self.needs_review:
                 self.status = STATUS_REVIEW

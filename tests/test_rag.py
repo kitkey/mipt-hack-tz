@@ -97,6 +97,7 @@ def test_disabled_or_missing_index_does_not_change_finding(monkeypatch, tmp_path
     f = Finding('p1', 'цитата', 'Гарантийные условия', 'объяснение', 'исправление', norm_ids=['GK-470'])
     monkeypatch.setenv('TZCHECK_RAG', '1')
     monkeypatch.setattr(rag, 'INDEX', tmp_path / 'missing')
+    rag._searcher.cache_clear()  # поисковик по настоящему индексу из прошлых тестов не должен подменять отсутствующий
     enrich([f])
     assert not f.evidence
     monkeypatch.setenv('TZCHECK_RAG', '0')
@@ -202,7 +203,7 @@ def test_status_finding_gets_scope_clause_or_nothing(monkeypatch, tmp_path):
     rag._searcher.cache_clear()
 
 
-def test_open_search_only_in_hybrid_by_default(monkeypatch):
+def test_open_search_off_by_default(monkeypatch):
     class Lexical:
         pass
 
@@ -210,6 +211,8 @@ def test_open_search_only_in_hybrid_by_default(monkeypatch):
         mode = 'hybrid'
 
     monkeypatch.delenv('TZCHECK_RAG_OPEN', raising=False)
+    assert not rag.open_search_allowed(Lexical()) and not rag.open_search_allowed(Hybrid())
+    monkeypatch.setenv('TZCHECK_RAG_OPEN', 'auto')
     assert not rag.open_search_allowed(Lexical()) and rag.open_search_allowed(Hybrid())
     monkeypatch.setenv('TZCHECK_RAG_OPEN', '0')
     assert not rag.open_search_allowed(Hybrid())
