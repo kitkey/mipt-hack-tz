@@ -9,10 +9,11 @@ class DocIndex:
         rows = [{"document": b.id, "number": "", "title": "", "text": f"{b.section} {b.text}"} for b in self.blocks]
         self.search = Search(rows=rows)
 
-    def top(self, query: str, k: int = 6, exclude=(), only=None) -> list:
-        """Блоки комплекта по запросу: exclude — id, которые не брать; only(block) — фильтр."""
+    def top(self, query: str, k: int = 6, exclude=(), only=None, min_match: int = 1) -> list:
+        """Блоки комплекта по запросу: exclude — id, которые не брать; only(block) — фильтр; min_match=0 для запроса
+        из коротких слов (сокращение из трёх букв само совпадением не считается)."""
         exclude = set(exclude)
-        sc = self.search.scores(query, min_match=1)
+        sc = self.search.scores(query, min_match=min_match)
         out = []
         for i, s in sorted(sc.items(), key=lambda x: -x[1]):
             b = self.blocks[i]

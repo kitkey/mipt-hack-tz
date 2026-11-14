@@ -194,12 +194,25 @@ def test_absent_claim_checked_against_whole_set(stub):
     assert found == [] and len(doc.llm_rejected) == 1
 
 
-def test_absent_claim_stated_elsewhere_is_lowered(stub):
+def test_absent_claim_stated_elsewhere_is_rejected(stub):
+    """«Не указано», которое нашлось в другой части комплекта, неверно: замечание снимается и остаётся в журнале снятых."""
     claim = _finding(block_id="t1r4", quote="Высота сиденья", explanation="Не указан гарантийный срок.", absent=True, missing="гарантийный срок")
     s, doc = _prep(stub, {"найти дефекты": lambda p: {"findings": [claim] if "Стул" in p else []},
                           "проверить утверждения": {"decisions": [{"n": 1, "decision": "other", "block_id": "p2", "reason": "есть"}]}})
     found = core.absent(doc, Scrubber(), core.find(doc, Scrubber(), CATS))
-    assert len(found) == 1 and found[0].severity == "low" and found[0].needs_review and "p2" in found[0].also_in
+    assert found == [] and len(doc.llm_rejected) == 1
+    assert doc.llm_rejected[0].evidence["проверка «не указано»"].startswith("указано в другой части комплекта: ")
+    assert "снято: указано в другой части комплекта" in doc.llm_rejected[0].trace[-1]["text"]
+
+
+def test_absent_claim_needs_shown_candidate_to_be_rejected(stub):
+    """Модель сослалась на место, которого ей не показывали: утверждение не снято, замечание идёт на ручную проверку."""
+    claim = _finding(block_id="t1r4", quote="Высота сиденья", explanation="Не указан гарантийный срок.", absent=True, missing="гарантийный срок")
+    s, doc = _prep(stub, {"найти дефекты": lambda p: {"findings": [claim] if "Стул" in p else []},
+                          "проверить утверждения": {"decisions": [{"n": 1, "decision": "same", "block_id": "t1r4", "reason": "есть"}]}})
+    found = core.absent(doc, Scrubber(), core.find(doc, Scrubber(), CATS))
+    assert len(found) == 1 and found[0].needs_review and doc.llm_rejected == []
+    assert found[0].evidence["проверка «не указано»"].startswith("не подтверждена")
 
 
 def test_absent_claim_confirmed_stays(stub):
@@ -208,6 +221,42 @@ def test_absent_claim_confirmed_stays(stub):
                           "проверить утверждения": {"decisions": [{"n": 1, "decision": "not_found", "reason": "нет"}]}})
     found = core.absent(doc, Scrubber(), core.find(doc, Scrubber(), CATS))
     assert len(found) == 1 and found[0].severity == "high"
+
+
+def test_verify_shows_part_once_with_places_from_whole_set(stub):
+    """Замечания одной позиции проверяются одним вызовом: позиция в запросе один раз, к доводу подобраны места комплекта."""
+    items = [_finding(), _finding(block_id="t1r2", quote="Длина", severity="low", category="Гарантийные условия",
+                                  explanation="Не указан гарантийный срок на стол.", norm_ids=["223-FZ-4-10-1"])]
+    seen = []
+
+    def verify(prompt):
+        seen.append(prompt)
+        return {"decisions": [{"n": 0, "decision": "keep", "reason": "значения нет", "confidence": 90},
+                              {"n": 1, "decision": "reject", "reason": "гарантия 12 месяцев в [p2]", "confidence": 5}]}
+    s, doc = _prep(stub, {"найти дефекты": lambda p: {"findings": items if "Стол" in p else []}, "независимая вторая проверка": verify})
+    out = core.verify(doc, Scrubber(), core.find(doc, Scrubber(), CATS))
+    assert len(seen) == 1 and seen[0].count("Характеристика: Длина") == 1
+    data = seen[0].split("<<<ТЗ>>>")[-1]
+    assert "Другие места комплекта:" in data and "[p2] (гарантия;" in data and "Гарантийный срок не менее 12 месяцев" in data
+    assert "Другие места по этому замечанию: " in data and "Нормы из замечаний:" in data and "223-ФЗ, ст. 4, ч. 10, п. 1" in data
+    assert [f.quote for f in out] == ["Высота"] and out[0].evidence["вторая проверка"] == "подтверждено"
+    assert doc.llm_rejected[0].evidence["довод проверки"] == "гарантия 12 месяцев в [p2]"
+
+
+def test_verify_sees_what_the_finding_stands_on(stub):
+    """Вторая проверка видит справочные записи и второе место, на которых стоит довод, а не только сам довод."""
+    def verify(prompt):
+        assert "Справочные записи: ОКПД 2 «31.01.12» для позиции «Стол рабочий»: в классификаторе «Мебель деревянная для офисов»" in prompt
+        assert "Второе место [c1] (проект договора): Количество столов по договору: 5 штук." in prompt
+        return {"decisions": [{"n": 0, "decision": "lower", "reason": "нужен классификатор", "confidence": 40},
+                              {"n": 1, "decision": "keep", "reason": "4 и 5 штук", "confidence": 95}]}
+    s, doc = _prep(stub, {"найти дефекты": lambda p: {"findings": [_finding(), _finding(block_id="t1r2", quote="Длина", category="Противоречие")]
+                                                   if "Стол" in p else []}, "независимая вторая проверка": verify})
+    found = core.find(doc, Scrubber(), CATS)
+    found[0]._records = ["ОКПД 2 «31.01.12» для позиции «Стол рабочий»: в классификаторе «Мебель деревянная для офисов»"]
+    found[1].evidence.update({"второй блок": "c1", "вторая цитата": "5 штук"})
+    out = core.verify(doc, Scrubber(), found)
+    assert [(f.needs_review, f.evidence["вторая проверка"]) for f in out] == [(True, "понижено: на ручную проверку"), (False, "подтверждено")]
 
 
 def test_verify_can_reject_or_lower_but_not_raise(stub):
