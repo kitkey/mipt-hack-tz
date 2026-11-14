@@ -1,6 +1,6 @@
 """Проверка правки (tzcheck.fixcheck): замену цитаты модель проверяет отдельным вызовом до правок Word. Подтверждённая замена
-идёт в правки, неподтверждённая нет (замечание и комментарий остаются), без ответа модели всё как раньше, TZCHECK_FIXCHECK=0
-шаг выключает."""
+идёт в правки, неподтверждённая нет (замечание и комментарий остаются), без ответа модели замена в правки тоже не идёт,
+TZCHECK_FIXCHECK=0 шаг выключает."""
 import json
 import os
 import re
@@ -111,19 +111,30 @@ def test_unconfirmed_fix_not_in_revisions_comment_kept(run, tmp_path):
     assert any(f"[{f['id']}]" in c.text and "Срок не определён." in c.text for c in docx.Document(out).comments)
 
 
-@pytest.mark.parametrize("fix_answer", [None, {"decisions": []}, {"decisions": [{"n": 1, "reason": "без поля ok"}, {"n": 7, "ok": False}]}])
-def test_no_model_answer_changes_nothing(run, monkeypatch, fix_answer):
-    s, r, _ = run(fix_answer)
+def _raises(prompt):
+    raise RuntimeError("timeout")
+
+
+@pytest.mark.parametrize("fix_answer", [None, _raises, {"decisions": []}, {"decisions": 17}, {"decisions": ["x"]},
+                                        {"decisions": [{"n": 1, "reason": "без поля ok"}, {"n": 7, "ok": False}]}])
+def test_no_model_answer_keeps_replacement_out_of_word(run, tmp_path, monkeypatch, fix_answer):
+    s, r, path = run(fix_answer)
     assert len(s.asked(KEY)) == 1
     monkeypatch.setenv("TZCHECK_FIXCHECK", "0")
     s0, r0, _ = run(fix_answer)
     assert s0.asked(KEY) == []
-    keys = ("id", "quote", "section", "status", "severity", "replacement", "evidence", "explanation", "fix")
-    assert [{k: f[k] for k in keys} for f in r["findings"]] == [{k: f[k] for k in keys} for f in r0["findings"]]
-    assert [[(x["step"], x.get("text")) for x in f["trace"]] for f in r["findings"]] == \
-           [[(x["step"], x.get("text")) for x in f["trace"]] for f in r0["findings"]]
-    assert r["findings"][0]["replacement"] == REPLACEMENT and _step(r["findings"][0]) is None
-    assert (r["status"], r["warnings"], r["summary"], r["stats"]["revisions"]) == (r0["status"], r0["warnings"], r0["summary"], 1)
+    f, f0 = r["findings"][0], r0["findings"][0]
+    keys = ("id", "quote", "section", "status", "severity", "explanation", "fix")
+    assert {k: f[k] for k in keys} == {k: f0[k] for k in keys}
+    assert (f["replacement"], f0["replacement"]) == ("", REPLACEMENT)
+    assert _step(f)["text"] == "правка не проверена: модель не ответила, в Word не внесена"
+    assert f["evidence"]["проверка правки"].startswith("правка не проверена: модель не ответила")
+    assert REPLACEMENT in f["evidence"]["проверка правки"]
+    assert (r["status"], r["warnings"], r["stats"]["revisions"]) == (r0["status"], r0["warnings"], 0)
+    assert revisions.write(r, path, str(tmp_path)) == {}
+    out = tmp_path / "tz.comments.docx"
+    assert report.to_docx_comments(r, path, str(out))
+    assert any(f"[{f['id']}]" in c.text and "Срок не определён." in c.text for c in docx.Document(out).comments)
 
 
 def test_switch_off_makes_no_call(run, monkeypatch):

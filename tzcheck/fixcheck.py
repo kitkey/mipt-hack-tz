@@ -3,8 +3,9 @@
 замену и текст вокруг цитаты и решает, устраняет ли замена дефект и не создаёт ли новое противоречие с соседним текстом.
 
 Неподтверждённая замена в правки Word не идёт (replacement очищается, предложенный текст остаётся в evidence), замечание
-и комментарий остаются. Без ответа модели правки остаются как были. TZCHECK_FIXCHECK=0 выключает шаг; своя модель шага
-задаётся как у других шагов ядра: TZCHECK_FIXCHECK_MODEL (llm.stage_setting)."""
+и комментарий остаются. Без ответа модели (сбой вызова, нет решения по правке) замена тоже не идёт в правки Word, причина
+пишется в evidence и trace. TZCHECK_FIXCHECK=0 выключает шаг; своя модель шага задаётся как у других шагов ядра:
+TZCHECK_FIXCHECK_MODEL (llm.stage_setting)."""
 import os
 import re
 
@@ -96,6 +97,13 @@ def _decide(scr, f, d: dict, ok: bool, call: str):
     f.replacement = ""
 
 
+def _unchecked(f, call: str):
+    text = "правка не проверена: модель не ответила, в Word не внесена"
+    f.evidence["проверка правки"] = f"правка не проверена: модель не ответила; замена «{f.replacement}» в правки Word не внесена"
+    f.trace.append({"step": "fixcheck", "call": call, "text": text})
+    f.replacement = ""
+
+
 def apply(doc, scr, findings: list) -> list:
     """Проверить замены у замечаний основного списка; замечания меняются на месте. Возвращает замечания, у которых была замена."""
     cand = [f for f in findings if f.section == SECTION_MAIN and f.replacement and f.quote.strip()]
@@ -114,11 +122,13 @@ def apply(doc, scr, findings: list) -> list:
 
     seen = len(doc.warnings)
     results = pmap(work, batches)
-    # шаг необязательный: сбой вызова не делает отчёт неполным, правки остаются как были (вызов с ошибкой лежит в журнале)
+    # сбой вызова не делает отчёт неполным (вызов с ошибкой лежит в журнале), но непроверенная замена в правки Word не идёт
     del doc.warnings[seen:]
     for ns, data in results:
+        data = data if isinstance(data, dict) else {}
+        decisions = data.get("decisions")
         done = set()
-        for d in data.get("decisions") or []:
+        for d in decisions if isinstance(decisions, list) else []:
             if not isinstance(d, dict):
                 continue
             try:
@@ -129,4 +139,7 @@ def apply(doc, scr, findings: list) -> list:
             if n in ns and n not in done and ok is not None:
                 done.add(n)
                 _decide(scr, cand[n - 1], d, ok, data.get("_call", ""))
+        for n in ns:
+            if n not in done:
+                _unchecked(cand[n - 1], data.get("_call", ""))
     return cand

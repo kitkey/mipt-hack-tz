@@ -68,6 +68,9 @@ class ScriptedModel:
             ns = re.findall(r"^(\d+)\. \[", prompt.split("<<<ТЗ>>>", 1)[-1], re.M)
             return {"decisions": [{"n": int(n), "decision": "lower" if self.lower_every and int(n) % self.lower_every == 1 else "keep",
                                    "reason": "по тексту", "confidence": self.verify_score} for n in ns]}
+        if prompt.startswith("Задача: проверить предложенные правки"):
+            ns = re.findall(r"^(\d+)\. \[", prompt.split("<<<ТЗ>>>", 1)[-1], re.M)
+            return {"decisions": [{"n": int(n), "ok": True, "reason": "по тексту"} for n in ns]}
         if "Верни JSON: {\"summary\"" in prompt:
             return {"summary": "Заключение заглушки."}
         return {"findings": [], "decisions": []}
