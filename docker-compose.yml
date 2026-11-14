@@ -76,5 +76,7 @@ services:
 
 volumes:
   runs:
+  # Docker заполняет том из образа только при создании: после обновления кода старый refdata закрывает справочники
+  # нового образа, перед сборкой новой версии его удаляют (docker compose down -v, см. README)
   refdata:
   models:
