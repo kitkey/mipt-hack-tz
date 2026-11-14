@@ -55,7 +55,7 @@ def meta():
     return {"groups": [{"key": k, "title": g, "categories": [c for c in CATEGORIES if CATEGORY_GROUP[c] == g]} for k, g in CHECK_GROUPS.items()],
             "category_group": CATEGORY_GROUP, "steps": STEP_TITLES,
             "statuses": ["ошибка", "неясно", "ручная проверка", "рекомендация"], "severities": ["high", "medium", "low"],
-            "sections": {"main": "основной список", "llm_review": "замечания модели, проверить вручную", "unchecked": "не проверено"},
+            "sections": {"main": "основной список", "llm_review": "на проверку", "unchecked": "не проверено"},
             "verdict_codes": {"blocked": "публиковать без исправлений нельзя", "review_high": "проверить вручную замечания высокого риска",
                               "fix": "исправить замечания со статусом «ошибка»", "review": "ошибок нет, есть места на ручную проверку",
                               "clean": "явных проблем не найдено", "partial": "проверка неполная, вывод о публикации не делается"},

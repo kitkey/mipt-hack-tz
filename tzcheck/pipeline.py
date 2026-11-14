@@ -245,7 +245,7 @@ def _finish(doc, paths, findings, scr, use_llm, mode, t0, orchestrator, steps, g
         if from_model(f.source):
             # замечания модели не смешиваются с правилами: отдельный блок, всегда ручная проверка, в вердикт не входят
             f.section, f.needs_review, f.status = SECTION_LLM, True, STATUS_REVIEW
-            f.evidence["блок отчёта"] = "замечание модели, проверить вручную"
+            f.evidence["блок отчёта"] = "на проверку: замечание модели"
         f.finalize()
         if f.norm_ids:
             f.evidence["нормы"] = [f"{NORMS[n]['title']} (редакция: {NORMS[n].get('edition', 'см. источник')})" for n in f.norm_ids if n in NORMS]
@@ -290,7 +290,7 @@ def _finish(doc, paths, findings, scr, use_llm, mode, t0, orchestrator, steps, g
     if unchecked:
         summary += f" Отдельным блоком «Не проверено»: {_remarks(len(unchecked))} о сведениях, которых нет в переданных файлах; в вердикт они не входят."
     if extra:
-        summary += f" Отдельным блоком {_remarks(len(extra))} модели на ручную проверку, в вердикт они не входят."
+        summary += f" Отдельным блоком «На проверку» {_remarks(len(extra))}, в вердикт они не входят."
     rejected = getattr(doc, "llm_rejected", [])
     journal = getattr(doc, "journal", None)
     if journal is not None:
