@@ -1,0 +1,3 @@
+# слой NER для маскирования персональных данных (redmadrobot-rnd/rubert-base-pii-ner, Apache-2.0); torch CPU ставится в Dockerfile
+torch>=2.4
+transformers>=4.51
