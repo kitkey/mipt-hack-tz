@@ -293,8 +293,13 @@ def to_docx_comments(result: dict, src_path: str, out_path: str) -> bool:
         if bid[0] in "hp" and bid[1:].isdigit():
             target = paras.get(int(bid[1:]))
         elif bid.startswith("t") and "r" in bid:
-            a, b = bid[1:].split("r")
-            row = rows.get((int(a), int(b)))
+            # строка таблицы «t3r2» или строка вложенной таблицы «t3r2n1r4» (вложенная таблица 1 в строке 2 таблицы 3)
+            m = re.match(r"t(\d+)r(\d+)(?:n(\d+)r(\d+))?$", bid)
+            row = rows.get((int(m.group(1)), int(m.group(2)))) if m else None
+            if row is not None and m.group(3):
+                inner = [t for c in row.cells for t in c.tables]
+                k, r = int(m.group(3)), int(m.group(4))
+                row = inner[k - 1].rows[r - 1] if k <= len(inner) and r <= len(inner[k - 1].rows) else row
             if row is not None:
                 cell = next((c for c in row.cells if f["quote"][:30] in " ".join(c.text.split())), row.cells[min(1, len(row.cells) - 1)])
                 head = " ".join(f["quote"].split())[:30]

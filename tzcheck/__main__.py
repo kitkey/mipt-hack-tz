@@ -23,9 +23,11 @@ def main():
         ap.error(str(e))
     path = args.files[0]
     res = check(args.files, use_llm=False if args.no_llm else None, orchestrator=args.orchestrator, checks=groups)
-    if res["status"] != "ok":
-        print(f"{path}: ошибка: {res['error']}", file=sys.stderr)
+    if res["status"] == "error":
+        print(f"{path}: ошибка: {res.get('error', '')}", file=sys.stderr)
         sys.exit(1)
+    if res["status"] == "incomplete":
+        print(f"{path}: проверка неполная, отчёт сохранён с предупреждением: {res.get('summary', '')}", file=sys.stderr)
     paths = write_all(res, path, args.out)
     rev = revisions.write(res, path, args.out)
     if (rev.get("main") or {}).get("path"):
