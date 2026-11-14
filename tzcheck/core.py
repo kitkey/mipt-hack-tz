@@ -765,7 +765,13 @@ def verify(doc, scr, findings: list[Finding]) -> list[Finding]:
                                       count=len(ns), numbers=", ".join(str(n) for n in ns))
         unit = unit_of("finding", f"замечаний: {len(ns)}", [findings[n].block_id for n in ns])
         # бюджет ответа по числу замечаний: зациклившийся ответ не занимает модель на минуты (нижнюю границу задаёт TZCHECK_LLM_MAX_TOKENS)
-        return ns, ask(doc, prompt, min(4000, 500 + 300 * len(ns)), "вторая проверка", "verify", "Вторая проверка замечаний", unit) or {}
+        data = {}
+        for _ in range(2):
+            # ответ без единого годного решения (у части моделей JSON-режим изредка отдаёт мусор) запрашивается ещё раз
+            data = ask(doc, prompt, min(4000, 500 + 300 * len(ns)), "вторая проверка", "verify", "Вторая проверка замечаний", unit) or {}
+            if any(isinstance(d, dict) and str(d.get("decision")) in ("keep", "lower", "reject") for d in data.get("decisions") or []):
+                break
+        return ns, data
 
     calls = {}
     for ns, data in pmap(work, batches):
