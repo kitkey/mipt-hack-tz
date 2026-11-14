@@ -167,6 +167,20 @@ def test_whole_position_goes_to_model_not_fixed_chunk(stub):
     assert not any("[c1]" in p.split("<<<ТЗ>>>")[-1] for p in prompts)
 
 
+def test_find_prompt_defines_categories_and_asks_for_every_defect(stub):
+    """В запросе поиска у каждой проверяемой категории есть определение, и модель просят назвать каждый дефект строки отдельно."""
+    s = stub({"паспорт": PASS, "разметка шапки": HEADER, "найти дефекты": {"findings": [], "lookups": []}})
+    doc = spec_doc()
+    passport.detect(doc, Scrubber())
+    tables.build(doc, Scrubber())
+    core.find(doc, Scrubber(), ["Противоречие", "Гарантийные условия"])
+    p = s.asked("найти дефекты")[0]
+    notes = p.split("Что относится к категории:")[1].split("Нормы (id: суть):")[0]
+    assert "- Противоречие: " in notes and "- Гарантийные условия: " in notes and "Ограничение конкуренции" not in notes
+    assert "каждый назови отдельным замечанием со своей цитатой" in p
+    assert set(core.CATEGORIES) == set(core.CATEGORY_NOTES)
+
+
 def _finding(**kw):
     base = {"block_id": "t1r3", "quote": "Высота", "category": "Неполнота или комплектность", "severity": "high",
             "explanation": "Не указано значение высоты стола.", "fix": "Указать высоту.", "norm_ids": [], "confidence": 80}

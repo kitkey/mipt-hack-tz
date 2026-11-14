@@ -13,7 +13,7 @@ import re
 from . import chunks, confidence, passport, search, tables
 from .ask import ask, pmap, unit_of, wrap
 from .model import Finding
-from .norms import CATEGORIES, CATEGORY_GROUP, NORMS, norm_list_for_prompt
+from .norms import CATEGORIES, CATEGORY_GROUP, CATEGORY_NOTES, NORMS, category_notes, norm_list_for_prompt
 
 SEV = ("low", "medium", "high")
 UNIT_CHARS = 5000
@@ -29,6 +29,9 @@ FIND_PROMPT = """Задача: найти дефекты техническог�
 Категории (только эти), по группам:
 {categories}
 
+Что относится к категории:
+{notes}
+
 Нормы (id: суть):
 {norms}
 
@@ -40,6 +43,10 @@ FIND_PROMPT = """Задача: найти дефекты техническог�
 задания. Требования к конкуренции оценивай с учётом способа закупки из паспорта. Какие характеристики нужны, решай по виду товара, работы
 или услуги и не требуй того, чего у такого предмета не бывает. Не считай дефектом то, что указано в общих условиях. Корректные
 формулировки не помечай.
+В одной строке или ячейке может быть несколько дефектов разных категорий: каждый назови отдельным замечанием со своей цитатой, не
+останавливайся на первом. Если в строке или ячейке перечислено несколько изделий, подпунктов или характеристик, проверь каждое:
+наименование, значение и единицу каждой характеристики, полноту состава, обозначения. Замечание о товарном знаке не заменяет проверку
+характеристик и комплектности того же изделия.
 
 Если утверждаешь, что чего-то нет (характеристики, значения, срока, количества, условия), поставь "absent": true и в "missing" коротко назови,
 чего нет: это проверят по всему комплекту документов.
@@ -343,7 +350,7 @@ def find(doc, scr, cats: list) -> list[Finding]:
         what = (f"позиция спецификации «{u.title[:120]}»" if u.kind == "position" else f"раздел «{u.title[:120]}»")
         prompt = FIND_PROMPT.format(what=scr.scrub(what), passport=pline, practice=practice + "\n" if practice else "",
                                     terms=_terms(doc, scr, u) if u.kind == "position" else "нет",
-                                    categories=ctext, norms=norms, data=wrap(u.text))
+                                    categories=ctext, notes=category_notes(cats), norms=norms, data=wrap(u.text))
         title = "Поиск дефектов: " + what
         data = ask(doc, prompt, 6000, "поиск дефектов", "find", title, unit_of(u.kind, u.title, u.block_ids)) or {}
         blocks = [doc.block(x) for x in u.block_ids if doc.block(x)]
