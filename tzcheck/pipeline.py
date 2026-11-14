@@ -4,7 +4,7 @@ import time
 import unicodedata
 from collections import Counter
 
-from . import confidence, core, customer, feedback, gost_check, llm, passport, replacements, tables
+from . import confidence, core, customer, feedback, fixcheck, gost_check, llm, passport, replacements, tables
 from . import progress as prog
 from .checks import categories_for, group_names, group_stats, is_full, only_groups, parse_checks, partial_note, steps_note, verdict_code
 from .model import SECTION_LLM, SECTION_MAIN, SECTION_UNCHECKED, STATUS_ERROR, STATUS_REVIEW, Finding, from_model, status_title
@@ -359,6 +359,8 @@ def _finish(doc, paths, findings, scr, use_llm, mode, t0, orchestrator, steps, g
     for i, f in enumerate(unchecked, 1):
         f.id = f"U{i:03d}"
     replacements.apply(findings)
+    if use_llm:
+        fixcheck.apply(doc, scr, main)  # замену цитаты до правок Word проверяет модель отдельным вызовом
     sev_ru = {"high": "высокий", "medium": "средний", "low": "низкий"}
     for f in findings:
         f.trace.append({"step": "final", "text": f"статус «{status_title(f.status)}», риск {sev_ru.get(f.severity, f.severity)}"
