@@ -7,7 +7,7 @@ import docx
 import pytest
 from conftest import fake_litellm
 
-from tzcheck import fixcheck, pipeline
+from tzcheck import pipeline
 from tzcheck.rag import verify
 
 FINDING = {"block_id": "p1", "quote": "в разумный срок", "category": "Некорректная характеристика", "severity": ["high"],
