@@ -187,7 +187,7 @@ def test_second_check_can_use_its_own_model(monkeypatch):
     seen = []
 
     def completion(**kw):
-        seen.append((kw["model"], kw.get("api_base"), kw["messages"][-1]["content"].split(".")[0]))
+        seen.append((kw["model"], kw.get("api_base"), kw.get("api_key")))
         text = json.dumps({"findings": [], "decisions": [], "lookups": []})
         return SimpleNamespace(choices=[SimpleNamespace(finish_reason="stop", message=SimpleNamespace(content=text))], usage=None)
     monkeypatch.setitem(sys.modules, "litellm", SimpleNamespace(completion=completion))
@@ -200,11 +200,27 @@ def test_second_check_can_use_its_own_model(monkeypatch):
     from tzcheck.ask import ask
     ask(doc, "Задача: найти дефекты. x", 100, "поиск дефектов", "find")
     ask(doc, "Задача: независимая вторая проверка. x", 100, "вторая проверка", "verify")
-    assert [(m, b) for m, b, _ in seen] == [("stub/find", "http://common"), ("stub/verify", "http://verify")]
-    assert [c["model"] for c in doc.journal.calls] == ["stub/find", "stub/verify"]
-    monkeypatch.delenv("TZCHECK_VERIFY_API_BASE")
+    monkeypatch.setenv("TZCHECK_LLM_API_KEY", "common-key")
+    ask(doc, "Задача: найти дефекты. x", 100, "поиск дефектов", "find")
     ask(doc, "Задача: независимая вторая проверка. x", 100, "вторая проверка", "verify")
-    assert seen[-1][:2] == ("stub/verify", None)
+    # свой адрес без своего ключа: общий ключ чужому серверу не уходит
+    assert seen[-2:] == [("stub/find", "http://common", "common-key"), ("stub/verify", "http://verify", None)]
+    seen.clear()
+    doc.journal.calls.clear()
+    monkeypatch.setenv("TZCHECK_VERIFY_API_KEY", "verify-key")
+    ask(doc, "Задача: независимая вторая проверка. x", 100, "вторая проверка", "verify")
+    assert seen[-1] == ("stub/verify", "http://verify", "verify-key")
+    # модель шага у того же поставщика (адреса нет ни у шага, ни у общей модели): ключ общий
+    monkeypatch.delenv("TZCHECK_VERIFY_API_BASE")
+    monkeypatch.delenv("TZCHECK_VERIFY_API_KEY")
+    monkeypatch.delenv("TZCHECK_LLM_API_BASE")
+    ask(doc, "Задача: независимая вторая проверка. x", 100, "вторая проверка", "verify")
+    assert seen[-1] == ("stub/verify", None, "common-key")
+    # общая модель на своём сервере, модель шага без адреса: ключ сервера ей не уходит
+    monkeypatch.setenv("TZCHECK_LLM_API_BASE", "http://common")
+    ask(doc, "Задача: независимая вторая проверка. x", 100, "вторая проверка", "verify")
+    assert seen[-1] == ("stub/verify", None, None)
+    assert {c["model"] for c in doc.journal.calls} == {"stub/verify"}
 
 
 def _finding(**kw):

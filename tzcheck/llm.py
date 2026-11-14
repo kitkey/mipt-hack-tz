@@ -237,12 +237,16 @@ def _call(prompt: str, max_tokens: int = 4000, doc_flags: dict | None = None, st
         timeout=float(os.environ.get("TZCHECK_LLM_TIMEOUT", "900")),
     )
     own = bool(stage and os.environ.get(f"TZCHECK_{stage.upper()}_MODEL"))
-    # у шага со своей моделью свой адрес и ключ; общий адрес к чужой модели не подставляется
-    base = os.environ.get(f"TZCHECK_{stage.upper()}_API_BASE", "") if own else os.environ.get("TZCHECK_LLM_API_BASE", "")
-    key = (os.environ.get(f"TZCHECK_{stage.upper()}_API_KEY", "") if own else "") or os.environ.get("TZCHECK_LLM_API_KEY", "")
+    # у шага со своей моделью свой адрес; общий адрес к чужой модели не подставляется
+    common_base, common_key = os.environ.get("TZCHECK_LLM_API_BASE", ""), os.environ.get("TZCHECK_LLM_API_KEY", "")
+    base = os.environ.get(f"TZCHECK_{stage.upper()}_API_BASE", "") if own else common_base
+    key = os.environ.get(f"TZCHECK_{stage.upper()}_API_KEY", "") if own else common_key
+    if own and not key and base == common_base:
+        # модель шага у того же поставщика, что и общая (адрес тот же или оба по умолчанию): ключ общий
+        key = common_key
     if base:
         kwargs["api_base"] = base
-    if key and (base or not own):
+    if key:
         kwargs["api_key"] = key
     if os.environ.get("TZCHECK_LLM_JSON_MODE", "1") == "1":
         kwargs["response_format"] = {"type": "json_object"}
