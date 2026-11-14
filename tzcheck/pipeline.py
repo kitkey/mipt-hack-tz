@@ -7,7 +7,7 @@ from collections import Counter
 from . import confidence, core, feedback, gost_check, llm, passport, replacements, tables
 from . import progress as prog
 from .checks import categories_for, group_names, group_stats, is_full, only_groups, parse_checks, partial_note, verdict_code
-from .model import SECTION_LLM, SECTION_MAIN, SECTION_UNCHECKED, STATUS_REVIEW, Finding, from_model
+from .model import SECTION_LLM, SECTION_MAIN, SECTION_UNCHECKED, STATUS_ERROR, STATUS_REVIEW, Finding, from_model
 from .norms import NORMS, apply_editions
 from .parse import ParseError, ParsedDoc, parse, parse_many
 from .pii import Scrubber
@@ -230,6 +230,36 @@ def run_core(doc, scr, groups, rep) -> tuple[list[Finding], list[str]]:
     return core_verify(doc, scr, groups, found, rep), steps + ["core_verify"]
 
 
+def main_min_confidence() -> int:
+    try:
+        return int(os.environ.get("TZCHECK_MAIN_MIN_CONFIDENCE", "90"))
+    except ValueError:
+        return 90
+
+
+def route(f: Finding) -> Finding:
+    """Раздел отчёта для замечания ядра по его собственным полям, без проверки текста кодом. В основной список идёт только то,
+    что модель назвала ошибкой (статус «ошибка»), вторая проверка подтвердила с уверенностью от TZCHECK_MAIN_MIN_CONFIDENCE
+    (по умолчанию 90) и что не держится на утверждении «не указано». Остальное идёт в раздел «на проверку», ничего не снимается."""
+    if f.section != SECTION_MAIN or not f.source.startswith("model:"):
+        return f
+    why = []
+    if f.status != STATUS_ERROR:
+        why.append(f"статус «{f.status}», а не «{STATUS_ERROR}»")
+    if f.confidence_pct is None or f.confidence_pct < main_min_confidence():
+        got = "нет оценки" if f.confidence_pct is None else f"{f.confidence_pct} %"
+        why.append(f"уверенность второй проверки {got}, порог основного списка {main_min_confidence()} %")
+    if getattr(f, "_absent", False) or f.evidence.get("проверка «не указано»"):
+        why.append("замечание держится на утверждении «не указано»")
+    if not why:
+        f.trace.append({"step": "route", "text": "основной список: ошибка, подтверждена второй проверкой с высокой уверенностью"})
+        return f
+    f.section, f.needs_review = SECTION_LLM, True
+    f.evidence["блок отчёта"] = "на проверку: " + "; ".join(why)
+    f.trace.append({"step": "route", "text": "на проверку: " + "; ".join(why)})
+    return f
+
+
 def _finish(doc, paths, findings, scr, use_llm, mode, t0, orchestrator, steps, groups=None, rep=None) -> dict:
     groups = parse_checks(groups)
     rep = prog.reporter(rep)
@@ -253,6 +283,7 @@ def _finish(doc, paths, findings, scr, use_llm, mode, t0, orchestrator, steps, g
             # вывод из отсутствия сведений в переданных файлах: вопрос закупщику, в вердикт и счётчики не входит
             f.needs_review, f.status = True, STATUS_REVIEW
             f.evidence["блок отчёта"] = "не проверено и не найдено в переданных файлах"
+        route(f)
     findings.sort(key=lambda f: ({SECTION_MAIN: 0, SECTION_LLM: 1}.get(f.section, 2), SEV_ORDER.get(f.severity, 1), _order(doc, f.block_id)))
     main = [f for f in findings if f.section == SECTION_MAIN]
     extra = [f for f in findings if f.section == SECTION_LLM]

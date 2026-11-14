@@ -51,8 +51,14 @@ def test_practice_only_for_customer_from_passport(scripted, monkeypatch, profile
     assert r["document"]["procurement"]["профиль заказчика"] == profile
 
 
-def test_findings_of_core_are_main_and_in_report(scripted):
+def test_findings_of_core_routed_by_own_fields_and_in_report(scripted):
+    """Основной список: «ошибка» с уверенностью второй проверки от 90 % и не «не указано»; остальное в разделе «На проверку»."""
     r = check(FIN, use_llm=True)
-    assert r["findings"] and all(f["section"] == "main" for f in r["findings"])
-    assert r["stats"]["from_model"] == 0 and r["verdict"]
-    assert r["findings"][0]["quote"] in to_html(r)
+    main = [f for f in r["findings"] if f["section"] == "main"]
+    review = [f for f in r["findings"] if f["section"] == "llm_review"]
+    assert main and review and len(main) + len(review) == len(r["findings"])
+    assert all(f["status"] == "ошибка" and f["confidence_pct"] >= 90 for f in main)
+    assert all(f["evidence"]["блок отчёта"].startswith("на проверку: ") for f in review)
+    assert r["stats"]["from_model"] == len(review) and r["verdict"]
+    html = to_html(r)
+    assert main[0]["quote"] in html and f"На проверку ({len(review)})" in html

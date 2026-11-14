@@ -272,12 +272,12 @@ def test_pipeline_with_stub_model(tmp_path, stub, orch):
     s = stub({"паспорт": {"passport": PASS["passport"], "roles": []},
               "найти дефекты": {"findings": [{"block_id": "p1", "quote": "в разумный срок", "category": "Некорректная характеристика",
                                               "severity": "high", "explanation": "Срок не определён.", "fix": "Указать число дней.", "confidence": 90}]},
-              "независимая вторая проверка": {"decisions": [{"n": 0, "decision": "keep", "reason": "срок не задан", "confidence": 88}]}})
+              "независимая вторая проверка": {"decisions": [{"n": 0, "decision": "keep", "reason": "срок не задан", "confidence": 95}]}})
     r = pipeline.check(str(p), use_llm=True, orchestrator=orch)
     steps = ["parse", "security", "passport", "tables", "core_find", "core_cross", "core_verify"]
     assert r["mode"] == "model" and r["steps"] == steps + (["finish"] if orch == "graph" else [])
     assert [(f["quote"], f["section"]) for f in r["findings"]] == [("в разумный срок", "main")]
-    assert r["findings"][0]["confidence_pct"] == 88
+    assert r["findings"][0]["confidence_pct"] == 95
     assert r["document"]["procurement"]["закон"] == "223-ФЗ"
 
 
@@ -337,3 +337,21 @@ def test_trace_file_only_via_api(tmp_path, monkeypatch, scripted):
     run = c.get(f"/api/runs/{rid}").json()
     assert run["trace_calls"] == len(t["calls"]) and "calls" not in run and run["findings"][0]["trace"][0]["step"] == "found"
     assert c.get("/api/runs/nope/trace").status_code == 404
+
+
+def test_pipeline_routes_low_confidence_to_review(tmp_path, stub):
+    """Ошибку, которую вторая проверка подтвердила с уверенностью ниже порога, ядро не снимает, а кладёт в «На проверку»."""
+    from docx import Document
+    d = Document()
+    d.add_paragraph("Срок поставки: в разумный срок.")
+    p = tmp_path / "a.docx"
+    d.save(p)
+    stub({"паспорт": {"passport": PASS["passport"], "roles": []},
+          "найти дефекты": {"findings": [{"block_id": "p1", "quote": "в разумный срок", "category": "Противоречие",
+                                          "severity": "high", "explanation": "Срок не определён.", "fix": "Указать число дней.", "confidence": 90}]},
+          "независимая вторая проверка": {"decisions": [{"n": 0, "decision": "keep", "reason": "срок не задан", "confidence": 88}]}})
+    r = pipeline.check(str(p), use_llm=True)
+    assert [(f["quote"], f["section"], f["status"]) for f in r["findings"]] == [("в разумный срок", "llm_review", "ошибка")]
+    assert r["stats"]["from_model"] == 1 and r["stats"]["by_status"] == {}
+    assert "уверенность второй проверки 88 %" in r["findings"][0]["evidence"]["блок отчёта"]
+    assert "«На проверку»" in r["summary"]
