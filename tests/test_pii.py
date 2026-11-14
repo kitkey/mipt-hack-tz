@@ -127,6 +127,72 @@ def test_gate_warns_and_falls_back_to_rules(external_no_ner):
     assert llm.gate(public) is True and public.warnings == [llm.NER_DOWN]
 
 
+@pytest.fixture
+def local_main_external_stage(monkeypatch):
+    """Общая модель локальная, у второй модели второй проверки внешний поставщик; NER не загружается, документ не открытый."""
+    for k in ("TZCHECK_PII_NER", "TZCHECK_DOC_PUBLIC", "TZCHECK_VERIFY2_API_BASE", "TZCHECK_VERIFY2_API_KEY"):
+        monkeypatch.delenv(k, raising=False)
+    _model(monkeypatch, "openai/qwen", "http://localhost:8091/v1")
+    monkeypatch.setenv("TZCHECK_VERIFY2_MODEL", "openrouter/other/model")
+    monkeypatch.setattr(pii, "_load", lambda: None)
+    sent = []
+
+    def completion(**kw):
+        sent.append(kw)
+        raise RuntimeError("заглушка")
+    monkeypatch.setitem(__import__("sys").modules, "litellm", type("L", (), {"completion": staticmethod(completion)}))
+    return sent
+
+
+def test_stage_model_needs_admission_by_its_own_address(local_main_external_stage, monkeypatch):
+    sent = local_main_external_stage
+    assert llm.allow_external() is True and llm.allow_external(stage="verify2") is False
+    assert llm.allow_external({"public": True}, stage="verify2") is True
+    with pytest.raises(llm.ExternalBlocked):
+        llm._call("ТЗ", stage="verify2")
+    assert sent == []
+    with pytest.raises(RuntimeError):
+        llm._call("ТЗ")
+    assert [kw["model"] for kw in sent] == ["openai/qwen"]
+    monkeypatch.setenv("TZCHECK_VERIFY2_API_BASE", "http://127.0.0.1:9000/v1")
+    monkeypatch.setenv("TZCHECK_VERIFY2_MODEL", "openai/second")
+    assert llm.allow_external(stage="verify2") is True
+    monkeypatch.setenv("TZCHECK_VERIFY2_MODEL", "openrouter/other/model")
+    assert llm.allow_external(stage="verify2") is False  # openrouter/ внешний при любом адресе, как у общей модели
+    monkeypatch.delenv("TZCHECK_VERIFY2_API_BASE")
+    monkeypatch.setenv("TZCHECK_VERIFY2_MODEL", "gpt-4o")
+    assert llm.allow_external(stage="verify2") is False  # без своего адреса модель шага идёт в облако поставщика
+    monkeypatch.setenv("TZCHECK_DOC_PUBLIC", "1")
+    assert llm.allow_external(stage="verify2") is True
+    with pytest.raises(RuntimeError):
+        llm._call("ТЗ", stage="verify2")
+    assert [kw["model"] for kw in sent] == ["openai/qwen", "gpt-4o"]
+
+
+def test_pipeline_external_stage_model_not_called_for_closed_doc(local_main_external_stage, monkeypatch, scripted):
+    import sys
+    from conftest import fake_litellm
+    from tzcheck.pipeline import check
+    for k in ("TZCHECK_DOC_PUBLIC", "TZCHECK_ORCHESTRATOR", "TZCHECK_RAG", "TZCHECK_CUSTOMER"):
+        monkeypatch.delenv(k, raising=False)
+    monkeypatch.setenv("TZCHECK_REFDATA_OFFLINE", "1")
+    _model(monkeypatch, "openai/qwen", "http://localhost:8091/v1")
+    models = []
+    inner = fake_litellm(scripted).completion
+
+    def completion(**kw):
+        models.append(kw["model"])
+        return inner(**kw)
+    monkeypatch.setitem(sys.modules, "litellm", type("L", (), {"completion": staticmethod(completion)}))
+    r = check("samples/lift_fin.docx", use_llm=True)
+    assert models and set(models) == {"openai/qwen"}
+    assert any("ExternalBlocked" in w for w in r["warnings"])
+    assert r["status"] == "incomplete" and "core_verify" in r["completeness"]["incomplete_steps"]
+    models.clear()
+    r = check("samples/lift_fin.docx", use_llm=True, public=True)
+    assert "openrouter/other/model" in models and "core_verify" not in r["completeness"]["incomplete_steps"]
+
+
 @pytest.mark.parametrize("orchestrator", ["linear", "graph"])
 def test_pipeline_external_without_ner_skips_model(external_no_ner, monkeypatch, orchestrator):
     from tzcheck.pipeline import check
