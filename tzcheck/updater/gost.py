@@ -216,6 +216,18 @@ def lookup(key: str, http) -> dict | bool:
         return protect_lookup(key, http)
 
 
+def target_groups(prev: dict) -> dict:
+    """Откуда берутся обозначения, которые updater проверяет поштучно при каждом запуске."""
+    requested = refdata.gost_requested()
+    return {
+        "watch": {refdata.norm_designation(x) for x in WATCH},
+        "tz_online": {refdata.norm_designation(k) for k in refdata.cache_keys("gost")},
+        "tz_offline": {refdata.norm_designation(k) for k, v in requested.items() if (v or {}).get("by") != "manual"},
+        "manual": {refdata.norm_designation(k) for k, v in requested.items() if (v or {}).get("by") == "manual"},
+        "watched_before": {k for k, r in prev.items() if r.get("watch")},
+    }
+
+
 class GostSource(Source):
     name = "gost"
     title = "Статусы стандартов (ГОСТ, ГОСТ Р, ПНСТ, СП)"
@@ -236,9 +248,7 @@ class GostSource(Source):
 
     def targets(self, prev: dict) -> list[str]:
         if self._targets is None:
-            keys = {refdata.norm_designation(x) for x in WATCH}
-            keys |= {refdata.norm_designation(k) for k in refdata.cache_keys("gost")}
-            keys |= {k for k, r in prev.items() if r.get("watch")}
+            keys = set().union(*target_groups(prev).values())
             self._targets = sorted(k for k in keys if k)
         return self._targets
 
@@ -251,6 +261,7 @@ class GostSource(Source):
         new, changes, notes = {}, [], []
         for y, m in months:
             try:
+                self.ctx.say(f"[gost]   лента protect.gost.ru за {m:02d}.{y}")
                 rows = self._feed_pages(f"{PROTECT}/gost", y, m)
                 for row in rows:
                     key = refdata.norm_designation(row["designation"])
@@ -301,7 +312,10 @@ class GostSource(Source):
         changed_targets = {c["target"] for c in feed["changes"] if c.get("target")}
         targets = sorted(set(self.targets(prev)) | (changed_targets & set(records)))
         found, missing, failed = 0, [], []
-        for k in targets:
+        self.ctx.say(f"[gost]   проверяю поштучно, обозначений: {len(targets)}")
+        for i, k in enumerate(targets, 1):
+            if i % 20 == 0:
+                self.ctx.say(f"[gost]   проверено {i} из {len(targets)}")
             try:
                 rec = protect_lookup(k, self.http) if library_for(k) == "sp" else fetch_one(k)
             except (FetchError, SourceError, ValueError) as e:

@@ -22,7 +22,8 @@ def data_dir() -> str:
 
 
 def offline() -> bool:
-    return os.environ.get("TZCHECK_REFDATA_OFFLINE", "") == "1"
+    """Проверка ТЗ без сети по умолчанию везде (CLI, uvicorn, Docker); запросы к rst.gov.ru и «Аршину» только при TZCHECK_REFDATA_OFFLINE=0."""
+    return os.environ.get("TZCHECK_REFDATA_OFFLINE", "1") != "0"
 
 
 def now_iso() -> str:
@@ -141,12 +142,54 @@ def _gost_out(rec: dict, origin: str, stale: bool = False) -> dict:
     return out
 
 
+_noted: set = set()
+
+
+def gost_requested_path() -> str:
+    return os.path.join(data_dir(), "cache", "gost_requested.json")
+
+
+def gost_requested() -> dict:
+    try:
+        with open(gost_requested_path(), encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def note_gost(key: str, by: str = "tz") -> bool:
+    """Обозначение из проверенного ТЗ (или добавленное на вкладке «Справочники») попадает в список наблюдения updater."""
+    mark = (data_dir(), key)
+    if by == "tz" and mark in _noted:
+        return False
+    with _lock:
+        asked = gost_requested()
+        if key in asked and (by == "tz" or asked[key].get("by") == by):
+            _noted.add(mark)
+            return False
+        asked[key] = {"at": now_iso(), "by": by}
+        path = gost_requested_path()
+        try:
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            tmp = f"{path}.{os.getpid()}.{threading.get_ident()}.tmp"
+            with open(tmp, "w", encoding="utf-8") as f:
+                json.dump(asked, f, ensure_ascii=False, indent=1)
+            os.replace(tmp, path)
+        except OSError:
+            return False
+        _noted.add(mark)
+    return True
+
+
 def gost_status(designation: str) -> dict | None:
     try:
         key = norm_designation(designation)
         if not re.search(r"\d", key):
             return None
         rec = _mirror("gost.json.gz").get(key)
+        if not (rec and rec.get("watch")):
+            note_gost(key)
         if rec and _age(rec.get("checked_at")) < TTL["mirror_gost"]:
             return _gost_out(rec, "mirror")
         hit = cache_get("gost", key)

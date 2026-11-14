@@ -19,6 +19,19 @@ SEARCH = ZAK + "/epz/ktru/search/results.html"
 COMMON = ZAK + "/epz/ktru/ktruCard/commonInfo.html"
 DESC = ZAK + "/epz/ktru/ktruCard/ktru-description.html"
 WATCH = ["28.22.16.110", "28.22.16.111", "28.22.16.112", "26.51.66.190", "26.51.33.110", "26.51.43.117", "26.51.62.120", "26.70.13.000"]
+
+
+
+def _corpus_codes() -> list[str]:
+    """Коды позиций из корпуса ТЗ и реагентов (data/ktru_watch.json): по ним правило check_ktru берёт обязательные характеристики."""
+    try:
+        with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "ktru_watch.json"), encoding="utf-8") as f:
+            return [c for c in json.load(f).get("codes", []) if c not in WATCH]
+    except (OSError, ValueError):
+        return []
+
+
+WATCH += _corpus_codes()
 MAX_CARDS = int(os.environ.get("TZCHECK_KTRU_MAX_CARDS", "40"))
 COMMON_FIELDS = {"Статус": "status", "Дата включения позиции в каталог": "included", "Код позиции КТРУ": "code",
                  "Код по ОКПД2": "okpd2_text", "Наименование товара, работы, услуги": "name",

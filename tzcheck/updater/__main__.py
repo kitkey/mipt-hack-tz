@@ -9,11 +9,12 @@ from .arshin import ArshinSource
 from .base import Context
 from .eaeu import EaeuSource
 from .gost import GostSource
+from .gost_texts import GostTextsSource
 from .ktru import KtruSource
 from .laws import LawsSource
 from .okpd2 import Okpd2Source
 
-SOURCES = {"okpd2": Okpd2Source, "laws": LawsSource, "eaeu": EaeuSource, "gost": GostSource, "arshin": ArshinSource, "ktru": KtruSource}
+SOURCES = {"okpd2": Okpd2Source, "laws": LawsSource, "eaeu": EaeuSource, "gost": GostSource, "gost_texts": GostTextsSource, "arshin": ArshinSource, "ktru": KtruSource}
 LOCK_TTL = 6 * 3600
 
 
