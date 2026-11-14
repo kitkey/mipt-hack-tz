@@ -1,6 +1,6 @@
 # Оценка качества
 
-Все прогоны ниже в режиме правил без модели, справочники из локальных копий. Перед запуском: `export TZCHECK_REFDATA_OFFLINE=1` (Windows: `$env:TZCHECK_REFDATA_OFFLINE=1`). В Docker: `docker compose exec app python eval/eval_labels.py`.
+Замеры ниже сняты на прежней версии системы, где проверку вели правила; текущая проверка идёт моделью (README репозитория), на ней эти цифры не пересчитывались. Все прогоны ниже в режиме правил без модели, справочники из локальных копий. Перед запуском: `export TZCHECK_REFDATA_OFFLINE=1` (Windows: `$env:TZCHECK_REFDATA_OFFLINE=1`). В Docker: `docker compose exec app python eval/eval_labels.py`.
 
 ## 105 правок закупщиков: `eval_labels.py`
 

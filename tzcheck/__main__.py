@@ -11,7 +11,7 @@ def main():
     ap = argparse.ArgumentParser(prog="tzcheck", description="Проверка ТЗ на закупку по 223-ФЗ")
     ap.add_argument("files", nargs="+", help="основное ТЗ и приложения: docx, doc, pdf, xlsx, rtf или txt")
     ap.add_argument("-o", "--out", default="out", help="папка для отчётов")
-    ap.add_argument("--no-llm", action="store_true", help="только правила, без языковой модели")
+    ap.add_argument("--no-llm", action="store_true", help="без языковой модели: только разбор и проверка безопасности")
     ap.add_argument("--orchestrator", choices=["linear", "graph"], default=None,
                     help="linear: линейный конвейер (по умолчанию); graph: тот же конвейер на LangGraph с повторной проверкой замечаний с низкой уверенностью")
     ap.add_argument("--checks", default="all",

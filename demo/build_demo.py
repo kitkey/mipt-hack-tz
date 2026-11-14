@@ -1,5 +1,8 @@
-"""Собирает demo/output: настоящие отчёты системы на примерах кейса и на ТЗ из ЕИС (режим правил, без сети).
+"""Собирает demo/output: отчёты системы на примерах кейса и на ТЗ из ЕИС, проверка моделью (справочники без сети).
 
+Нужна модель: TZCHECK_LLM_MODEL и ключ (README, «Быстрый старт»); без неё скрипт останавливается. Каждый документ
+проходит все шаги ядра, вызовы платные. Все входы открытые (образцы кейса и ТЗ, опубликованные в ЕИС), поэтому
+документы помечаются открытыми (public, TZCHECK_DOC_PUBLIC=1) и внешняя модель вызывается без слоя NER.
 Отчёты по документам ЕИС проходят маскирование ПД (контакты сотрудников заказчиков), DOCX с комментариями
 для них не сохраняется, потому что это копия исходного файла.
 """
@@ -13,7 +16,10 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 os.environ.setdefault("TZCHECK_REFDATA_OFFLINE", "1")
 os.environ.setdefault("TZCHECK_FEEDBACK", os.path.join(tempfile.gettempdir(), "tzcheck_demo_feedback.jsonl"))
+os.environ.setdefault("TZCHECK_DOC_PUBLIC", "1")  # сравнение версий флага public не принимает
 
+from tzcheck import llm
+from tzcheck.checks import succeeded
 from tzcheck.pii import Scrubber
 from tzcheck.pipeline import check, compare
 from tzcheck.report import to_compare_html, to_html, write_all
@@ -42,21 +48,24 @@ def _mask(text: str, scr: Scrubber) -> str:
 
 
 def _short(res: dict) -> dict:
-    return {"file": res.get("file"), "status": res["status"], "mode": res.get("mode"), "seconds": res.get("seconds"),
-            "findings": len(res.get("findings", [])), "by_severity": res.get("stats", {}).get("by_severity", {}),
+    sections = {}
+    for f in res.get("findings", []):
+        sections[f["section"]] = sections.get(f["section"], 0) + 1
+    return {"file": res.get("file"), "status": res["status"], "mode": res.get("mode"), "model": res.get("model"), "seconds": res.get("seconds"),
+            "findings": len(res.get("findings", [])), "sections": sections, "by_severity": res.get("stats", {}).get("by_severity", {}),
             "by_category": res.get("stats", {}).get("by_category", {}), "needs_review": res.get("stats", {}).get("needs_review"),
             "warnings": len(res.get("warnings", [])), "pii_in_document": res.get("pii_masked", {})}
 
 
-def run_case(name, paths, public):
+def run_case(name, paths, mask):
     folder = os.path.join(OUT, name)
     if not paths or not all(os.path.exists(p) for p in paths):
         print(f"{name}: входных файлов нет в репозитории, оставлен готовый отчёт")
         return {"case": name, "status": "skipped", "reason": "корпус ЕИС не входит в репозиторий: в нём контакты сотрудников заказчиков"}
     shutil.rmtree(folder, ignore_errors=True)
     os.makedirs(folder)
-    res = check(paths if len(paths) > 1 else paths[0], use_llm=False)
-    if res["status"] != "ok":
+    res = check(paths if len(paths) > 1 else paths[0], use_llm=True, public=True)
+    if not succeeded(res):
         with open(os.path.join(folder, "result.json"), "w", encoding="utf-8") as f:
             json.dump(res, f, ensure_ascii=False, indent=2)
         return {"case": name, **_short(res)}
@@ -64,7 +73,7 @@ def run_case(name, paths, public):
     scr.scrub(res["_doc"].text())
     res["pii_masked"] = scr.summary()
     base = os.path.splitext(os.path.basename(paths[0]))[0]
-    if public:
+    if mask:
         scr = Scrubber()
         data = {k: v for k, v in res.items() if not k.startswith("_")}
         data["files_note"] = "ПД в отчёте заменены метками [PERSON_n], [PHONE_n], [EMAIL_n]"
@@ -100,9 +109,12 @@ def run_compare():
     folder = os.path.join(OUT, "06_compare_metro")
     shutil.rmtree(folder, ignore_errors=True)
     os.makedirs(folder)
-    cmp = compare(os.path.join(ROOT, "samples", "metro_src.docx"), os.path.join(ROOT, "samples", "metro_fin.docx"), use_llm=False)
+    cmp = compare(os.path.join(ROOT, "samples", "metro_src.docx"), os.path.join(ROOT, "samples", "metro_fin.docx"), use_llm=True)
     with open(os.path.join(folder, "compare.json"), "w", encoding="utf-8") as f:
         json.dump({k: v for k, v in cmp.items() if not k.startswith("_")}, f, ensure_ascii=False, indent=2)
+    if cmp["status"] != "ok":
+        # сравнение не собрано (одна из проверок не дошла до результата): причина в compare.json
+        return {"case": "06_compare_metro", "status": cmp["status"], "old": cmp.get("old"), "new": cmp.get("new")}
     with open(os.path.join(folder, "compare.html"), "w", encoding="utf-8") as f:
         f.write(to_compare_html(cmp))
     return {"case": "06_compare_metro", "status": cmp["status"], "summary": cmp["summary"],
@@ -120,7 +132,7 @@ def run_broken():
         p = os.path.join(tmp, fname)
         with open(p, "wb") as f:
             f.write(content)
-        res = check(p, use_llm=False)
+        res = check(p, use_llm=True, public=True)
         out.append({"file": fname, "status": res["status"], "error": res.get("error"), "summary": res.get("summary")})
     with open(os.path.join(folder, "results.json"), "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, indent=2)
@@ -129,6 +141,8 @@ def run_broken():
 
 
 def main():
+    if not llm.enabled():
+        sys.exit("Модель не задана (TZCHECK_LLM_MODEL): без неё содержательной проверки нет, отчёты не собираются.")
     os.makedirs(OUT, exist_ok=True)
     summary = [run_case(*c) for c in CASES[:5]] + [run_compare()] + [run_case(*c) for c in CASES[5:]] + [run_broken(), run_rag(), run_case("15_injection", [os.path.join(ROOT, "samples", "injection.docx")], False)]
     scan = os.path.join(OUT, "14_lift_scan_ocr", "report.json")
@@ -136,13 +150,6 @@ def main():
         # скан собирается в образе с WITH_OCR=1: curl -F file=@samples/scan/lift_src_scan.pdf .../api/check
         summary.append({"case": "14_lift_scan_ocr", "inputs": ["samples/scan/lift_src_scan.pdf"], "built_in": "docker WITH_OCR=1",
                         **_short(json.load(open(scan, encoding="utf-8")))})
-    for name in ("16_lift_src_llm_linear", "17_lift_src_llm_graph", "18_lift_fin_llm_linear", "19_lift_fin_llm_graph"):
-        # прогоны с моделью: python demo/run_llm_cases.py при поднятом сервере модели
-        rep = os.path.join(OUT, name, name.split("_llm")[0].split("_", 1)[1] + ".report.json")
-        if os.path.exists(rep):
-            r = json.load(open(rep, encoding="utf-8"))
-            summary.append({"case": name, "built_by": "demo/run_llm_cases.py", "orchestrator": r.get("orchestrator"),
-                            "from_model": r.get("stats", {}).get("from_model"), **_short(r)})
     path = os.path.join(OUT, "summary.json")
     if any(s.get("status") == "skipped" for s in summary) and os.path.exists(path):
         old = {s["case"]: s for s in json.load(open(path, encoding="utf-8"))}

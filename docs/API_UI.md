@@ -100,9 +100,9 @@
 Поля можно передавать в форме или в query (`/api/jobs?use_llm=false&checks=risks`).
 
 ```json
-{"job_id": "871f5ff20a73", "run_id": "871f5ff20a73", "kind": "check", "status": "running", "use_llm": false,
+{"job_id": "63067ae3a179", "run_id": "63067ae3a179", "kind": "check", "status": "running", "use_llm": true,
  "orchestrator": "linear", "checks": ["logic", "standards", "risks"],
- "links": {"self": "/api/jobs/871f5ff20a73", "events": "/api/jobs/871f5ff20a73/events", "result": "/api/runs/871f5ff20a73"}}
+ "links": {"self": "/api/jobs/63067ae3a179", "events": "/api/jobs/63067ae3a179/events", "result": "/api/runs/63067ae3a179"}}
 ```
 
 Ошибки: `400` (неизвестный `orchestrator` или `checks`, больше 10 файлов).
@@ -113,24 +113,29 @@
 
 ```json
 {
-  "job_id": "871f5ff20a73", "run_id": "871f5ff20a73", "kind": "check", "status": "done",
+  "job_id": "63067ae3a179", "run_id": "63067ae3a179", "kind": "check", "status": "done",
   "created_at": "2026-11-14T16:59:02", "started_at": "2026-11-14T16:59:02", "finished_at": "2026-11-14T16:59:04",
-  "user": "Иванова", "files": ["lift_src.docx"], "checks": ["logic", "standards", "risks"],
-  "progress": {"done": 6, "total": 6, "percent": 100, "current": null, "current_title": null, "current_text": ""},
+  "user": "Иванова", "files": ["lift_fin.docx"], "checks": ["logic", "standards", "risks"],
+  "progress": {"done": 9, "total": 9, "percent": 100, "current": null, "current_title": null, "current_text": ""},
   "steps": [
-    {"id": "parse", "title": "Разбор документа", "status": "done", "started_at": "2026-11-14T16:59:02", "finished_at": "2026-11-14T16:59:02",
-     "seconds": 0.3, "details": {"blocks": 163, "files": 1}, "text": "блоков разобрано: 163"},
-    {"id": "rules", "title": "Проверка правилами", "status": "done", "seconds": 1.3, "details": {"findings": 19}, "text": "замечаний: 19", "...": "..."},
-    {"id": "report", "title": "Выгрузка отчёта, файла с комментариями и файла с правками", "status": "done", "details": {"revisions": 9}, "text": "правок в файле: 9", "...": "..."}
+    {"id": "parse", "title": "...", "status": "done", "state": "выполнен", "started_at": "2026-11-14T16:59:02", "finished_at": "2026-11-14T16:59:02",
+     "seconds": 0.4, "details": {"blocks": 170, "files": 1}, "text": "..."},
+    {"id": "passport", "title": "...", "status": "done", "state": "выполнен", "details": {"law": "223-ФЗ", "customer": "..."}, "...": "..."},
+    {"id": "tables", "title": "...", "status": "done", "state": "выполнен", "details": {"tables": 3, "positions": 0}, "...": "..."},
+    {"id": "core_find", "title": "...", "status": "done", "state": "выполнен", "details": {"stage": "проверка «не указано» по всему комплекту", "found": 36}, "...": "..."},
+    {"id": "core_cross", "title": "...", "status": "done", "state": "выполнен", "details": {"found": 0}, "...": "..."},
+    {"id": "core_verify", "title": "...", "status": "done", "state": "выполнен", "details": {"candidates": 36, "confirmed": 36}, "...": "..."},
+    {"id": "finish", "title": "...", "status": "done", "state": "выполнен", "details": {"findings": 31, "model": 4, "unchecked": 0}, "...": "..."},
+    {"id": "report", "title": "...", "status": "done", "state": "выполнен", "details": {"revisions": 2}, "...": "..."}
   ],
-  "error": null, "result_url": "/api/runs/871f5ff20a73",
+  "error": null, "result_url": "/api/runs/63067ae3a179",
   "result": { "...": "тот же объект, что GET /api/runs/{run_id}, без полей run и decisions" }
 }
 ```
 
 - `status` задачи: `queued`, `running`, `done`, `error`.
 - `status` шага: `pending`, `running`, `done`, `skipped`, `not_done`, `error`; то же по-русски в поле `state`: `ожидает`, `идёт`, `выполнен`, `неприменим`, `не выполнен`, `ошибка`. Причина сбоя в `details.ошибка` или `details.причина` и в `text`.
-- `text` шага уже собран по-русски из `details`, его можно показывать как есть.
+- `text` шага уже собран по-русски из `details`, его можно показывать как есть. Названия шагов (`title`) отдаёт `GET /api/meta` в поле `steps`.
 - После перезапуска сервиса ход задачи в памяти пропадает: готовая задача отдаётся из сохранённого отчёта (`steps: []`, `status: "done"`), незавершённая получит `status: "lost"`.
 - Неизвестный id → `404`.
 
@@ -195,36 +200,43 @@ event: done  {"status": "done", "result_url": "/api/runs/<run_id>", "summary": "
 
 ```json
 {
-  "run_id": "871f5ff20a73", "file": "lift_src.docx", "status": "ok", "mode": "rules", "model": "", "orchestrator": "linear", "public": false,
-  "steps_status": [{"id": "parse", "title": "Разбор документа", "state": "выполнен", "reason": ""}, "..."],
+  "run_id": "63067ae3a179", "file": "lift_fin.docx", "status": "ok", "mode": "model", "model": "openrouter/deepseek/deepseek-v4.1-flash",
+  "orchestrator": "linear", "public": true, "customer": "mipt",
+  "steps_status": [{"id": "parse", "title": "...", "state": "выполнен", "reason": ""}, "..."],
   "completeness": {"complete": true, "all_groups": true, "all_steps": true, "incomplete_steps": []},
-  "steps": ["parse", "security", "rules", "reconcile"], "seconds": 1.6,
+  "steps": ["parse", "security", "passport", "tables", "core_find", "core_cross", "core_verify"], "seconds": 0.9,
   "checks": ["logic", "standards", "risks"], "check_groups": ["Логика", "Стандарты", "Риски"], "full_check": true,
-  "verdict": "Публиковать без исправлений нельзя: ошибок высокого риска 3 (F003, F004, F005). Ещё высокого риска на ручную проверку 2 (F001, F002).",
+  "verdict": "Публиковать без исправлений нельзя. Ошибок высокого риска: 13 (F001, F002, F003, F004, F005…).",
   "verdict_code": "blocked",
-  "summary": "<verdict> Найдено 18 замечаний, из них с высоким риском 5. ... По группам: Логика 6, Стандарты 10, Риски 2. ...",
+  "summary": "<verdict> Найдено 31 замечание, из них с высоким риском 13. Чаще всего: ... Отдельным блоком «На проверку» 4 замечания, в вердикт они не входят.",
   "stats": {
-    "by_group": {"Логика": 6, "Стандарты": 10, "Риски": 2},
-    "groups": {"Логика": {"checked": true, "count": 6, "by_severity": {"high": 2, "medium": 4}, "by_status": {"ручная проверка": 6},
-                          "by_category": {"Противоречие": 4, "Неполнота или комплектность": 1, "Предмет закупки или наименование": 1}},
+    "by_group": {"Логика": 18, "Стандарты": 7, "Риски": 6},
+    "groups": {"Логика": {"checked": true, "count": 18, "by_severity": {"...": 0}, "by_status": {"...": 0}, "by_category": {"...": 0}},
                "Стандарты": {"...": "..."}, "Риски": {"...": "..."}},
-    "by_category": {"...": 0}, "by_severity": {"high": 5, "medium": 7, "low": 6}, "by_status": {"ошибка": 5, "...": 0},
-    "needs_review": 8, "revisions": 9,
-    "model_block": {"count": 0, "by_severity": {}, "by_category": {}, "by_group": {}},
-    "unchecked_block": {"count": 3, "by_rule": {"gost.old_unverified": 1, "...": 1}},
-    "confidence": {"...": 0}
+    "by_category": {"...": 0}, "by_severity": {"high": 13, "medium": 12, "low": 6}, "by_status": {"ошибка": 31},
+    "needs_review": 0, "revisions": 2, "from_model": 4,
+    "model_block": {"count": 4, "by_severity": {"medium": 1, "low": 3}, "by_category": {"...": 0}, "by_group": {"Риски": 4}, "note": "пояснение модели к основному списку"},
+    "unchecked_block": {"count": 0, "by_rule": {}},
+    "model_rejected": {"count": 0, "by_category": {}},
+    "confidence": {"оценено моделью": 35, "правило": 0, "нет оценки": 0, "порог повторной проверки": 60}
   },
   "findings": [ "...замечания, см. ниже..." ],
   "norms": {"ROSSTANDART": {"title": "Росстандарт, сведения о действии стандартов", "text": "...", "url": "https://..."}},
-  "warnings": [], "pii_masked": {}, "document": {"format": "docx", "files": ["lift_src.docx"], "blocks": 163, "fields": {}, "requirement_graph": {}},
-  "passport": {"справочники": {}, "файлы": [], "модель": "не подключена"},
-  "revisions": {"main": {"applied": ["F003", "F004", "..."], "skipped": {}, "file": "lift_src.revisions.docx"}},
+  "warnings": [], "pii_masked": {},
+  "document": {"format": "docx", "files": ["lift_fin.docx"], "blocks": 170, "fields": {},
+               "procurement": {"закон": "223-ФЗ", "способ": "запрос котировок", "конкурентная": true, "вид": "товар", "предмет": "...", "заказчик": "...", "профиль заказчика": ""},
+               "passport_source": "...", "roles": {"...": 0}, "tables": {"...": "..."}},
+  "model_calls": {"паспорт и роли": 1, "разметка шапки таблицы": 3, "поиск дефектов": 16, "вторая проверка": 7},
+  "model_dropped": [{"шаг": "...", "цитата": "...", "почему": "цитаты нет в тексте"}],
+  "trace_calls": 28, "trace_rejected": 0,
+  "passport": {"справочники": {"...": {"версия": "...", "получено": "...", "источник": "..."}}, "файлы": [{"файл": "lift_fin.docx", "sha256": "..."}],
+               "модель": "openrouter/deepseek/deepseek-v4.1-flash", "версия кода": "...", "промпты sha256": "..."},
   "links": {
-    "report_json": "/runs/871f5ff20a73/lift_src.report.json",
-    "report_html": "/runs/871f5ff20a73/lift_src.report.html",
-    "comments_docx": "/runs/871f5ff20a73/lift_src.comments.docx",
-    "revisions_docx": "/runs/871f5ff20a73/lift_src.revisions.docx",
-    "result": "/api/runs/871f5ff20a73"
+    "report_json": "/runs/63067ae3a179/lift_fin.report.json",
+    "report_html": "/runs/63067ae3a179/lift_fin.report.html",
+    "comments_docx": "/runs/63067ae3a179/lift_fin.comments.docx",
+    "revisions_docx": "/runs/63067ae3a179/lift_fin.revisions.docx",
+    "result": "/api/runs/63067ae3a179"
   },
   "run": { "...карточка, как в GET /api/runs..." },
   "decisions": {"F004": {"decision": "accept", "comment": "заменим", "ts": "2026-11-14T17:01:06"}}
@@ -235,7 +247,8 @@ event: done  {"status": "done", "result_url": "/api/runs/<run_id>", "summary": "
 - общая оценка: `verdict_code` (цвет) и `verdict` (текст);
 - количество замечаний: `stats.by_group` в сумме (основной список) или `findings.length` с разбивкой по `section`;
 - детализация по трём группам: `stats.groups` (у непроверенной группы `checked: false`);
-- подробный список: `findings` (основной список `section: "main"`, отдельными блоками `llm_review` и `unchecked`, в вердикт они не входят);
+- подробный список: `findings` (основной список `section: "main"`, отдельными блоками `llm_review` «На проверку» и `unchecked`, в вердикт они не входят; почему замечание в своём блоке, пишет `evidence["блок отчёта"]` и шаг `route` в `trace`);
+- журнал вызовов модели (промпты с маской ПД, сырые ответы, снятые кандидаты): `GET /api/runs/{run_id}/trace` возвращает `{"calls": [...], "rejected": [...], "dropped": [...]}`, видимость та же, что у запуска;
 - выгрузки: «отчёт» `links.report_html` или `links.report_json`, «файл с комментариями» `links.comments_docx`;
 - «Внести предлагаемые изменения»: `links.revisions_docx`. Ссылки нет, если в документе нет ни одного замечания с точной заменой или исходник не DOCX: кнопку тогда не показывать.
 
@@ -245,15 +258,15 @@ event: done  {"status": "done", "result_url": "/api/runs/<run_id>", "summary": "
 
 | Поле | Тип | Смысл |
 |---|---|---|
-| `id` | строка | `F001...` основной список, `M001...` замечания модели, `U001...` «не проверено» |
+| `id` | строка | `F001...` основной список, `M001...` раздел «На проверку», `U001...` «не проверено» |
 | `group` | `Логика` / `Стандарты` / `Риски` | группа интерфейса, вычисляется по категории |
 | `category` | строка | категория кейса (одна из 10) |
 | `severity` | `high` / `medium` / `low` | риск |
 | `status` | `ошибка` / `неясно` / `ручная проверка` / `рекомендация` | статус; «ручная проверка» = спорное требование, бывает в любой группе |
 | `needs_review` | bool | нужна ручная проверка |
 | `section` | `main` / `llm_review` / `unchecked` | блок отчёта |
-| `confidence` | число 0-1 | внутренняя уверенность правила |
-| `confidence_pct`, `confidence_basis` | число 0-100 или `null`, строка | оценка модели и на чём она основана; у правил `null` и «правило» |
+| `confidence` | число 0-1 | служебное поле, у замечаний ядра всегда 0.7; для интерфейса брать `confidence_pct` |
+| `confidence_pct`, `confidence_basis` | число 0-100 или `null`, строка | уверенность второй проверки и на чём она основана («модель при второй проверке») |
 | `quote` | строка | точная цитата из документа; пустая у замечаний на документ в целом |
 | `location` | строка | место по-русски: «раздел «4. Место и сроки выполнения работ.», абзац 21» или «таблица 1, строка 31» |
 | `block_id` | строка | id блока документа (`p21`, `t1r31`; у приложений префикс `a1_`) |
@@ -262,39 +275,37 @@ event: done  {"status": "done", "result_url": "/api/runs/<run_id>", "summary": "
 | `fix` | строка | как исправить (рекомендация словами) |
 | `replacement` | строка | точный текст, которым заменяется `quote` в файле с правками; пусто, если замены нет |
 | `norm_ids` | список | основания, расшифровка в `result.norms[id]` (`title`, `text`, `url`, `edition`) |
-| `evidence` | объект | основание вывода: статус по каталогу, пункт нормы с цитатой, вторая проверка моделью и т.п. |
-| `source`, `rule_id` | строка | кто нашёл: правило (`rule:gost`, `days.in_words`) или модель (`llm`, `llm.find`) |
+| `evidence` | объект | основание вывода: вторая проверка и её довод, справочные записи, пункт нормы с цитатой, причина блока отчёта |
+| `source`, `rule_id` | строка | шаг ядра, на котором найдено: `model:find`, `model:ref`, `model:cross`, `model:gost`; `rule_id` то же через точку (`model.find`) |
+| `trace` | список | цепочка шагов: `found` (ответ модели, `call` = id записи журнала), `located`, `verify`, `route`, `final` |
 
 Пример:
 
 ```json
-{"id": "F015", "group": "Стандарты", "category": "Оформление по внутреннему стандарту", "severity": "low", "status": "рекомендация",
- "needs_review": false, "section": "main", "confidence": 0.8, "confidence_pct": null, "confidence_basis": "правило",
- "quote": "105 календарных дней", "location": "раздел «4. Место и сроки выполнения работ.», абзац 21", "block_id": "p21", "also_in": [],
- "explanation": "Срок указан только цифрами; по практике закупщиков заказчика сроки дублируются прописью, чтобы исключить опечатку в цифре.",
- "fix": "105 (сто пять) календарных дней", "replacement": "105 (сто пять) календарных дней", "norm_ids": ["INTERNAL"],
- "evidence": {"практика заказчика": "МФТИ: сроки цифрами и прописью (...)", "найдено": "rule:days"}, "source": "rule:days", "rule_id": "days.in_words"}
+{"id": "F001", "group": "Риски", "category": "Гарантийные условия", "severity": "high", "status": "ошибка",
+ "needs_review": false, "section": "main", "confidence": 0.7, "confidence_pct": 90, "confidence_basis": "модель при второй проверке",
+ "quote": "...", "location": "раздел «2. Требования к качеству работ.», абзац 13", "block_id": "p13", "also_in": [],
+ "explanation": "...", "fix": "...", "replacement": "", "norm_ids": [],
+ "evidence": {"вторая проверка": "подтверждено", "довод проверки": "...", "уверенность (модель при поиске)": "60 %", "найдено": "model:find",
+              "цитата найдена в тексте": true, "основание из базы норм": false},
+ "source": "model:find", "rule_id": "model.find", "confirmed_by": "",
+ "trace": [{"step": "found", "call": "c008", "item": {"...": "ответ модели как есть"}},
+           {"step": "located", "text": "цитата найдена: раздел «2. Требования к качеству работ.», абзац 13 (блок p13)"},
+           {"step": "verify", "call": "c021", "item": {"n": 4, "decision": "keep", "reason": "...", "confidence": 90}, "text": "подтверждено: ..."},
+           {"step": "route", "text": "основной список: ошибка, подтверждена второй проверкой с высокой уверенностью"},
+           {"step": "final", "text": "статус «ошибка», риск высокий"}]}
 ```
+
+У замечания раздела «На проверку» `section: "llm_review"`, `needs_review: true`, а в `evidence["блок отчёта"]` причина, например «на проверку: статус «неясно», а не «ошибка»».
 
 ### Файл с правками (`<base>.revisions.docx`)
 
-Копия исходного DOCX, где каждое замечание с `replacement` внесено правкой в режиме рецензирования (`w:del` / `w:ins`, автор «Проверка ТЗ»), к правке приложен комментарий с номером замечания. Word и LibreOffice показывают правки как исправления, их можно принять или отклонить по одной. Правкой становятся только замены, которые правило знает точно:
-
-| Правило | Пример |
-|---|---|
-| ГОСТ заменён (по каталогу Росстандарта) | `ГОСТ Р 34441-2018` → `ГОСТ 34441-2024` |
-| «ГОСТ» без «Р» и лишняя «Р» | `ГОСТ 53782-2010` → `ГОСТ Р 53782-2010` |
-| срок прописью | `105 календарных дней` → `105 (сто пять) календарных дней` |
-| единое начало сроков | `с момента заключения` → `с даты заключения` |
-| марка без «или эквивалент» | `кнопки BW-1-круглые` → `кнопки BW-1-круглые (или эквивалент)` |
-| «мкр» вместо «мкм», документация на английском, начало гарантии «с даты приёмки» | по тексту рекомендации правила |
-
-Всё остальное (добавить характеристику, перечислить стандарты, замечания модели) остаётся комментарием в `comments.docx`. Список внесённых и пропущенных правок: `result.revisions.main.applied` / `skipped`. Для приложений DOCX: `attachment_<i>.revisions.docx` (ссылки `links.attachment_<i>_revisions_docx`).
+Копия исходного DOCX, где каждое замечание основного списка с `replacement` внесено правкой в режиме рецензирования (`w:del` / `w:ins`, автор «Проверка ТЗ»), к правке приложен комментарий с номером замечания. Word и LibreOffice показывают правки как исправления, их можно принять или отклонить по одной. `replacement` предлагает модель, когда исправление сводится к замене цитаты; код принимает его после снятия маски ПД. Всё остальное (добавить характеристику, перечислить стандарты, замечания раздела «На проверку») остаётся комментарием в `comments.docx`. Список внесённых и пропущенных правок: `result.revisions.main.applied` / `skipped`. Для приложений DOCX: `attachment_<i>.revisions.docx` (ссылки `links.attachment_<i>_revisions_docx`).
 
 ### POST /api/feedback (решение закупщика, без изменений)
 
 ```json
-{"run_id": "871f5ff20a73", "finding_id": "F004", "decision": "accept", "comment": "заменим"}
+{"run_id": "63067ae3a179", "finding_id": "F004", "decision": "accept", "comment": "заменим"}
 ```
 
 `decision`: `accept` (принято), `reject` (отклонено), `review` (ручная проверка). Решения видны в `GET /api/runs/{id}` (`decisions`) и в карточке истории (`run.decisions`).
@@ -396,15 +407,15 @@ event: done  {"status": "done", "result_url": "/api/runs/<run_id>", "summary": "
 
 ```json
 {"total": 9, "items": [
-  {"number": 6, "run_id": "871f5ff20a73", "kind": "check", "created_at": "2026-11-14T16:59:02", "finished_at": "2026-11-14T16:59:04",
-   "user": "Иванова", "seconds": 1.9, "files": ["lift_src.docx"], "previous_file": "",
+  {"number": 6, "run_id": "63067ae3a179", "kind": "check", "created_at": "2026-11-14T19:44:55", "finished_at": "2026-11-14T19:44:56",
+   "user": "Иванова", "seconds": 0.9, "files": ["lift_fin.docx"], "previous_file": "",
    "checks": ["logic", "standards", "risks"], "check_groups": ["Логика", "Стандарты", "Риски"], "full_check": true,
-   "mode": "rules", "model": "", "orchestrator": "linear",
-   "counts": {"total": 18, "by_group": {"Логика": 6, "Стандарты": 10, "Риски": 2}, "by_severity": {"high": 5, "medium": 7, "low": 6},
-              "high": 5, "errors": 5, "model_block": 0, "unchecked": 3, "revisions": 9},
+   "mode": "model", "model": "openrouter/deepseek/deepseek-v4.1-flash", "orchestrator": "linear",
+   "counts": {"total": 31, "by_group": {"Логика": 18, "Стандарты": 7, "Риски": 6}, "by_severity": {"high": 13, "medium": 12, "low": 6},
+              "high": 13, "errors": 31, "model_block": 4, "unchecked": 0, "revisions": 3},
    "verdict": "Публиковать без исправлений нельзя: ...", "verdict_code": "blocked",
    "decisions": {"принято": 1, "отклонено": 1, "ручная проверка": 0, "всего решений": 2},
-   "links": {"report_json": "...", "comments_docx": "...", "revisions_docx": "...", "result": "/api/runs/871f5ff20a73"}}
+   "links": {"report_json": "...", "comments_docx": "...", "revisions_docx": "...", "result": "/api/runs/63067ae3a179"}}
 ]}
 ```
 
@@ -426,7 +437,7 @@ event: done  {"status": "done", "result_url": "/api/runs/<run_id>", "summary": "
 | `POST` | `/api/check` | синхронная проверка, JSON-результат как в `GET /api/runs/{id}` (без `run`, `decisions`); query: `use_llm` (по умолчанию `true`), `orchestrator`, новые `checks`, `user`, `public` (можно и полями формы); `200` при `status` `ok` и `incomplete` |
 | `POST` | `/compare`, `/api/compare` | сравнение версий одного ТЗ: `old`, `new`, `use_llm` (по умолчанию `false`); ответ `fixed`, `remained`, `added`, `summary` |
 | `POST` | `/api/feedback` | решение закупщика (см. выше) |
-| `GET` | `/api/feedback/stats` | доля принятых по правилам |
+| `GET` | `/api/feedback/stats` | доля принятых по `rule_id` замечаний |
 | `GET` | `/runs/{run_id}/{fname}` | скачать артефакт запуска: только `<имя>.report.json`, `<имя>.report.html`, `<имя>.comments.docx`, `<имя>.revisions.docx`, `req_compare.json` прямо в папке запуска. Загруженный исходник, приложения и `run.json` не отдаются, имена с `/`, `\`, `..` отклоняются: `404` |
 | `GET` | `/health` | `{"status": "ok", "llm": bool, "model": "..."}` |
 | `GET` | `/refdata`, `/api/refdata/...` | вкладка «Справочники» (без изменений) |
@@ -436,10 +447,10 @@ event: done  {"status": "done", "result_url": "/api/runs/<run_id>", "summary": "
 ## CLI
 
 ```
-python -m tzcheck samples/lift_src.docx --no-llm --checks standards,risks -o out
+TZCHECK_DOC_PUBLIC=1 python -m tzcheck samples/lift_src.docx --checks standards,risks -o out
 ```
 
-`--checks` принимает `logic`, `standards`, `risks` через запятую или `all` (по умолчанию). Рядом с отчётом пишется `<base>.revisions.docx`, если есть точные замены.
+Модель берётся из `TZCHECK_LLM_*`, `--no-llm` оставляет только разбор и проверку безопасности; `TZCHECK_DOC_PUBLIC=1` помечает документ открытым для внешней модели. `--checks` принимает `logic`, `standards`, `risks` через запятую или `all` (по умолчанию). Рядом с отчётом пишется `<base>.revisions.docx`, если есть точные замены.
 
 ## Хранение
 
