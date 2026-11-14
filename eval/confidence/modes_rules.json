@@ -1,0 +1,158 @@
+[
+ {
+  "doc": "lift_src",
+  "linear": {
+   "findings": 18,
+   "seconds": 0.24,
+   "steps": [
+    "parse",
+    "security",
+    "rules",
+    "reconcile"
+   ],
+   "confidence": {
+    "оценено моделью": 0,
+    "правило": 18,
+    "нет оценки": 0,
+    "повторно проверено": 0
+   }
+  },
+  "graph": {
+   "findings": 18,
+   "seconds": 0.25,
+   "steps": [
+    "parse",
+    "security",
+    "rules",
+    "reconcile",
+    "finish"
+   ],
+   "confidence": {
+    "оценено моделью": 0,
+    "правило": 18,
+    "нет оценки": 0,
+    "повторно проверено": 0
+   }
+  },
+  "same_findings": true,
+  "only_linear": [],
+  "only_graph": []
+ },
+ {
+  "doc": "lift_fin",
+  "linear": {
+   "findings": 7,
+   "seconds": 0.25,
+   "steps": [
+    "parse",
+    "security",
+    "rules",
+    "reconcile"
+   ],
+   "confidence": {
+    "оценено моделью": 0,
+    "правило": 7,
+    "нет оценки": 0,
+    "повторно проверено": 0
+   }
+  },
+  "graph": {
+   "findings": 7,
+   "seconds": 0.25,
+   "steps": [
+    "parse",
+    "security",
+    "rules",
+    "reconcile",
+    "finish"
+   ],
+   "confidence": {
+    "оценено моделью": 0,
+    "правило": 7,
+    "нет оценки": 0,
+    "повторно проверено": 0
+   }
+  },
+  "same_findings": true,
+  "only_linear": [],
+  "only_graph": []
+ },
+ {
+  "doc": "metro_src",
+  "linear": {
+   "findings": 92,
+   "seconds": 0.13,
+   "steps": [
+    "parse",
+    "security",
+    "rules",
+    "reconcile"
+   ],
+   "confidence": {
+    "оценено моделью": 0,
+    "правило": 92,
+    "нет оценки": 0,
+    "повторно проверено": 0
+   }
+  },
+  "graph": {
+   "findings": 92,
+   "seconds": 0.13,
+   "steps": [
+    "parse",
+    "security",
+    "rules",
+    "reconcile",
+    "finish"
+   ],
+   "confidence": {
+    "оценено моделью": 0,
+    "правило": 92,
+    "нет оценки": 0,
+    "повторно проверено": 0
+   }
+  },
+  "same_findings": true,
+  "only_linear": [],
+  "only_graph": []
+ },
+ {
+  "doc": "metro_fin",
+  "linear": {
+   "findings": 8,
+   "seconds": 0.16,
+   "steps": [
+    "parse",
+    "security",
+    "rules",
+    "reconcile"
+   ],
+   "confidence": {
+    "оценено моделью": 0,
+    "правило": 8,
+    "нет оценки": 0,
+    "повторно проверено": 0
+   }
+  },
+  "graph": {
+   "findings": 8,
+   "seconds": 0.15,
+   "steps": [
+    "parse",
+    "security",
+    "rules",
+    "reconcile",
+    "finish"
+   ],
+   "confidence": {
+    "оценено моделью": 0,
+    "правило": 8,
+    "нет оценки": 0,
+    "повторно проверено": 0
+   }
+  },
+  "same_findings": true,
+  "only_linear": [],
+  "only_graph": []
+ }
+]

@@ -1,0 +1,194 @@
+[
+ {
+  "doc": "lift_src",
+  "linear": {
+   "findings": 29,
+   "seconds": 0.4,
+   "steps": [
+    "parse",
+    "security",
+    "rules",
+    "llm_verify_rules",
+    "llm_find",
+    "llm_verify_new",
+    "reconcile",
+    "reconcile_llm"
+   ],
+   "confidence": {
+    "оценено моделью": 19,
+    "правило": 10,
+    "нет оценки": 0,
+    "повторно проверено": 0
+   }
+  },
+  "graph": {
+   "findings": 29,
+   "seconds": 0.38,
+   "steps": [
+    "parse",
+    "security",
+    "rules",
+    "llm_verify_rules",
+    "llm_find",
+    "llm_verify_new",
+    "llm_recheck",
+    "reconcile",
+    "reconcile_llm",
+    "finish"
+   ],
+   "confidence": {
+    "оценено моделью": 19,
+    "правило": 10,
+    "нет оценки": 0,
+    "повторно проверено": 19
+   }
+  },
+  "same_findings": false,
+  "only_linear": [],
+  "only_graph": []
+ },
+ {
+  "doc": "lift_fin",
+  "linear": {
+   "findings": 18,
+   "seconds": 0.33,
+   "steps": [
+    "parse",
+    "security",
+    "rules",
+    "llm_verify_rules",
+    "llm_find",
+    "llm_verify_new",
+    "reconcile",
+    "reconcile_llm"
+   ],
+   "confidence": {
+    "оценено моделью": 13,
+    "правило": 5,
+    "нет оценки": 0,
+    "повторно проверено": 0
+   }
+  },
+  "graph": {
+   "findings": 18,
+   "seconds": 0.31,
+   "steps": [
+    "parse",
+    "security",
+    "rules",
+    "llm_verify_rules",
+    "llm_find",
+    "llm_verify_new",
+    "llm_recheck",
+    "reconcile",
+    "reconcile_llm",
+    "finish"
+   ],
+   "confidence": {
+    "оценено моделью": 13,
+    "правило": 5,
+    "нет оценки": 0,
+    "повторно проверено": 13
+   }
+  },
+  "same_findings": false,
+  "only_linear": [],
+  "only_graph": []
+ },
+ {
+  "doc": "metro_src",
+  "linear": {
+   "findings": 93,
+   "seconds": 0.19,
+   "steps": [
+    "parse",
+    "security",
+    "rules",
+    "llm_verify_rules",
+    "llm_find",
+    "llm_verify_new",
+    "reconcile",
+    "reconcile_llm"
+   ],
+   "confidence": {
+    "оценено моделью": 68,
+    "правило": 25,
+    "нет оценки": 0,
+    "повторно проверено": 0
+   }
+  },
+  "graph": {
+   "findings": 93,
+   "seconds": 0.19,
+   "steps": [
+    "parse",
+    "security",
+    "rules",
+    "llm_verify_rules",
+    "llm_find",
+    "llm_verify_new",
+    "llm_recheck",
+    "reconcile",
+    "reconcile_llm",
+    "finish"
+   ],
+   "confidence": {
+    "оценено моделью": 68,
+    "правило": 25,
+    "нет оценки": 0,
+    "повторно проверено": 68
+   }
+  },
+  "same_findings": false,
+  "only_linear": [],
+  "only_graph": []
+ },
+ {
+  "doc": "metro_fin",
+  "linear": {
+   "findings": 11,
+   "seconds": 0.27,
+   "steps": [
+    "parse",
+    "security",
+    "rules",
+    "llm_verify_rules",
+    "llm_find",
+    "llm_verify_new",
+    "reconcile",
+    "reconcile_llm"
+   ],
+   "confidence": {
+    "оценено моделью": 10,
+    "правило": 1,
+    "нет оценки": 0,
+    "повторно проверено": 0
+   }
+  },
+  "graph": {
+   "findings": 11,
+   "seconds": 0.25,
+   "steps": [
+    "parse",
+    "security",
+    "rules",
+    "llm_verify_rules",
+    "llm_find",
+    "llm_verify_new",
+    "llm_recheck",
+    "reconcile",
+    "reconcile_llm",
+    "finish"
+   ],
+   "confidence": {
+    "оценено моделью": 10,
+    "правило": 1,
+    "нет оценки": 0,
+    "повторно проверено": 10
+   }
+  },
+  "same_findings": false,
+  "only_linear": [],
+  "only_graph": []
+ }
+]

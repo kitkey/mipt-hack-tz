@@ -1,0 +1,90 @@
+[
+  {
+    "name": "lift_src",
+    "pages": 7,
+    "seconds": 0.888,
+    "cer": 0.03834979662986636,
+    "wer": 0.08065208065208065,
+    "cells_exact_multiset": {
+      "matched": 186,
+      "reference": 188,
+      "candidate": 191
+    },
+    "numbers_exact_multiset": {
+      "matched": 163,
+      "reference": 163,
+      "candidate": 163
+    },
+    "okpd_exact_multiset": {
+      "matched": 1,
+      "reference": 1,
+      "candidate": 1
+    }
+  },
+  {
+    "name": "metro_src",
+    "pages": 6,
+    "seconds": 1.336,
+    "cer": 0.4456814600172843,
+    "wer": 0.44789018810371123,
+    "cells_exact_multiset": {
+      "matched": 168,
+      "reference": 214,
+      "candidate": 207
+    },
+    "numbers_exact_multiset": {
+      "matched": 269,
+      "reference": 332,
+      "candidate": 303
+    },
+    "okpd_exact_multiset": {
+      "matched": 14,
+      "reference": 28,
+      "candidate": 14
+    }
+  },
+  {
+    "name": "lift_fin",
+    "pages": 7,
+    "seconds": 0.823,
+    "cer": 0.03726664809139036,
+    "wer": 0.07741935483870968,
+    "cells_exact_multiset": {
+      "matched": 189,
+      "reference": 193,
+      "candidate": 206
+    },
+    "numbers_exact_multiset": {
+      "matched": 179,
+      "reference": 179,
+      "candidate": 179
+    },
+    "okpd_exact_multiset": {
+      "matched": 2,
+      "reference": 2,
+      "candidate": 2
+    }
+  },
+  {
+    "name": "metro_fin",
+    "pages": 9,
+    "seconds": 1.439,
+    "cer": 0.0998766954377312,
+    "wer": 0.13197308443672673,
+    "cells_exact_multiset": {
+      "matched": 274,
+      "reference": 292,
+      "candidate": 299
+    },
+    "numbers_exact_multiset": {
+      "matched": 347,
+      "reference": 368,
+      "candidate": 401
+    },
+    "okpd_exact_multiset": {
+      "matched": 32,
+      "reference": 53,
+      "candidate": 32
+    }
+  }
+]

@@ -1,0 +1,24 @@
+{
+ "source": "laws",
+ "title": "Редакции законов (223-ФЗ, 44-ФЗ, 102-ФЗ, 184-ФЗ, ГК РФ и др.)",
+ "file": "laws.json",
+ "via": "actual_api",
+ "via_title": "actual.pravo.gov.ru, API :8000 (HTTP)",
+ "chain": [
+  "actual_api",
+  "actual_browser",
+  "consultant",
+  "keep"
+ ],
+ "source_url": "http://actual.pravo.gov.ru/",
+ "source_version": "23.10.2026",
+ "fetched_at": "2026-11-13T17:54:36+00:00",
+ "checked_at": "2026-11-13T17:54:36+00:00",
+ "records_count": 8,
+ "sha256": "c4bc55605e65581de73363c44b029b1ff5d71990695cb6d3f3f57cedacb45479",
+ "last_status": "ok",
+ "last_errors": [],
+ "notes": [
+  "publication.pravo.gov.ru: последних федеральных законов 30, по теме закупок и стандартизации 0"
+ ]
+}

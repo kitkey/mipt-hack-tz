@@ -1,0 +1,56 @@
+[
+  {
+    "id": "gost-34441-2018",
+    "ok": true,
+    "blocks": 120,
+    "characters": 17007
+  },
+  {
+    "id": "gost-r-55964-2014",
+    "ok": true,
+    "blocks": 234,
+    "characters": 34458
+  },
+  {
+    "id": "tr-ts-011-2011",
+    "ok": true,
+    "blocks": 305,
+    "characters": 43383
+  },
+  {
+    "id": "sp-54-13330-2016",
+    "ok": true,
+    "blocks": 662,
+    "characters": 119180
+  },
+  {
+    "id": "fz-102",
+    "ok": true,
+    "blocks": 419,
+    "characters": 80368
+  },
+  {
+    "id": "fz-223",
+    "ok": true,
+    "blocks": 516,
+    "characters": 169855
+  },
+  {
+    "id": "gk2",
+    "ok": true,
+    "blocks": 3428,
+    "characters": 600699
+  },
+  {
+    "id": "gost-34581-2019",
+    "ok": true,
+    "blocks": 237,
+    "characters": 28221
+  },
+  {
+    "id": "gost-33984-1-2023",
+    "ok": true,
+    "blocks": 2682,
+    "characters": 362340
+  }
+]

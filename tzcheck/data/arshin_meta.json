@@ -1,0 +1,25 @@
+{
+ "source": "arshin",
+ "title": "Утверждённые типы средств измерений (ФГИС «Аршин»)",
+ "file": "arshin.json.gz",
+ "via": "eapi",
+ "via_title": "ФГИС «Аршин», открытый API eapi (HTTP)",
+ "chain": [
+  "eapi",
+  "eapi_browser",
+  "keep"
+ ],
+ "source_url": "https://fgis.gost.ru/fundmetrology/eapi/mit",
+ "source_version": "2026-11-13",
+ "fetched_at": "2026-11-13T17:59:10+00:00",
+ "checked_at": "2026-11-13T17:59:10+00:00",
+ "records_count": 5314,
+ "sha256": "76654a753e42dea25c102c7d34e38ae1d732490ceca90138676dcc9a0cca9ede",
+ "last_status": "ok",
+ "last_errors": [],
+ "notes": [
+  "запрошено типов: 5314; {'number': '*-26'}: 2371; {'number': '*-25'}: 2943",
+  "режим инкремента: типы с номерами текущего и прошлого года; полный реестр: --full"
+ ],
+ "mode": "recent"
+}

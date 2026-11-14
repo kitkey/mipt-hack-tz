@@ -1,0 +1,114 @@
+[
+  {
+    "name": "lift_src",
+    "pages": 7,
+    "parser_pair_seconds_including_docx": 0.96,
+    "cer": 0.004793724578733295,
+    "wer": 0.00429000429000429,
+    "cells_exact_multiset": {
+      "matched": 187,
+      "reference": 188,
+      "candidate": 191
+    },
+    "numbers_exact_multiset": {
+      "matched": 163,
+      "reference": 163,
+      "candidate": 163
+    },
+    "okpd_exact_multiset": {
+      "matched": 1,
+      "reference": 1,
+      "candidate": 1
+    },
+    "findings": {
+      "matched": 18,
+      "reference": 18,
+      "candidate": 18,
+      "method": "same category and quote similarity >= 0.7, greedy one-to-one"
+    }
+  },
+  {
+    "name": "metro_src",
+    "pages": 6,
+    "parser_pair_seconds_including_docx": 0.604,
+    "cer": 0.010878958873468557,
+    "wer": 0.011692933401118455,
+    "cells_exact_multiset": {
+      "matched": 205,
+      "reference": 214,
+      "candidate": 213
+    },
+    "numbers_exact_multiset": {
+      "matched": 280,
+      "reference": 280,
+      "candidate": 335
+    },
+    "okpd_exact_multiset": {
+      "matched": 28,
+      "reference": 28,
+      "candidate": 28
+    },
+    "findings": {
+      "matched": 91,
+      "reference": 92,
+      "candidate": 92,
+      "method": "same category and quote similarity >= 0.7, greedy one-to-one"
+    }
+  },
+  {
+    "name": "lift_fin",
+    "pages": 7,
+    "parser_pair_seconds_including_docx": 1.418,
+    "cer": 0.00459738088604068,
+    "wer": 0.004032258064516129,
+    "cells_exact_multiset": {
+      "matched": 192,
+      "reference": 193,
+      "candidate": 196
+    },
+    "numbers_exact_multiset": {
+      "matched": 179,
+      "reference": 179,
+      "candidate": 179
+    },
+    "okpd_exact_multiset": {
+      "matched": 2,
+      "reference": 2,
+      "candidate": 2
+    },
+    "findings": {
+      "matched": 7,
+      "reference": 7,
+      "candidate": 7,
+      "method": "same category and quote similarity >= 0.7, greedy one-to-one"
+    }
+  },
+  {
+    "name": "metro_fin",
+    "pages": 9,
+    "parser_pair_seconds_including_docx": 0.983,
+    "cer": 0.0005527445894808453,
+    "wer": 0.001519426958975472,
+    "cells_exact_multiset": {
+      "matched": 286,
+      "reference": 292,
+      "candidate": 288
+    },
+    "numbers_exact_multiset": {
+      "matched": 368,
+      "reference": 368,
+      "candidate": 372
+    },
+    "okpd_exact_multiset": {
+      "matched": 53,
+      "reference": 53,
+      "candidate": 53
+    },
+    "findings": {
+      "matched": 8,
+      "reference": 8,
+      "candidate": 9,
+      "method": "same category and quote similarity >= 0.7, greedy one-to-one"
+    }
+  }
+]

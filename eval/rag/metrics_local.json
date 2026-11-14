@@ -1,0 +1,15 @@
+{
+  "bm25": {
+    "positive_n": 201,
+    "real_reference_n": 1,
+    "synthetic_title_n": 200,
+    "recall@1": 0.8557213930348259,
+    "recall@5": 0.9402985074626866,
+    "recall@10": 0.9402985074626866,
+    "mrr": 0.8919568822553897,
+    "negative_n": 25,
+    "refusal_accuracy": 0.96,
+    "false_answer_n": 1
+  },
+  "seconds": 2.8
+}

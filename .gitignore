@@ -1,0 +1,57 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+.env
+*.log
+
+# прогоны и черновые отчёты
+out/
+out_*/
+eval/result*.json
+demo/out/
+
+# справочники: сырые ответы источников и кэш пересобираются обновлятором
+tzcheck/data/raw/
+tzcheck/data/cache/
+tzcheck/data/updates/.lock
+
+# документы ЕИС и производные от них: публичные, но с контактами сотрудников заказчиков
+data_raw/*
+!data_raw/eis_holdout/
+data_raw/eis_holdout/*
+!data_raw/eis_holdout/manifest.csv
+eval/reconcile/split/
+eval/ocr_compare/real_eis/
+eval/ocr_compare/generated/
+eval/ocr_compare/browser_probe/
+
+# рабочие заметки и снимки кода: методика и цифры собраны в eval/README.md
+REVIEW_jury_user.md
+eval/*/REPORT.md
+tzcheck/updater/HANDOFF.md
+eval/models_ab/snap/
+eval/models_ab/old_*/
+
+# нормативный корпус: исходные PDF и карантин тяжёлые, индекс пересобирается
+data/norm_corpus/raw/
+data/norm_corpus/quarantine/
+data/rag-model-cache/
+eval/models_ab/smoke_*
+eval/models_ab/*.run
+# нормативный корпус: в репозитории сжатые документы *.json.gz; индекс BM25 и векторы собираются (README, раздел RAG)
+data/norm_corpus/*.json
+!data/norm_corpus/manifest.json
+data/norm_corpus/index.json
+data/norm_corpus/vectors/
+# опыты разработки с внешними судьями: в решении не используются
+eval/judge/
+eval/rag/generate.py
+requirements-judge.txt
+eval/ocr_compare/ocr_text/*.pdf
+eval/rag/eis_documents/
+!eval/generalization/REPORT.md
+!eval/confidence/REPORT.md
+*.stackdump
+eval/models_ab/switch_to_gemma.sh
+!eval/rag/REPORT.md

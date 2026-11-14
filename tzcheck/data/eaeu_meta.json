@@ -1,0 +1,27 @@
+{
+ "source": "eaeu",
+ "title": "Перечни стандартов к техрегламентам ЕАЭС",
+ "file": "eaeu.json.gz",
+ "via": "protect_trlist",
+ "via_title": "protect.gost.ru /TrList + ЕЭК + API правового портала ЕАЭС",
+ "chain": [
+  "protect_trlist",
+  "eec_portal",
+  "keep"
+ ],
+ "source_url": "https://protect.gost.ru/TrList",
+ "source_version": "2026-11-13",
+ "fetched_at": "2026-11-13T18:08:09+00:00",
+ "checked_at": "2026-11-13T18:08:09+00:00",
+ "records_count": 156,
+ "sha256": "86b43f5a80e9d9daf89c71f233c485bc9d668543eba561b7fd1161191755407b",
+ "last_status": "ok",
+ "last_errors": [],
+ "notes": [
+  "перечней 94, строк в них 27583",
+  "API правового портала ЕАЭС с 2026-07-13: документов 224, по стандартам и ТР 9"
+ ],
+ "lists": 94,
+ "rows": 27583,
+ "acts_checked_to": "2026-11-13"
+}

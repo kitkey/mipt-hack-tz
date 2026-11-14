@@ -1,0 +1,67 @@
+x-build: &build
+  context: .
+  args:
+    WITH_OCR: ${WITH_OCR:-0}
+    WITH_RAG: ${WITH_RAG:-0}
+    WITH_BROWSER: ${WITH_BROWSER:-0}
+
+services:
+  app:
+    build: *build
+    image: tzcheck:local
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      TZ: MSK-3
+      TZCHECK_REFDATA_OFFLINE: ${TZCHECK_REFDATA_OFFLINE:-1}
+      TZCHECK_RAG: ${TZCHECK_RAG:-0}
+      # OCR включён, если образ собран с WITH_OCR=1; без PaddleOCR в образе выключен сам
+      TZCHECK_OCR: auto
+      HF_HUB_OFFLINE: ${HF_HUB_OFFLINE:-1}
+    volumes:
+      - runs:/data/runs
+      - refdata:/refdata
+      - models:/models
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  updater:
+    build: *build
+    image: tzcheck:local
+    command: ["python", "-m", "tzcheck.updater.nightly"]
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      TZ: MSK-3
+      TZCHECK_UPDATE_AT: ${TZCHECK_UPDATE_AT:-04:30}
+    volumes:
+      - refdata:/refdata
+    healthcheck:
+      disable: true
+    restart: unless-stopped
+
+  # разовая сборка векторов для гибридного поиска (образ с WITH_RAG=1): docker compose --profile rag run --rm rag-vectors
+  rag-vectors:
+    build: *build
+    image: tzcheck:local
+    profiles: ["rag"]
+    command: ["python", "-m", "tzcheck.rag.models", "build", "--model", "${TZCHECK_RAG_EMBED_MODEL:-deepvk/USER-bge-m3}"]
+    environment:
+      TZCHECK_REFDATA_OFFLINE: "1"
+      HF_HUB_OFFLINE: "0"
+      TZCHECK_RAG_DEVICE: ${TZCHECK_RAG_DEVICE:-cpu}
+    volumes:
+      - models:/models
+    healthcheck:
+      disable: true
+    restart: "no"
+
+volumes:
+  runs:
+  refdata:
+  models:

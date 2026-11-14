@@ -1,0 +1,2614 @@
+{
+ "source": "gost",
+ "title": "Статусы стандартов (ГОСТ, ГОСТ Р, ПНСТ, СП)",
+ "date": "2026-11-13",
+ "runs": [
+  {
+   "at": "2026-11-13T17:58:16+00:00",
+   "via": "rst_api",
+   "via_title": "Росстандарт, API каталога стандартов (HTTP)",
+   "errors": [],
+   "http_errors": [],
+   "version_before": null,
+   "status": "updated",
+   "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/catalognational",
+   "version_after": "2026-11-13",
+   "notes": [
+    "protect.gost.ru за 11.2026: новых стандартов 42, изменений и поправок 10",
+    "protect.gost.ru за 10.2026: новых стандартов 150, изменений и поправок 83",
+    "проверено обозначений: 44, найдено 41, нет в каталоге 3: ГОСТ Р 28911-2015, ГОСТ Р 34441-2018, СП 31-110",
+    "Поправка к ГОСТ 14637-2024 (Поправка, ИУС 10-2026)",
+    "Поправка к ГОСТ 9.301-2025 (Поправка, ИУС 10-2026)",
+    "Поправка к ГОСТ Р 1.10-2004 (Поправка, ИУС 12-2026)",
+    "Поправка к ГОСТ Р 1.1-2020 (Поправка, ИУС 12-2026)",
+    "Поправка к ГОСТ Р 1.12-2020 (Поправка, ИУС 12-2026)",
+    "Поправка к ГОСТ Р 1.14-2017 (Поправка, ИУС 12-2026)",
+    "Поправка к ГОСТ Р 1.15-2017 (Поправка, ИУС 12-2026)",
+    "Поправка к ГОСТ Р 1.16-2011 (Поправка, ИУС 12-2026)",
+    "Поправка к ГОСТ Р 1.17-2017 (Поправка, ИУС 12-2026)",
+    "Поправка к ГОСТ Р 1.18-2018 (Поправка, ИУС 12-2026)",
+    "Поправка к ГОСТ Р 1.19-2023 (Поправка, ИУС 12-2026)",
+    "Поправка к ГОСТ Р 1.20-2025 (Поправка, ИУС 12-2026)",
+    "Поправка к ГОСТ Р 1.2-2020 (Поправка, ИУС 12-2026)",
+    "Поправка к ГОСТ Р 1.3-2018 (Поправка, ИУС 12-2026)",
+    "Поправка к ГОСТ Р 1.4-2004 (Поправка, ИУС 12-2026)",
+    "Поправка к ГОСТ Р 1.5-2012 (Поправка, ИУС 12-2026)",
+    "Поправка к ГОСТ Р 1.6-2013 (Поправка, ИУС 12-2026)",
+    "Поправка к ГОСТ Р 1.7-2014 (Поправка, ИУС 12-2026)",
+    "Поправка к ГОСТ Р 1.8-2011 (Поправка, ИУС 12-2026)",
+    "Поправка к ГОСТ Р 1.9-2004 (Поправка, ИУС 12-2026)"
+   ],
+   "counts": {
+    "before": 0,
+    "after": 213,
+    "added": 213,
+    "removed": 0,
+    "changed": 0
+   },
+   "added": [
+    {
+     "key": "ГОСТ 14637-2024",
+     "record": {
+      "designation": "ГОСТ 14637-2024",
+      "title": "Прокат толстолистовой из нелегированной стали обыкновенного качества. Технические условия",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/cataloginter"
+     }
+    },
+    {
+     "key": "ГОСТ 18963-2026",
+     "record": {
+      "designation": "ГОСТ 18963-2026",
+      "title": "Вода питьевая. Методы санитарно-бактериологического анализа",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/a02c1a54-b726-4413-a190-3e3624e076e8"
+     }
+    },
+    {
+     "key": "ГОСТ 2.601-2013",
+     "record": {
+      "designation": "ГОСТ 2.601-2013",
+      "title": "Единая система конструкторской документации. Эксплуатационные документы",
+      "status": "Утратил силу в РФ",
+      "replaced_by": "ГОСТ Р 2.601-2019",
+      "date_end": "01.02.2020",
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/cataloginter"
+     }
+    },
+    {
+     "key": "ГОСТ 20910-2026",
+     "record": {
+      "designation": "ГОСТ 20910-2026",
+      "title": "Бетоны жаростойкие. Технические условия",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/531022c2-e00b-4312-b7d0-e0ac61c097e3"
+     }
+    },
+    {
+     "key": "ГОСТ 22371-2023",
+     "record": {
+      "designation": "ГОСТ 22371-2023",
+      "title": "Консервы. Пюре фруктовое, фрукты протертые или дробленые. Общие технические условия",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/460cb391-6d0f-43cd-8121-34dcf2453bf1"
+     }
+    },
+    {
+     "key": "ГОСТ 28379-2025",
+     "record": {
+      "designation": "ГОСТ 28379-2025",
+      "title": "Шпатлевки ЭП-0010 и ЭП-0020. Технические условия",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/3ccb6410-98ee-4607-b17e-1d3d3754a5bb"
+     }
+    },
+    {
+     "key": "ГОСТ 28911-2015",
+     "record": {
+      "designation": "ГОСТ 28911-2015",
+      "title": "Лифты. Устройства управления, сигнализации и дополнительные приспособления",
+      "status": "Заменён",
+      "replaced_by": "ГОСТ 28911-2021",
+      "date_end": "01.06.2022",
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/cataloginter"
+     }
+    },
+    {
+     "key": "ГОСТ 33605-2015",
+     "record": {
+      "designation": "ГОСТ 33605-2015",
+      "title": "Лифты. Термины и определения",
+      "status": "Заменён",
+      "replaced_by": "ГОСТ 33605-2021",
+      "date_end": "01.06.2022",
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/cataloginter"
+     }
+    },
+    {
+     "key": "ГОСТ 33749-2026",
+     "record": {
+      "designation": "ГОСТ 33749-2026",
+      "title": "Демпферы гидравлические железнодорожного подвижного состава. Общие технические условия",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/bad0e939-bff0-4cc3-a978-b025fcb7eade"
+     }
+    },
+    {
+     "key": "ГОСТ 33759-2026",
+     "record": {
+      "designation": "ГОСТ 33759-2026",
+      "title": "Поддоны полимерные. Общие технические условия",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/0defb0bb-1913-485e-9913-97c96777a0ad"
+     }
+    },
+    {
+     "key": "ГОСТ 33984.1-2016",
+     "record": {
+      "designation": "ГОСТ 33984.1-2016",
+      "title": "Лифты. Общие требования безопасности к устройству и установке. Лифты для транспортирования людей или людей и грузов",
+      "status": "Заменён",
+      "replaced_by": "ГОСТ 33984.1-2023",
+      "date_end": "01.11.2024",
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/cataloginter"
+     }
+    },
+    {
+     "key": "ГОСТ 33984.1-2023",
+     "record": {
+      "designation": "ГОСТ 33984.1-2023",
+      "title": "Лифты. Лифты для транспортирования людей или людей и грузов. Общие требования безопасности к устройству и установке",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/cataloginter"
+     }
+    },
+    {
+     "key": "ГОСТ 34441-2018",
+     "record": {
+      "designation": "ГОСТ 34441-2018",
+      "title": "Лифты. Диспетчерский контроль. Общие технические требования",
+      "status": "Заменён",
+      "replaced_by": "ГОСТ 34441-2024",
+      "date_end": "01.01.2025",
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/cataloginter"
+     }
+    },
+    {
+     "key": "ГОСТ 34442-2018",
+     "record": {
+      "designation": "ГОСТ 34442-2018",
+      "title": "Лифты. Пожарная безопасность",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/cataloginter"
+     }
+    },
+    {
+     "key": "ГОСТ 35028-2023",
+     "record": {
+      "designation": "ГОСТ 35028-2023",
+      "title": "Консервы. Пюре и пасты из печеных и вареных овощей. Технические условия",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/2ab3e7c9-d245-4dc6-b9e5-9e9bfee2c10d"
+     }
+    },
+    {
+     "key": "ГОСТ 35062-2024",
+     "record": {
+      "designation": "ГОСТ 35062-2024",
+      "title": "Полуфабрикаты фруктовые и овощные. Общие технические условия",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/16f6b323-f682-4d95-b958-19bd83d2176b"
+     }
+    },
+    {
+     "key": "ГОСТ 35343-2026",
+     "record": {
+      "designation": "ГОСТ 35343-2026",
+      "title": "Анкеры тарельчатые для крепления теплоизоляционного слоя в фасадных теплоизоляционных композиционных системах с наружными штукатурными слоями и навесных фасадных системах с воздушным зазором. Методы испытаний",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/c0a2c4c3-8950-4ce5-9585-c7c0848c6fd7"
+     }
+    },
+    {
+     "key": "ГОСТ 35346-2026",
+     "record": {
+      "designation": "ГОСТ 35346-2026",
+      "title": "Упаковка деревянная. Общие технические условия",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/f1312586-00f3-4f2c-ab10-96c76b284f5b"
+     }
+    },
+    {
+     "key": "ГОСТ 35380-2026",
+     "record": {
+      "designation": "ГОСТ 35380-2026",
+      "title": "Продукция рыбная пищевая. Метод определения содержания гистамина с помощью ион-парной высокоэффективной жидкостной хроматографии со спектрофотометрическим детектированием",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/3f2a0bc6-adc1-492f-91d8-cae1d04a6c0b"
+     }
+    },
+    {
+     "key": "ГОСТ 35387-2026",
+     "record": {
+      "designation": "ГОСТ 35387-2026",
+      "title": "Анкеры тарельчатые для крепления теплоизоляционного слоя в фасадных теплоизоляционных композиционных системах с наружными штукатурными слоями и навесных фасадных системах с воздушным зазором. Технические условия",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/84c3ba87-7c1c-4da3-a1d1-ddab69a262f2"
+     }
+    },
+    {
+     "key": "ГОСТ 35397-2026",
+     "record": {
+      "designation": "ГОСТ 35397-2026",
+      "title": "Элементы профильные для фасадных теплоизоляционных композиционных систем с наружными штукатурными слоями. Технические условия",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/6dbf1cdf-533d-4dfd-a751-d718fcb53250"
+     }
+    },
+    {
+     "key": "ГОСТ 35399-2026",
+     "record": {
+      "designation": "ГОСТ 35399-2026",
+      "title": "Система газоснабжения. Магистральная трубопроводная транспортировка газа. Подземные хранилища газа в пористых пластах. Проектирование",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/f11bb32a-1a32-4645-b534-a87f4c1de197"
+     }
+    },
+    {
+     "key": "ГОСТ 35401-2026",
+     "record": {
+      "designation": "ГОСТ 35401-2026",
+      "title": "Объекты инфраструктуры железнодорожного транспорта. Комплексная защита от атмосферных и коммутационных перенапряжений. Структура и общие технические требования",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/c3852715-33dc-42a0-b051-e713d91c5ade"
+     }
+    },
+    {
+     "key": "ГОСТ 6625-2026",
+     "record": {
+      "designation": "ГОСТ 6625-2026",
+      "title": "Оборудование горно-шахтное. Вентиляторы шахтные местного проветривания. Общие технические условия",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/e6aa6fda-d499-4929-ab60-cc1ec3ba3bbd"
+     }
+    },
+    {
+     "key": "ГОСТ 8.401-80",
+     "record": {
+      "designation": "ГОСТ 8.401-80",
+      "title": "Государственная система обеспечения единства измерений. Классы точности средств измерений. Общие требования",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/cataloginter"
+     }
+    },
+    {
+     "key": "ГОСТ 8.417-2002",
+     "record": {
+      "designation": "ГОСТ 8.417-2002",
+      "title": "Государственная система обеспечения единства измерений. Единицы величин",
+      "status": "Заменён",
+      "replaced_by": "ГОСТ 8.417-2024",
+      "date_end": "30.09.2024",
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/cataloginter"
+     }
+    },
+    {
+     "key": "ГОСТ 9.301-2025",
+     "record": {
+      "designation": "ГОСТ 9.301-2025",
+      "title": "Единая система защиты от коррозии и старения. Покрытия металлические и неметаллические неорганические. Общие требования",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/cataloginter"
+     }
+    },
+    {
+     "key": "ГОСТ 9109-2026",
+     "record": {
+      "designation": "ГОСТ 9109-2026",
+      "title": "Грунтовки ФЛ-03К и ФЛ-03Ж. Технические условия",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/ddb5e04d-0ba3-4964-8a22-71e907ecf17d"
+     }
+    },
+    {
+     "key": "ГОСТ 9942-2026",
+     "record": {
+      "designation": "ГОСТ 9942-2026",
+      "title": "Подшипники качения. Подшипники роликовые упорно-радиальные сферические одинарные. Классификация, указания по применению и эксплуатации",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/a21e9c49-95c8-4e4c-9506-2de570b95b7c"
+     }
+    },
+    {
+     "key": "ГОСТ EN 12353-2023",
+     "record": {
+      "designation": "ГОСТ EN 12353-2023",
+      "title": "Средства химические дезинфицирующие и антисептические. Консервация тест-микроорганизмов, используемых для определения бактерицидной (включая Legionella), микобактерицидной, спорицидной, фунгицидной и вирулицидной (включая бактериофаги) активности",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/5d2149cf-a6aa-41ec-9306-2aaca14d555d"
+     }
+    },
+    {
+     "key": "ГОСТ IEC 60695-11-5-2025",
+     "record": {
+      "designation": "ГОСТ IEC 60695-11-5-2025",
+      "title": "Испытания на пожароопасность. Часть 11-5. Испытательное пламя. Метод испытания игольчатым пламенем. Аппаратура, руководство и порядок испытания на подтверждение соответствия",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/fd9edf6c-1bf4-4092-9549-3808190a7326"
+     }
+    },
+    {
+     "key": "ГОСТ IEC 60825-12-2026",
+     "record": {
+      "designation": "ГОСТ IEC 60825-12-2026",
+      "title": "Безопасность лазерных изделий. Часть 12. Безопасность атмосферных оптических линий связи (АОЛС)",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/31e25e97-1d8e-40ae-bdb2-c20b931c5841"
+     }
+    },
+    {
+     "key": "ГОСТ IEC 60825-4-2026",
+     "record": {
+      "designation": "ГОСТ IEC 60825-4-2026",
+      "title": "Безопасность лазерных изделий. Часть 4. Ограждения от лазерного излучения",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/e73a50b4-cc3d-460b-b667-60f31aff05b0"
+     }
+    },
+    {
+     "key": "ГОСТ IEC 63403-1-2026",
+     "record": {
+      "designation": "ГОСТ IEC 63403-1-2026",
+      "title": "Светодиоды корпусированные для тепличного освещения. Часть 1. Эксплуатационные характеристики",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/b8591072-d98d-4f97-b4a4-cd58aa809d8d"
+     }
+    },
+    {
+     "key": "ГОСТ IEC 63403-2-2026",
+     "record": {
+      "designation": "ГОСТ IEC 63403-2-2026",
+      "title": "Светодиоды корпусированные для тепличного освещения. Часть 2. Бинирование",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/4675c05c-fe13-452e-ab5c-b850816673b0"
+     }
+    },
+    {
+     "key": "ГОСТ IEC TR 60825-14-2026",
+     "record": {
+      "designation": "ГОСТ IEC TR 60825-14-2026",
+      "title": "Безопасность лазерных изделий. Часть 14. Руководство для пользователя",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/f72e9d97-5e2e-49bf-90dd-316f8ef244e5"
+     }
+    },
+    {
+     "key": "ГОСТ IEC TR 60825-17-2026",
+     "record": {
+      "designation": "ГОСТ IEC TR 60825-17-2026",
+      "title": "Безопасность лазерных изделий. Часть 17. Аспекты безопасности при использовании пассивных оптических компонентов и оптических кабелей в волоконно-оптических линиях связи с высокой мощностью излучения",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/8b4d8fa2-03fa-4b8e-9b6a-5d58532ef48d"
+     }
+    },
+    {
+     "key": "ГОСТ ISO 10605-2022",
+     "record": {
+      "designation": "ГОСТ ISO 10605-2022",
+      "title": "Транспорт дорожный. Методы испытаний для электрических помех от электростатических разрядов",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/4b85e7a9-e043-4a5a-a4fc-75e6a909158c"
+     }
+    },
+    {
+     "key": "ГОСТ ISO 13766-1-2025",
+     "record": {
+      "designation": "ГОСТ ISO 13766-1-2025",
+      "title": "Машины землеройные и строительная техника. Электромагнитная совместимость машин с внутренним источником электропитания. Часть 1 Общие требования к электромагнитной совместимости при обычных электромагнитных условиях окружающей среды",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/0e9c23f1-77b7-4868-8639-4a6bb215d29f"
+     }
+    },
+    {
+     "key": "ГОСТ ISO 13766-2-2025",
+     "record": {
+      "designation": "ГОСТ ISO 13766-2-2025",
+      "title": "Машины землеройные и строительная техника. Электромагнитная совместимость машин с внутренним источником электропитания. Часть 2. Дополнительные требования к электромагнитной совместимости для функциональной безопасности",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/e32c7f0a-6967-421d-bbe9-e8a1e574eb1a"
+     }
+    },
+    {
+     "key": "ГОСТ ISO 1833-10-2023",
+     "record": {
+      "designation": "ГОСТ ISO 1833-10-2023",
+      "title": "Материалы текстильные. Количественный химический анализ. Часть 10. Смеси триацетата или полилактида с некоторыми другими волокнами (метод с использованием дихлорметана)",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/22fe99bd-2ae4-450b-89a3-786c24dbe759"
+     }
+    },
+    {
+     "key": "ГОСТ ISO 1833-11-2022",
+     "record": {
+      "designation": "ГОСТ ISO 1833-11-2022",
+      "title": "Материалы и изделия текстильные. Количественный химический анализ. Часть 11. Смеси определенных волокон целлюлозы с некоторыми другими волокнами (метод с использованием серной кислоты)",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/edb33828-5558-4a61-8502-920bcb4a9496"
+     }
+    },
+    {
+     "key": "ГОСТ ISO 1833-12-2022",
+     "record": {
+      "designation": "ГОСТ ISO 1833-12-2022",
+      "title": "Материалы и изделия текстильные. Количественный химический анализ. Часть 12. Смеси акриловых, модифицированных акриловых, эластановых, поливинилхлоридных волокон с некоторыми другими волокнами (метод с использованием диметилформамида)",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/b3fc2774-62f3-4df1-9b4b-529dd3c20bbb"
+     }
+    },
+    {
+     "key": "ГОСТ ISO 1833-14-2022",
+     "record": {
+      "designation": "ГОСТ ISO 1833-14-2022",
+      "title": "Материалы и изделия текстильные. Количественный химический анализ. Часть 14. Смеси ацетата с другими волокнами (метод с использованием ледяной уксусной кислоты)",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/991fffe4-44e5-4dc9-bff3-d89856aca004"
+     }
+    },
+    {
+     "key": "ГОСТ ISO 1833-15-2022",
+     "record": {
+      "designation": "ГОСТ ISO 1833-15-2022",
+      "title": "Материалы и изделия текстильные. Количественный химический анализ. Часть 15. Смеси джута с определенными волокнами животного происхождения (метод на основе определения содержания азота)",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/1b9b2424-be71-43d2-a289-820b5fed2891"
+     }
+    },
+    {
+     "key": "ГОСТ ISO 1833-16-2023",
+     "record": {
+      "designation": "ГОСТ ISO 1833-16-2023",
+      "title": "Материалы и изделия текстильные. Количественный химический анализ. Часть 16. Смеси полипропиленовых волокон с некоторыми другими волокнами (метод с использованием ксилола)",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/1e0b02ec-67c3-4a2f-86d1-26e1049995dc"
+     }
+    },
+    {
+     "key": "ГОСТ ISO 1833-17-2022",
+     "record": {
+      "designation": "ГОСТ ISO 1833-17-2022",
+      "title": "Материалы текстильные. Количественный химический анализ. Часть 17. Смеси целлюлозных волокон и определенных волокон с хлорофибрами и некоторыми другими волокнами (метод с использованием концентрированной серной кислоты)",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/cd3e9fb7-6ef2-41e7-8047-e7650a0b011d"
+     }
+    },
+    {
+     "key": "ГОСТ ISO 1833-18-2022",
+     "record": {
+      "designation": "ГОСТ ISO 1833-18-2022",
+      "title": "Материалы текстильные. Количественный химический анализ. Часть 18. Смеси натурального шелкового волокна и шерстяного волокна или волокна из волос животных (метод с использованием серной кислоты)",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/d1516413-ff37-4f74-b390-a3424505b5aa"
+     }
+    },
+    {
+     "key": "ГОСТ ISO 1833-2-2022",
+     "record": {
+      "designation": "ГОСТ ISO 1833-2-2022",
+      "title": "Материалы и изделия текстильные. Количественный химический анализ. Часть 2. Трехкомпонентные смеси волокон",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/a73e46b4-5b2c-452d-ab0f-5cf830b8645b"
+     }
+    },
+    {
+     "key": "ГОСТ ISO 1833-28-2022",
+     "record": {
+      "designation": "ГОСТ ISO 1833-28-2022",
+      "title": "Материалы текстильные. Количественный химический анализ. Часть 28. Смеси хитозановых и некоторых других волокон (метод с использованием разбавленной уксусной кислоты)",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/41503e19-0b81-43ee-8c66-753ecde40d4e"
+     }
+    },
+    {
+     "key": "ГОСТ ISO 1833-3-2022",
+     "record": {
+      "designation": "ГОСТ ISO 1833-3-2022",
+      "title": "Материалы и изделия текстильные. Количественный химический анализ. Часть 3. Смеси ацетатного и некоторых других волокон (метод с использованием ацетона)",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/d17377a7-3a71-4979-b80d-dfc05c0b4f8a"
+     }
+    },
+    {
+     "key": "ГОСТ ISO 1833-9-2023",
+     "record": {
+      "designation": "ГОСТ ISO 1833-9-2023",
+      "title": "Материалы текстильные. Количественный химический анализ. Часть 9. Смеси ацетата с некоторыми другими волокнами (метод с использованием бензилового спирта)",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/7902905d-d275-4b92-8b33-562730485515"
+     }
+    },
+    {
+     "key": "ГОСТ ISO 19954-2026",
+     "record": {
+      "designation": "ГОСТ ISO 19954-2026",
+      "title": "Обувь. Методы испытаний готовой обуви. Пригодность к стирке в домашней стиральной машине",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/e886871c-e5b7-4621-a6c0-8e680036b767"
+     }
+    },
+    {
+     "key": "ГОСТ ISO 20932-1-2026",
+     "record": {
+      "designation": "ГОСТ ISO 20932-1-2026",
+      "title": "Материалы и изделия текстильные. Определение эластичности материалов. Часть 1. Методы полоски",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/a36df4de-3a37-489a-a30c-297f3437c2f8"
+     }
+    },
+    {
+     "key": "ГОСТ ISO 21294-2024",
+     "record": {
+      "designation": "ГОСТ ISO 21294-2024",
+      "title": "Семена масличных культур. Ручной или автоматический прерывистый отбор проб",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/afcde49e-1125-4e07-910f-1ad234b4ee95"
+     }
+    },
+    {
+     "key": "ГОСТ ISO 24231-2026",
+     "record": {
+      "designation": "ГОСТ ISO 24231-2026",
+      "title": "Система стандартов безопасности труда. Одежда специальная для защиты от воды (атмосферных осадков). Метод определения водонепроницаемости в дождевой башне",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/b87ab337-3fb1-4e8b-96da-5f6d4c7359b6"
+     }
+    },
+    {
+     "key": "ГОСТ ISO 24232-2026",
+     "record": {
+      "designation": "ГОСТ ISO 24232-2026",
+      "title": "Система стандартов безопасности труда. Одежда специальная для защиты от воды (атмосферных осадков). Технические требования и методы испытаний",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/da17566e-42fc-424a-84e0-54942243b9e4"
+     }
+    },
+    {
+     "key": "ГОСТ ISO 5398-4-2022",
+     "record": {
+      "designation": "ГОСТ ISO 5398-4-2022",
+      "title": "Кожа. Химическое определение содержания оксида хрома. Часть 4. Количественное определение методом индуктивно связанной плазмы",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/3cae4a11-44cd-4ee8-bc18-790f9fd85456"
+     }
+    },
+    {
+     "key": "ГОСТ ISO 6259-1-2023",
+     "record": {
+      "designation": "ГОСТ ISO 6259-1-2023",
+      "title": "Трубы из термопластов. Определение механических свойств при растяжении. Часть 1. Общий метод испытания",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/f02f480b-e778-4b62-81cd-dc942a44e444"
+     }
+    },
+    {
+     "key": "ГОСТ ISO 874-2017",
+     "record": {
+      "designation": "ГОСТ ISO 874-2017",
+      "title": "Фрукты и овощи свежие. Отбор проб",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/d528ccbf-a6dd-4de7-8be8-fe224ac07ba5"
+     }
+    },
+    {
+     "key": "ГОСТ ISO/IEC 17043-2025",
+     "record": {
+      "designation": "ГОСТ ISO/IEC 17043-2025",
+      "title": "Оценка соответствия. Общие требования к компетентности провайдеров проверки квалификации",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/92ab13c3-59ff-44a3-8f35-c902c42a53fd"
+     }
+    },
+    {
+     "key": "ГОСТ OIML R 76-1-2011",
+     "record": {
+      "designation": "ГОСТ OIML R 76-1-2011",
+      "title": "Государственная система обеспечения единства измерений. Весы неавтоматического действия. Часть 1. Метрологические и технические требования. Испытания",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/cataloginter"
+     }
+    },
+    {
+     "key": "ГОСТ Р 1.1-2020",
+     "record": {
+      "designation": "ГОСТ Р 1.1-2020",
+      "title": "Стандартизация в Российской Федерации. Технические комитеты по стандартизации и проектные технические комитеты по стандартизации. Правила создания и деятельности",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/catalognational"
+     }
+    },
+    {
+     "key": "ГОСТ Р 1.10-2004",
+     "record": {
+      "designation": "ГОСТ Р 1.10-2004",
+      "title": "Стандартизация в Российской Федерации. Правила стандартизации и рекомендации по стандартизации. Порядок разработки, утверждения, изменения, пересмотра и отмены",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/catalognational"
+     }
+    },
+    {
+     "key": "ГОСТ Р 1.12-2020",
+     "record": {
+      "designation": "ГОСТ Р 1.12-2020",
+      "title": "Стандартизация в Российской Федерации. Термины и определения",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/catalognational"
+     }
+    },
+    {
+     "key": "ГОСТ Р 1.14-2017",
+     "record": {
+      "designation": "ГОСТ Р 1.14-2017",
+      "title": "Стандартизация в Российской Федерации. Программа национальной стандартизации. Требования к структуре, правила формирования, утверждения и контроля за реализацией",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/catalognational"
+     }
+    },
+    {
+     "key": "ГОСТ Р 1.15-2017",
+     "record": {
+      "designation": "ГОСТ Р 1.15-2017",
+      "title": "Стандартизация в Российской Федерации. Службы стандартизации в организациях. Правила создания и функционирования",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/catalognational"
+     }
+    },
+    {
+     "key": "ГОСТ Р 1.16-2011",
+     "record": {
+      "designation": "ГОСТ Р 1.16-2011",
+      "title": "Стандартизация в Российской Федерации. Стандарты национальные предварительные. Правила разработки, утверждения, применения и отмены",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/catalognational"
+     }
+    },
+    {
+     "key": "ГОСТ Р 1.17-2017",
+     "record": {
+      "designation": "ГОСТ Р 1.17-2017",
+      "title": "Стандартизация в Российской Федерации. Эксперт по стандартизации. Общие требования",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/catalognational"
+     }
+    },
+    {
+     "key": "ГОСТ Р 1.18-2018",
+     "record": {
+      "designation": "ГОСТ Р 1.18-2018",
+      "title": "Стандартизация в Российской Федерации. Реестр технических условий. Правила формирования, ведения и получения информации",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/catalognational"
+     }
+    },
+    {
+     "key": "ГОСТ Р 1.19-2023",
+     "record": {
+      "designation": "ГОСТ Р 1.19-2023",
+      "title": "Стандартизация в Российской Федерации. Своды правил. Правила построения, изложения, оформления и обозначения",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/catalognational"
+     }
+    },
+    {
+     "key": "ГОСТ Р 1.2-2020",
+     "record": {
+      "designation": "ГОСТ Р 1.2-2020",
+      "title": "Стандартизация в Российской Федерации. Стандарты национальные Российской Федерации. Правила разработки, утверждения, обновления, внесения поправок и отмены",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/catalognational"
+     }
+    },
+    {
+     "key": "ГОСТ Р 1.20-2025",
+     "record": {
+      "designation": "ГОСТ Р 1.20-2025",
+      "title": "Стандартизация в Российской Федерации. Классификаторы общероссийские. Основные положения и порядок проведения работ по разработке, ведению, изменению и применению",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/catalognational"
+     }
+    },
+    {
+     "key": "ГОСТ Р 1.3-2018",
+     "record": {
+      "designation": "ГОСТ Р 1.3-2018",
+      "title": "Стандартизация в Российской Федерации. Технические условия на продукцию. Общие требования к содержанию, оформлению, обозначению и обновлению",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/catalognational"
+     }
+    },
+    {
+     "key": "ГОСТ Р 1.4-2004",
+     "record": {
+      "designation": "ГОСТ Р 1.4-2004",
+      "title": "Стандартизация в Российской Федерации. Стандарты организаций. Общие положения",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/catalognational"
+     }
+    },
+    {
+     "key": "ГОСТ Р 1.5-2012",
+     "record": {
+      "designation": "ГОСТ Р 1.5-2012",
+      "title": "Стандартизация в Российской Федерации. Стандарты национальные. Правила построения, изложения, оформления и обозначения",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/catalognational"
+     }
+    },
+    {
+     "key": "ГОСТ Р 1.6-2013",
+     "record": {
+      "designation": "ГОСТ Р 1.6-2013",
+      "title": "Стандартизация в Российской Федерации. Проекты стандартов. Правила организации и проведения экспертизы",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/catalognational"
+     }
+    },
+    {
+     "key": "ГОСТ Р 1.7-2014",
+     "record": {
+      "designation": "ГОСТ Р 1.7-2014",
+      "title": "Стандартизация в Российской Федерации. Стандарты национальные. Правила оформления и обозначения при разработке на основе применения международных стандартов",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/catalognational"
+     }
+    },
+    {
+     "key": "ГОСТ Р 1.8-2011",
+     "record": {
+      "designation": "ГОСТ Р 1.8-2011",
+      "title": "Стандартизация в Российской Федерации. Стандарты межгосударственные. Правила проведения в Российской Федерации работ по разработке, применению, обновлению и прекращению применения",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/catalognational"
+     }
+    },
+    {
+     "key": "ГОСТ Р 1.9-2004",
+     "record": {
+      "designation": "ГОСТ Р 1.9-2004",
+      "title": "Стандартизация в Российской Федерации. Знак соответствия национальным стандартам Российской Федерации. Изображение. Порядок применения",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/catalognational"
+     }
+    },
+    {
+     "key": "ГОСТ Р 2.305-2026",
+     "record": {
+      "designation": "ГОСТ Р 2.305-2026",
+      "title": "Единая система конструкторской документации. Изображения — виды, разрезы, сечения",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/1922e193-7fd8-4e15-8e2b-93912a456452"
+     }
+    },
+    {
+     "key": "ГОСТ Р 2.306-2026",
+     "record": {
+      "designation": "ГОСТ Р 2.306-2026",
+      "title": "Единая система конструкторской документации. Обозначения материалов графические",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/298e1ad4-7fd2-4399-a2db-790bd52dd2eb"
+     }
+    },
+    {
+     "key": "ГОСТ Р 2.309-2026",
+     "record": {
+      "designation": "ГОСТ Р 2.309-2026",
+      "title": "Единая система конструкторской документации. Обозначение шероховатости поверхностей",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/3f5698ca-65e9-410f-ab4c-db649ac28f0f"
+     }
+    },
+    {
+     "key": "ГОСТ Р 2.315-2026",
+     "record": {
+      "designation": "ГОСТ Р 2.315-2026",
+      "title": "Единая система конструкторской документации. Изображения упрощенные и условные крепежных изделий",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/ba3f9358-de31-4f55-9075-b1f62d3d7031"
+     }
+    },
+    {
+     "key": "ГОСТ Р 2.318-2026",
+     "record": {
+      "designation": "ГОСТ Р 2.318-2026",
+      "title": "Единая система конструкторской документации. Условное изображение и упрощенное указание размеров отверстий",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/2fd45ba4-cb18-4f30-86f6-fb4a65ad7895"
+     }
+    },
+    {
+     "key": "ГОСТ Р 2.321-2026",
+     "record": {
+      "designation": "ГОСТ Р 2.321-2026",
+      "title": "Единая система конструкторской документации. Обозначения буквенные",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/70a3ecdc-3cc3-402b-8922-6e8ca3b2da1b"
+     }
+    },
+    {
+     "key": "ГОСТ Р 2.601-2019",
+     "record": {
+      "designation": "ГОСТ Р 2.601-2019",
+      "title": "Единая система конструкторской документации. Эксплуатационные документы",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/catalognational"
+     }
+    },
+    {
+     "key": "ГОСТ Р 2.602-2026",
+     "record": {
+      "designation": "ГОСТ Р 2.602-2026",
+      "title": "Единая система конструкторской документации. Ремонтная документация. Основные положения",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/17f3be6d-e111-4252-b807-8c667af50231"
+     }
+    },
+    {
+     "key": "ГОСТ Р 2.610-2019",
+     "record": {
+      "designation": "ГОСТ Р 2.610-2019",
+      "title": "Единая система конструкторской документации. Правила выполнения эксплуатационных документов",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/catalognational"
+     }
+    },
+    {
+     "key": "ГОСТ Р 2.611-2026",
+     "record": {
+      "designation": "ГОСТ Р 2.611-2026",
+      "title": "Единая система конструкторской документации. Каталоги",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/69992166-20fb-4e08-985f-41198cea8ae2"
+     }
+    },
+    {
+     "key": "ГОСТ Р 2.620-2026",
+     "record": {
+      "designation": "ГОСТ Р 2.620-2026",
+      "title": "Единая система конструкторской документации. Эксплуатационная документация. Технология модульной разработки",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/5f4a20e2-2337-49d7-a615-dd5b6f78b608"
+     }
+    },
+    {
+     "key": "ГОСТ Р 22.9.08-2026",
+     "record": {
+      "designation": "ГОСТ Р 22.9.08-2026",
+      "title": "Безопасность в чрезвычайных ситуациях. Системы парашютные специального назначения. Общие технические требования",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/93421827-48d0-48cf-95b5-2c713f47332d"
+     }
+    },
+    {
+     "key": "ГОСТ Р 3.103-2026",
+     "record": {
+      "designation": "ГОСТ Р 3.103-2026",
+      "title": "Единая система технологической документации. Основные надписи",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/5ba94e05-5116-423d-af2c-3aff95eae012"
+     }
+    },
+    {
+     "key": "ГОСТ Р 3.105-2026",
+     "record": {
+      "designation": "ГОСТ Р 3.105-2026",
+      "title": "Единая система технологической документации. Документы общего назначения",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/c607ac7a-c161-4990-a9f5-9c72a23b4c79"
+     }
+    },
+    {
+     "key": "ГОСТ Р 44.004-2026",
+     "record": {
+      "designation": "ГОСТ Р 44.004-2026",
+      "title": "Система технологической подготовки производства. Технологичность конструкции изделий. Термины и определения",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/7a63891d-b6c3-4ced-85d5-bd18691b613a"
+     }
+    },
+    {
+     "key": "ГОСТ Р 50.04.03-2026",
+     "record": {
+      "designation": "ГОСТ Р 50.04.03-2026",
+      "title": "Система оценки соответствия в области использования атомной энергии. Оценка соответствия в форме испытаний. Аттестационные испытания технологий сварки, наплавки",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/21951c42-19e4-4d58-bac7-5975ea1130ae"
+     }
+    },
+    {
+     "key": "ГОСТ Р 50.10.01-2026",
+     "record": {
+      "designation": "ГОСТ Р 50.10.01-2026",
+      "title": "Система оценки соответствия в области использования атомной энергии. Насосы плунжерные и агрегаты на их основе. Требования к проведению испытаний",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/1384748a-22bb-4689-b4fc-a3e77b777e48"
+     }
+    },
+    {
+     "key": "ГОСТ Р 51143-2026",
+     "record": {
+      "designation": "ГОСТ Р 51143-2026",
+      "title": "Комплексы стартовые и технические и заправочно-нейтрализационные станции для ракет космического назначения. Требования к испытаниям",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/5bc9cddf-5a5d-4b27-9185-2406c93032ec"
+     }
+    },
+    {
+     "key": "ГОСТ Р 51631-2008",
+     "record": {
+      "designation": "ГОСТ Р 51631-2008",
+      "title": "Лифты пассажирские. Технические требования доступности, включая доступность для инвалидов и других маломобильных групп населения",
+      "status": "Отменён",
+      "replaced_by": "ГОСТ 33652-2015",
+      "date_end": "01.01.2017",
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/catalognational"
+     }
+    },
+    {
+     "key": "ГОСТ Р 51814.7-2026",
+     "record": {
+      "designation": "ГОСТ Р 51814.7-2026",
+      "title": "Системы менеджмента качества в автомобилестроении. Оценка систем менеджмента качества",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/36215a6a-80b6-4c89-9129-2c12ee34b86d"
+     }
+    },
+    {
+     "key": "ГОСТ Р 52382-2010",
+     "record": {
+      "designation": "ГОСТ Р 52382-2010",
+      "title": "Лифты пассажирские. Лифты для пожарных",
+      "status": "Отменён",
+      "replaced_by": "ГОСТ 34305-2017",
+      "date_end": "15.02.2020",
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/catalognational"
+     }
+    },
+    {
+     "key": "ГОСТ Р 53780-2010",
+     "record": {
+      "designation": "ГОСТ Р 53780-2010",
+      "title": "Лифты. Общие требования безопасности к устройству и установке",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/catalognational"
+     }
+    },
+    {
+     "key": "ГОСТ Р 53782-2010",
+     "record": {
+      "designation": "ГОСТ Р 53782-2010",
+      "title": "Лифты. Правила и методы оценки соответствия лифтов при вводе в эксплуатацию",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/catalognational"
+     }
+    },
+    {
+     "key": "ГОСТ Р 53783-2010",
+     "record": {
+      "designation": "ГОСТ Р 53783-2010",
+      "title": "Лифты. Правила и методы оценки соответствия лифтов в период эксплуатации",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/catalognational"
+     }
+    },
+    {
+     "key": "ГОСТ Р 55964-2022",
+     "record": {
+      "designation": "ГОСТ Р 55964-2022",
+      "title": "Лифты. Общие требования безопасности при эксплуатации",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/catalognational"
+     }
+    },
+    {
+     "key": "ГОСТ Р 55965-2014",
+     "record": {
+      "designation": "ГОСТ Р 55965-2014",
+      "title": "Лифты. Общие требования к модернизации находящихся в эксплуатации лифтов",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/catalognational"
+     }
+    },
+    {
+     "key": "ГОСТ Р 55969-2023",
+     "record": {
+      "designation": "ГОСТ Р 55969-2023",
+      "title": "Лифты. Ввод в эксплуатацию. Общие требования",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/catalognational"
+     }
+    },
+    {
+     "key": "ГОСТ Р 56122-2026",
+     "record": {
+      "designation": "ГОСТ Р 56122-2026",
+      "title": "Беспилотные авиационные системы. Общие требования",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/cb02233c-303f-4e93-8f85-2fd3c827b538"
+     }
+    },
+    {
+     "key": "ГОСТ Р 57700.2-2026",
+     "record": {
+      "designation": "ГОСТ Р 57700.2-2026",
+      "title": "Компьютерные модели и моделирование. Сертификация программного обеспечения компьютерного моделирования физических процессов. Общие положения",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/2d4d12fd-8286-41c2-9b3a-d1fadc151306"
+     }
+    },
+    {
+     "key": "ГОСТ Р 59155-2020",
+     "record": {
+      "designation": "ГОСТ Р 59155-2020",
+      "title": "Лифты. Технические условия",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://www.rst.gov.ru/portal/gost/home/standarts/catalognational"
+     }
+    },
+    {
+     "key": "ГОСТ Р 59519-2026",
+     "record": {
+      "designation": "ГОСТ Р 59519-2026",
+      "title": "Беспилотные авиационные системы. Элементы беспилотных авиационных систем. Спецификация и общие требования",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/aecd38a2-9114-406b-8b55-41f87d4f9a69"
+     }
+    },
+    {
+     "key": "ГОСТ Р 59693-2026",
+     "record": {
+      "designation": "ГОСТ Р 59693-2026",
+      "title": "Покрывала для изоляции очага горения. Общие технические требования. Методы испытаний",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/c380dee0-ce68-464a-bcdf-fedc431efaa2"
+     }
+    },
+    {
+     "key": "ГОСТ Р 59988.20.3-2026",
+     "record": {
+      "designation": "ГОСТ Р 59988.20.3-2026",
+      "title": "Системы автоматизированного проектирования электроники. Информационное обеспечение. Технические характеристики электронных компонентов. Источники света электрические и приборы световые. Классификация",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/ec418071-f7f4-471d-a4f1-ca036d670e24"
+     }
+    },
+    {
+     "key": "ГОСТ Р 70262.3-2026",
+     "record": {
+      "designation": "ГОСТ Р 70262.3-2026",
+      "title": "Защита информации. Идентификация и аутентификация. Типовые угрозы и уязвимости идентификации и аутентификации",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/c13fad61-77b8-4b01-95ff-29a346d3dbb9"
+     }
+    },
+    {
+     "key": "ГОСТ Р 70400.12-2026",
+     "record": {
+      "designation": "ГОСТ Р 70400.12-2026",
+      "title": "Промышленность боеприпасов и спецхимии. Детали типа «втулка». Изготовление методом порошковой металлургии. Электроэрозионная обработка. Типовые технологические процессы",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/fc2f4c5f-341e-45a9-b224-5411dac0da58"
+     }
+    },
+    {
+     "key": "ГОСТ Р 70400.13-2026",
+     "record": {
+      "designation": "ГОСТ Р 70400.13-2026",
+      "title": "Промышленность боеприпасов и спецхимии. Растворы и электролиты, используемые для изготовления металлических и неметаллических неорганических покрытий. Методы анализа растворов и электролитов",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/7685e052-1299-4280-a600-c4739d208c1d"
+     }
+    },
+    {
+     "key": "ГОСТ Р 70400.14-2026",
+     "record": {
+      "designation": "ГОСТ Р 70400.14-2026",
+      "title": "Промышленность боеприпасов и спецхимии. Детали типа «корпус». Типовой технологический процесс электроэрозионной обработки отверстий",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/b9c86b1b-8f9b-4302-92e2-1dbfb660699d"
+     }
+    },
+    {
+     "key": "ГОСТ Р 70729-2026",
+     "record": {
+      "designation": "ГОСТ Р 70729-2026",
+      "title": "Трубы и фитинги пластмассовые. Сварка нагретым инструментом враструб. Общие требования",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/61508f32-cb2b-400f-8590-390e48e5aa28"
+     }
+    },
+    {
+     "key": "ГОСТ Р 71448-2024",
+     "record": {
+      "designation": "ГОСТ Р 71448-2024",
+      "title": "Оптика и фотоника. Шероховатость поверхности. Параметры и типы направлений неровностей поверхности",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/76575567-ab17-4583-b661-2acb8388ba2b"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72252.5-2026",
+     "record": {
+      "designation": "ГОСТ Р 72252.5-2026",
+      "title": "Оптика и фотоника. Алмазный инструмент для обработки оптических деталей. Конструкция и размеры. Часть 5. Отливки грибов, чашек, планшайб",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/5f051dcf-0130-4046-ad43-1d14ce4b082e"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72414-2026",
+     "record": {
+      "designation": "ГОСТ Р 72414-2026",
+      "title": "Персональные электронно-вычислительные машины. Общие технические условия",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/85323337-2a83-4d84-8163-cce9635c6db5"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72420-2026",
+     "record": {
+      "designation": "ГОСТ Р 72420-2026",
+      "title": "Серверное оборудование. Классификация продукции и порядок ее применения",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/0fd65c09-6dff-4326-acbb-f9c33eedd52a"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72593.2-2026",
+     "record": {
+      "designation": "ГОСТ Р 72593.2-2026",
+      "title": "Оптика и фотоника. Схемы интегральные фотонные. Часть 2. Классификация и условные обозначения",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/ab5370cb-b22b-4855-bde4-938d45ad7cfd"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72593.3-2026",
+     "record": {
+      "designation": "ГОСТ Р 72593.3-2026",
+      "title": "Оптика и фотоника. Схемы интегральные фотонные. Часть 3. Основные параметры",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/39d85433-c14a-47b6-8f2b-2f3e12945e26"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72593.4-2026",
+     "record": {
+      "designation": "ГОСТ Р 72593.4-2026",
+      "title": "Оптика и фотоника. Схемы интегральные фотонные. Часть 4. Требования к креплению, монтажу и маркировке. Требования к корпусам и их обозначению",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/2070e506-d308-409a-b1fa-cedbdb7f45df"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72602-2026",
+     "record": {
+      "designation": "ГОСТ Р 72602-2026",
+      "title": "Конструкции для удаления дымовых газов. Общие требования к конструкциям различного типа, монтажу и вводу в эксплуатацию",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/33e4244f-34e0-426d-8d1d-7ae8dd94d5a3"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72603.1-2026",
+     "record": {
+      "designation": "ГОСТ Р 72603.1-2026",
+      "title": "Конструкции для удаления дымовых газов. Общие требования, монтаж и ввод в эксплуатацию. Часть 1. Конструкции для удаления дымовых газов от устройств для сжигания топлива с открытой камерой сгорания",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/4789d9af-401a-4876-bbb8-5a6c45511a21"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72604.1-2026",
+     "record": {
+      "designation": "ГОСТ Р 72604.1-2026",
+      "title": "Конструкции для удаления дымовых газов. Дымоходные системы из бетона. Часть 1. Применение с устройствами для сжигания топлива с открытой камерой сгорания",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/48b64df7-f2af-4453-8dd2-09b86002f4fe"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72665-2026",
+     "record": {
+      "designation": "ГОСТ Р 72665-2026",
+      "title": "Дороги автомобильные общего пользования. Модель дорожных данных. Общие положения",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/618d6380-7b34-4a9a-ac0b-be483292521a"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72687-2026",
+     "record": {
+      "designation": "ГОСТ Р 72687-2026",
+      "title": "Беспилотные авиационные системы. Требования к архитектуре и функционированию линии контроля и управления беспилотных воздушных судов",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/0cd3402c-d6c8-418c-8ff4-69d5c7188fd3"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72689-2026",
+     "record": {
+      "designation": "ГОСТ Р 72689-2026",
+      "title": "Беспилотные авиационные системы. Методы испытаний характеристик и переключения линий С2, а также испытаний при отказе линии С2",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/9fe7db44-d3e0-49cc-9d58-4dac2da655f9"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72696-2026",
+     "record": {
+      "designation": "ГОСТ Р 72696-2026",
+      "title": "Беспилотные авиационные системы. Радиоэлектронное оборудование. Основные принципы проектирования. Требования к функционированию, архитектуре и надежности",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/1c5e0a6a-0f23-4689-a659-4bab743abc0a"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72697-2026",
+     "record": {
+      "designation": "ГОСТ Р 72697-2026",
+      "title": "Беспилотные авиационные системы. Охрана окружающей среды при эксплуатации беспилотных авиационных систем. Общие требования",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/43f2c719-5272-4424-bf5d-86cbd08855d1"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72698-2026",
+     "record": {
+      "designation": "ГОСТ Р 72698-2026",
+      "title": "Беспилотные авиационные системы. Беспилотные воздушные суда. Компоненты. Воздушные винты. Общие технические требования",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/27e84d0c-312b-4b75-af77-4a724d95f69e"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72699-2026",
+     "record": {
+      "designation": "ГОСТ Р 72699-2026",
+      "title": "Беспилотные авиационные системы. Метрологическое обеспечение испытаний беспилотных авиационных систем. Основные положения",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/44b896a9-e50b-41e3-a24f-08fed3b7d1a7"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72700-2026",
+     "record": {
+      "designation": "ГОСТ Р 72700-2026",
+      "title": "Беспилотные авиационные системы. Аэродромы. Оборудование аэродромов, используемых беспилотными авиационными системами. Требования к функциональности и размещению",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/ae8cec2a-1cf7-4247-b333-f3009dd8c0b7"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72701-2026",
+     "record": {
+      "designation": "ГОСТ Р 72701-2026",
+      "title": "Беспилотные авиационные системы. Дронопорт. Требования к оператору",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/36537b8a-329d-4351-a812-f327b9f36dad"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72702-2026",
+     "record": {
+      "designation": "ГОСТ Р 72702-2026",
+      "title": "Беспилотные авиационные системы. Безопасность труда при эксплуатации беспилотных авиационных систем. Общие требования",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/95dd71b8-7101-45c6-99e4-9d32690dbedc"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72703-2026",
+     "record": {
+      "designation": "ГОСТ Р 72703-2026",
+      "title": "Беспилотные авиационные системы. Безопасность. Требования к устойчивости работы в условиях внешних воздействующих факторов",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/fdec4665-576e-4338-9eb1-0551a04ebae3"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72704-2026",
+     "record": {
+      "designation": "ГОСТ Р 72704-2026",
+      "title": "Беспилотные авиационные системы. Безопасность. Требования к устойчивости работы в условиях отсутствия связи с глобальными навигационными спутниковыми системами",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/ea1acf63-8155-4c18-b87c-530985666bbc"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72705-2026",
+     "record": {
+      "designation": "ГОСТ Р 72705-2026",
+      "title": "Беспилотные авиационные системы. Методы определения соответствия требованиям к летной годности беспилотных авиационных систем с воздушным судном самолетного типа",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/67be6d00-f514-46d1-b597-e366b42db7ac"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72706-2026",
+     "record": {
+      "designation": "ГОСТ Р 72706-2026",
+      "title": "Беспилотные авиационные системы. Методы определения соответствия требованиям к летной годности беспилотных авиационных систем с воздушным судном вертолетного типа",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/164cb015-a1d2-422f-b6c8-d710f7b7036a"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72707-2026",
+     "record": {
+      "designation": "ГОСТ Р 72707-2026",
+      "title": "Беспилотные авиационные системы. Требования к системам обнаружения и предотвращения столкновений",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/de90ceaf-837a-4f98-a699-118df4104bab"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72708-2026",
+     "record": {
+      "designation": "ГОСТ Р 72708-2026",
+      "title": "Беспилотные авиационные системы. Летная годность беспилотных авиационных систем в составе с БВС с максимальной взлетной массой 30 кг и менее. Общие технические условия",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/4a699e69-134f-48ce-8a8c-8270c6833109"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72709-2026",
+     "record": {
+      "designation": "ГОСТ Р 72709-2026",
+      "title": "Беспилотные авиационные системы. Общие требования к системам предотвращения столкновений в воздухе дистанционно пилотируемых воздушных судов и автономных беспилотных воздушных судов, не получающих диспетчерского обслуживания по эшелонированию",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/4d022a19-127c-4977-a3fc-3c9ab68ca483"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72747-2026",
+     "record": {
+      "designation": "ГОСТ Р 72747-2026",
+      "title": "Авиационная техника. Затворы пиротехнические. Технические условия",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/7f87093a-d6b7-458d-99db-020746bd7220"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72748-2026",
+     "record": {
+      "designation": "ГОСТ Р 72748-2026",
+      "title": "Авиационная техника. Пружины спиральные. Технические условия",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/125e16ac-e21c-4477-8af7-71826d155ac9"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72754-2026",
+     "record": {
+      "designation": "ГОСТ Р 72754-2026",
+      "title": "Авиационная техника. Штуцера консервации. Технические условия",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/72519e4d-109c-4114-8f54-6d1e858385c9"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72782.8-2026",
+     "record": {
+      "designation": "ГОСТ Р 72782.8-2026",
+      "title": "Машины землеройные. Машины высокоавтоматизированные гибридные землеройные и дорожно-строительные. Определение характеристик холодного пуска при минусовых температурах. Методы испытаний",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/a0846966-3532-462e-bc83-a6e0b22abbb9"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72795-2026",
+     "record": {
+      "designation": "ГОСТ Р 72795-2026",
+      "title": "Оптика и фотоника. Обработка заготовок оптических деталей. Термины и определения",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/9ec42261-f413-4c24-af4e-12601e0ce9b5"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72816-2026",
+     "record": {
+      "designation": "ГОСТ Р 72816-2026",
+      "title": "Оптика и фотоника. Элементы оптические. Метод определения полного рассеяния оптического излучения",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/7c3415bb-2637-4f1e-b5d8-93ba936ea435"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72840-2026",
+     "record": {
+      "designation": "ГОСТ Р 72840-2026",
+      "title": "Оптика и фотоника. Объективы для оптико-электронных систем. Метод определения смещения плоскости наилучшего изображения при изменении фокусного расстояния объектива",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/aa1c6622-5b14-4332-ba67-753f380ca1d0"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72843-2026",
+     "record": {
+      "designation": "ГОСТ Р 72843-2026",
+      "title": "Оптика и фотоника. Материалы и компоненты оптические для инфракрасного спектрального диапазона. Метод определения относительного показателя преломления оптического излучения",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/bd0ad916-4342-46a0-9ff2-2278810f4aed"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72848-2026",
+     "record": {
+      "designation": "ГОСТ Р 72848-2026",
+      "title": "Оптика и фотоника. Детали оптические из полимерных материалов. Общие технические условия",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/11702531-6ca3-4141-8587-d082a8c50414"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72850-2026",
+     "record": {
+      "designation": "ГОСТ Р 72850-2026",
+      "title": "Оптика и фотоника. Детали оптические c асферическими поверхностями. Классификация и основные параметры",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/429b3bde-1b70-466a-9638-8a8790ceb91a"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72853-2026",
+     "record": {
+      "designation": "ГОСТ Р 72853-2026",
+      "title": "Оптика и фотоника. Фильтры оптические интерференционные диэлектрические вакуумного напыления. Классификация и основные параметры",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/80200d0a-250d-462a-bfd3-8744c5c98796"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72854-2026",
+     "record": {
+      "designation": "ГОСТ Р 72854-2026",
+      "title": "Легкорельсовые транспортные средства. Требования к электрооборудованию. Методы проверки",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/83ceecb4-2a87-4656-b23b-c39d65705e98"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72856-2026",
+     "record": {
+      "designation": "ГОСТ Р 72856-2026",
+      "title": "Легкорельсовые транспортные средства. Электробезопасность. Общие требования и номенклатура видов защиты",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/eee8590f-eb7d-4fc9-baa1-8c94478c1d43"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72859.2-2026",
+     "record": {
+      "designation": "ГОСТ Р 72859.2-2026",
+      "title": "Суда малые. Системы обращения с отходами. Часть 2. Системы обработки сточных вод. Общие технические требования",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/837771d3-c3df-4add-b620-ccc23b47862d"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72860-2026",
+     "record": {
+      "designation": "ГОСТ Р 72860-2026",
+      "title": "Работы отделочные. Укладка рулонных и модульных напольных покрытий методом приклеивания. Правила и контроль выполнения работ",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/500d2b84-bd93-4a17-a0cb-3da18acd5219"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72864-2026",
+     "record": {
+      "designation": "ГОСТ Р 72864-2026",
+      "title": "Клеи для склеивания металлических и неметаллических поверхностей радиоэлектронной аппаратуры. Общие требования",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/6e58e6d5-e394-452c-b9f4-33aa0f0b5d7c"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72865-2026",
+     "record": {
+      "designation": "ГОСТ Р 72865-2026",
+      "title": "Покрытия лакокрасочные для металлических и неметаллических поверхностей радиоэлектронной аппаратуры. Общие требования",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/89217d1f-0fd9-4a6b-a120-544d0f81b815"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72867-2026",
+     "record": {
+      "designation": "ГОСТ Р 72867-2026",
+      "title": "Электромонтаж радиоэлектронной аппаратуры непаяными методами. Общие требования",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/75978540-78f3-4234-878c-e2096ffc4b72"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72868-2026",
+     "record": {
+      "designation": "ГОСТ Р 72868-2026",
+      "title": "Оптика и фотоника. Оборудование для производства оптических деталей. Термины и определения",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/4a7f623d-6a97-464a-b2f5-9a0644741776"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72872-2026",
+     "record": {
+      "designation": "ГОСТ Р 72872-2026",
+      "title": "Водный транспорт. Система управления безопасностью судов. Методика оценки экологического риска воднотранспортных происшествий",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/cb5727b5-2e8e-48d8-aaa2-00f1c0fe31dd"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72873-2026",
+     "record": {
+      "designation": "ГОСТ Р 72873-2026",
+      "title": "Буксировочные канатные дороги. Оборудование и системы безопасности. Общие требования",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/3f5bb9cf-7a5c-46f1-8ce5-6ff46f638886"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72875-2026",
+     "record": {
+      "designation": "ГОСТ Р 72875-2026",
+      "title": "Трубы. Изготовление методом радиальной намотки пресс-материала АГ-4С. Типовой технологический процесс",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/2f848d01-fe37-4b98-b842-b31da0f36e5f"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72876.1-2026",
+     "record": {
+      "designation": "ГОСТ Р 72876.1-2026",
+      "title": "Оптика и фотоника. Приборы оптические. Методы испытаний на воздействие внешних факторов. Часть 1. Общие требования",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/5d1026ab-8221-41ea-a7ac-d18bb107149a"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72877-2026",
+     "record": {
+      "designation": "ГОСТ Р 72877-2026",
+      "title": "Машины ручные электрические. Общие технические условия",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/4c6603be-f1b6-4d1d-9878-744cc6ad322b"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72878-2026",
+     "record": {
+      "designation": "ГОСТ Р 72878-2026",
+      "title": "Машины ручные электрические. Номинальные значения параметров и эксплуатационные характеристики",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/809947e3-08eb-48a3-b856-3c215acfd999"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72879-2026",
+     "record": {
+      "designation": "ГОСТ Р 72879-2026",
+      "title": "Оборудование горно-шахтное. Многофункциональные системы безопасности угольных разрезов. Система определения местоположения оборудования и персонала. Общие технические требования",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/89687319-29c1-45f1-914c-06bfc38b5651"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72880-2026",
+     "record": {
+      "designation": "ГОСТ Р 72880-2026",
+      "title": "Краска известковая для реставрационных работ. Технические требования",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/ae2216b4-bd06-4656-adf8-4ce843c152ad"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72882-2026",
+     "record": {
+      "designation": "ГОСТ Р 72882-2026",
+      "title": "Дороги автомобильные общего пользования. Швы деформационные резинометаллические пролетных строений мостовых сооружений. Общие технические условия",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/73f3ded9-21f9-44b8-be6a-1f4929f0c0c2"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72883-2026",
+     "record": {
+      "designation": "ГОСТ Р 72883-2026",
+      "title": "Дороги автомобильные общего пользования. Материалы вяжущие нефтяные битумные. Метод определения эластичности ротационным способом",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/b8d17318-36a4-4142-8880-f1816657ea16"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72884-2026",
+     "record": {
+      "designation": "ГОСТ Р 72884-2026",
+      "title": "Оборудование горно-шахтное. Многофункциональные системы безопасности угольных разрезов. Контроль сейсмических процессов. Общие технические требования",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/70cf672f-f8d2-4ec2-b1cd-3e46f7968999"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72885-2026",
+     "record": {
+      "designation": "ГОСТ Р 72885-2026",
+      "title": "Транспорт железнодорожный. Состав подвижной. Батареи для электропитания систем вспомогательного оборудования. Часть 3. Свинцово-кислотные аккумуляторные батареи с регулирующими клапанами. Технические требования",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/de397e0c-e29b-4405-940c-c5b7c4027959"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72891-2026",
+     "record": {
+      "designation": "ГОСТ Р 72891-2026",
+      "title": "Дороги автомобильные общего пользования. Швы деформационные с резиновым компенсатором пролетных строений мостовых сооружений. Методы квалификационных стендовых испытаний",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/6dc4dd6d-9062-42fe-a062-511252f40c29"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72892-2026",
+     "record": {
+      "designation": "ГОСТ Р 72892-2026",
+      "title": "Дороги автомобильные общего пользования. Вантовые системы мостовых сооружений. Правила расчета",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/e9ee760b-ff66-497a-b412-499929f0aa12"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72893-2026",
+     "record": {
+      "designation": "ГОСТ Р 72893-2026",
+      "title": "Устройство конструкций с применением изделий из ячеистых бетонов автоклавного твердения. Правила, контроль выполнения и требования к результатам работ",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/c75c25f0-212c-4bf6-92d3-15bc0d3af038"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72897-2026",
+     "record": {
+      "designation": "ГОСТ Р 72897-2026",
+      "title": "Покрытия лыжероллерных трасс. Технические требования и методы испытаний",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/c0bd9e05-5859-4329-ada4-793256c0836f"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72912-2026",
+     "record": {
+      "designation": "ГОСТ Р 72912-2026",
+      "title": "Дороги автомобильные и улицы. Остановочные пункты маршрутных транспортных средств. Общие требования",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/f74e4359-38ff-40d9-94c8-4818621fbfbb"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72914-2026",
+     "record": {
+      "designation": "ГОСТ Р 72914-2026",
+      "title": "Нефтяная и газовая промышленность. Операции арктические нефтегазовые. Управление персоналом",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/d4aaca5e-ae77-4f13-9247-6bd465622da3"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72915-2026",
+     "record": {
+      "designation": "ГОСТ Р 72915-2026",
+      "title": "Системы автоматизированного проектирования электроники. Подсистема виртуальных испытаний электронной аппаратуры на воздействие многократного механического удара",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/6281ab37-939b-46fc-8c3d-a3e2abd26aee"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72916-2026",
+     "record": {
+      "designation": "ГОСТ Р 72916-2026",
+      "title": "Системы автоматизированного проектирования электроники. Подсистема виртуальных испытаний электронной компонентной базы на воздействие линейного ускорения",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/9e7bfd77-8cb5-4565-a1e9-ce9c11981d3d"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72917-2026",
+     "record": {
+      "designation": "ГОСТ Р 72917-2026",
+      "title": "Системы автоматизированного проектирования электроники. Подсистема виртуальных испытаний электронной компонентной базы на нестационарные тепловые воздействия",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/28a8b016-dd83-4850-81b6-e35a0bcdec30"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72918-2026",
+     "record": {
+      "designation": "ГОСТ Р 72918-2026",
+      "title": "Системы автоматизированного проектирования электроники. Подсистема виртуальных испытаний электронной компонентной базы на воздействие синусоидальной вибрации",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/319c2bd2-c0d4-41b1-87dc-97b5598fb5d1"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72920-2026",
+     "record": {
+      "designation": "ГОСТ Р 72920-2026",
+      "title": "Технология полиграфии. Методы настройки цветовоспроизведения печатного процесса в соответствии с набором данных профилирования",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/52506940-be9f-4dab-841b-6a2c432bfac3"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72923-2026",
+     "record": {
+      "designation": "ГОСТ Р 72923-2026",
+      "title": "Установки ядерные энергетические судовые. Вода второго контура и основного запаса. Технические требования к качеству",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/c16be1b3-f679-4f59-bc19-451688aab01e"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72925-2026",
+     "record": {
+      "designation": "ГОСТ Р 72925-2026",
+      "title": "Обитаемые подводные аппараты. Система регенерации воздуха. Требования к составу и эксплуатационным характеристикам",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/98d58150-277e-4750-b40c-b8478ee39450"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72927-2026",
+     "record": {
+      "designation": "ГОСТ Р 72927-2026",
+      "title": "Яичники крупного рогатого скота, овец, коз и свиней замороженные. Технические условия",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/022822d4-f218-4055-a095-12c5f84343c6"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72928-2026",
+     "record": {
+      "designation": "ГОСТ Р 72928-2026",
+      "title": "Гипофизы крупного рогатого скота, овец, коз и свиней замороженные. Технические условия",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/ef11527b-ae64-4d38-91fe-8601f7c8819b"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72929-2026",
+     "record": {
+      "designation": "ГОСТ Р 72929-2026",
+      "title": "Печень крупного рогатого скота и свиней замороженная. Технические условия",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/f40f3790-3948-49e8-950f-cb578c79787e"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72946-2026",
+     "record": {
+      "designation": "ГОСТ Р 72946-2026",
+      "title": "Гидравлические и гидроаккумулирующие электростанции. Гидротехнические сооружения. Контрольно-измерительные системы и аппаратура. Организация эксплуатации и технического обслуживания. Нормы и требования",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/6d430628-25b3-408f-88d8-cb5c20ae2c63"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72949-2026",
+     "record": {
+      "designation": "ГОСТ Р 72949-2026",
+      "title": "Беспилотные авиационные системы. Работы, выполняемые с применением беспилотных авиационных систем. Доставка медицинских грузов. Общие требования",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/084361c7-8e11-47b0-a56c-09c7857efed2"
+     }
+    },
+    {
+     "key": "ГОСТ Р 72957-2026",
+     "record": {
+      "designation": "ГОСТ Р 72957-2026",
+      "title": "Кухня русская традиционная. Рекомендации по технологии приготовления блюд",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/d42b87fb-e8cd-42b8-8a6b-f18e76f688d1"
+     }
+    },
+    {
+     "key": "ГОСТ Р 77.001-2026",
+     "record": {
+      "designation": "ГОСТ Р 77.001-2026",
+      "title": "Система поддержки жизненного цикла изделия. Основные положения",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/f3387e3a-6cc3-4e2a-9efd-d8725cdc597c"
+     }
+    },
+    {
+     "key": "ГОСТ Р 77.101-2026",
+     "record": {
+      "designation": "ГОСТ Р 77.101-2026",
+      "title": "Система поддержки жизненного цикла изделия. Общие требования",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/30367399-9785-4172-81b2-ac9109f50a64"
+     }
+    },
+    {
+     "key": "ГОСТ Р 77.102-2026",
+     "record": {
+      "designation": "ГОСТ Р 77.102-2026",
+      "title": "Система поддержки жизненного цикла изделия. Модель жизненного цикла. Основные положения",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/41e30cae-5696-4373-ab1c-3cecdbf06c50"
+     }
+    },
+    {
+     "key": "ГОСТ Р 77.402-2026",
+     "record": {
+      "designation": "ГОСТ Р 77.402-2026",
+      "title": "Система поддержки жизненного цикла изделия. Виды программных средств поддержки жизненного цикла",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/0ee95254-c8df-4ffe-aadc-0e2f46a78678"
+     }
+    },
+    {
+     "key": "ГОСТ Р 77.403-2026",
+     "record": {
+      "designation": "ГОСТ Р 77.403-2026",
+      "title": "Система поддержки жизненного цикла изделия. Интероперабельность программных средств. Основные положения",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/858d7777-e996-46c5-bd84-c0bcdbedd332"
+     }
+    },
+    {
+     "key": "ГОСТ Р 8.1048-2026",
+     "record": {
+      "designation": "ГОСТ Р 8.1048-2026",
+      "title": "Государственная система обеспечения единства измерений. Объем природного газа. Вычислители, вычислители-контроллеры, корректоры и комплексы измерительно-вычислительные. Общие метрологические и технические требования",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/db1c7880-3e28-4225-a986-7d64fc7897b3"
+     }
+    },
+    {
+     "key": "ГОСТ Р ИСО 1151-11-2026",
+     "record": {
+      "designation": "ГОСТ Р ИСО 1151-11-2026",
+      "title": "Системы управления летательными аппаратами. Термины и определения",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/ed0fc6e5-d892-4f2c-bd44-eae8f6f681cd"
+     }
+    },
+    {
+     "key": "ГОСТ Р ИСО 18162-2026",
+     "record": {
+      "designation": "ГОСТ Р ИСО 18162-2026",
+      "title": "Биотехнологии. Биобанкинг. Требования к нервным стволовым клеткам человека, полученным из плюрипотентных стволовых клеток",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/af6caa60-1bad-4116-9973-57dbf91e848e"
+     }
+    },
+    {
+     "key": "ГОСТ Р ИСО 5224-2026",
+     "record": {
+      "designation": "ГОСТ Р ИСО 5224-2026",
+      "title": "Винтокрылые летательные аппараты. Динамика полета. Термины и определения",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/2a8e3bb7-d655-49c2-9ef7-29d3998d53ab"
+     }
+    },
+    {
+     "key": "ГОСТ Р МЭК 60086-2-1-2026",
+     "record": {
+      "designation": "ГОСТ Р МЭК 60086-2-1-2026",
+      "title": "Элементы и батареи первичные. Часть 2-1. Физические и электрические характеристики элементов и батарей с водным электролитом",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/2e2716da-f496-427a-9a73-dfe27f05302a"
+     }
+    },
+    {
+     "key": "ГОСТ Р МЭК 60086-2-2-2026",
+     "record": {
+      "designation": "ГОСТ Р МЭК 60086-2-2-2026",
+      "title": "Элементы и батареи первичные. Часть 2-2. Физические и электрические характеристики литиевых элементов и батарей",
+      "status": "Действует",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/ed74b9d9-1c88-4709-a399-2d382e1be026"
+     }
+    },
+    {
+     "key": "ГОСТ Р МЭК 60287-2-1-2026",
+     "record": {
+      "designation": "ГОСТ Р МЭК 60287-2-1-2026",
+      "title": "Кабели электрические. Расчет номинальной токовой нагрузки. Часть 2-1. Тепловое сопротивление. Расчет теплового сопротивления",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/ac9b81ce-1687-44b3-873e-a02d75e08e5e"
+     }
+    },
+    {
+     "key": "ГОСТ Р МЭК 61674-2026",
+     "record": {
+      "designation": "ГОСТ Р МЭК 61674-2026",
+      "title": "Изделия медицинские электрические. Дозиметры с ионизационными камерами и/или полупроводниковыми детекторами, используемые в рентгеновской диагностике",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/ab275afc-6b65-4843-a3db-c304d00b08c1"
+     }
+    },
+    {
+     "key": "ПНСТ 1082-2026",
+     "record": {
+      "designation": "ПНСТ 1082-2026",
+      "title": "Система поддержки жизненного цикла изделия. Интероперабельность программных средств. Представление данных об изделии в виде обменного файла",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/e8d2d7d1-3390-43f3-b81b-b794e2544e68"
+     }
+    },
+    {
+     "key": "ПНСТ 1083-2026",
+     "record": {
+      "designation": "ПНСТ 1083-2026",
+      "title": "Система поддержки жизненного цикла изделия. Информационная модель изделия. Основные положения",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/5cf3afd9-e05e-4fb8-8626-70768956a55b"
+     }
+    },
+    {
+     "key": "ПНСТ 1084-2026",
+     "record": {
+      "designation": "ПНСТ 1084-2026",
+      "title": "Система поддержки жизненного цикла изделия. Информационная модель изделия. Общие данные об изделии",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/a9fa5eff-5510-4bd4-8363-3eacbd3b205f"
+     }
+    },
+    {
+     "key": "ПНСТ 1085-2026",
+     "record": {
+      "designation": "ПНСТ 1085-2026",
+      "title": "Система поддержки жизненного цикла изделия. Информационная модель изделия. Структура изделия",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/219f2594-151f-4413-8c1f-5264317e7aab"
+     }
+    },
+    {
+     "key": "ПНСТ 1086-2026",
+     "record": {
+      "designation": "ПНСТ 1086-2026",
+      "title": "Система поддержки жизненного цикла изделия. Информационная модель изделия. Материалы и их свойства",
+      "status": "Принят",
+      "replaced_by": null,
+      "date_end": null,
+      "source_url": "https://protect.gost.ru/gost/details/ddd1497f-0209-47c8-8e24-574744846c94"
+     }
+    }
+   ],
+   "removed": [],
+   "changed": [],
+   "lines": [
+    "ГОСТ 14637-2024: новый в базе, статус «Действует», «Прокат толстолистовой из нелегированной стали обыкновенного качества. Технические условия»",
+    "ГОСТ 18963-2026: новый в базе, статус «Принят», «Вода питьевая. Методы санитарно-бактериологического анализа»",
+    "ГОСТ 2.601-2013: новый в базе, статус «Утратил силу в РФ», «Единая система конструкторской документации. Эксплуатационные документы»",
+    "ГОСТ 20910-2026: новый в базе, статус «Принят», «Бетоны жаростойкие. Технические условия»",
+    "ГОСТ 22371-2023: новый в базе, статус «Принят», «Консервы. Пюре фруктовое, фрукты протертые или дробленые. Общие технические условия»",
+    "ГОСТ 28379-2025: новый в базе, статус «Действует», «Шпатлевки ЭП-0010 и ЭП-0020. Технические условия»",
+    "ГОСТ 28911-2015: новый в базе, статус «Заменён», «Лифты. Устройства управления, сигнализации и дополнительные приспособления»",
+    "ГОСТ 33605-2015: новый в базе, статус «Заменён», «Лифты. Термины и определения»",
+    "ГОСТ 33749-2026: новый в базе, статус «Принят», «Демпферы гидравлические железнодорожного подвижного состава. Общие технические условия»",
+    "ГОСТ 33759-2026: новый в базе, статус «Принят», «Поддоны полимерные. Общие технические условия»",
+    "ГОСТ 33984.1-2016: новый в базе, статус «Заменён», «Лифты. Общие требования безопасности к устройству и установке. Лифты для транспортирования людей или»",
+    "ГОСТ 33984.1-2023: новый в базе, статус «Действует», «Лифты. Лифты для транспортирования людей или людей и грузов. Общие требования безопасности к устройс»",
+    "ГОСТ 34441-2018: новый в базе, статус «Заменён», «Лифты. Диспетчерский контроль. Общие технические требования»",
+    "ГОСТ 34442-2018: новый в базе, статус «Действует», «Лифты. Пожарная безопасность»",
+    "ГОСТ 35028-2023: новый в базе, статус «Принят», «Консервы. Пюре и пасты из печеных и вареных овощей. Технические условия»",
+    "ГОСТ 35062-2024: новый в базе, статус «Принят», «Полуфабрикаты фруктовые и овощные. Общие технические условия»",
+    "ГОСТ 35343-2026: новый в базе, статус «Действует», «Анкеры тарельчатые для крепления теплоизоляционного слоя в фасадных теплоизоляционных композиционных»",
+    "ГОСТ 35346-2026: новый в базе, статус «Принят», «Упаковка деревянная. Общие технические условия»",
+    "ГОСТ 35380-2026: новый в базе, статус «Принят», «Продукция рыбная пищевая. Метод определения содержания гистамина с помощью ион-парной высокоэффектив»",
+    "ГОСТ 35387-2026: новый в базе, статус «Действует», «Анкеры тарельчатые для крепления теплоизоляционного слоя в фасадных теплоизоляционных композиционных»",
+    "ГОСТ 35397-2026: новый в базе, статус «Действует», «Элементы профильные для фасадных теплоизоляционных композиционных систем с наружными штукатурными сл»",
+    "ГОСТ 35399-2026: новый в базе, статус «Принят», «Система газоснабжения. Магистральная трубопроводная транспортировка газа. Подземные хранилища газа в»",
+    "ГОСТ 35401-2026: новый в базе, статус «Принят», «Объекты инфраструктуры железнодорожного транспорта. Комплексная защита от атмосферных и коммутационн»",
+    "ГОСТ 6625-2026: новый в базе, статус «Действует», «Оборудование горно-шахтное. Вентиляторы шахтные местного проветривания. Общие технические условия»",
+    "ГОСТ 8.401-80: новый в базе, статус «Действует», «Государственная система обеспечения единства измерений. Классы точности средств измерений. Общие тре»",
+    "ГОСТ 8.417-2002: новый в базе, статус «Заменён», «Государственная система обеспечения единства измерений. Единицы величин»",
+    "ГОСТ 9.301-2025: новый в базе, статус «Принят», «Единая система защиты от коррозии и старения. Покрытия металлические и неметаллические неорганически»",
+    "ГОСТ 9109-2026: новый в базе, статус «Принят», «Грунтовки ФЛ-03К и ФЛ-03Ж. Технические условия»",
+    "ГОСТ 9942-2026: новый в базе, статус «Принят», «Подшипники качения. Подшипники роликовые упорно-радиальные сферические одинарные. Классификация, ука»",
+    "ГОСТ EN 12353-2023: новый в базе, статус «Принят», «Средства химические дезинфицирующие и антисептические. Консервация тест-микроорганизмов, используемы»",
+    "ГОСТ IEC 60695-11-5-2025: новый в базе, статус «Принят», «Испытания на пожароопасность. Часть 11-5. Испытательное пламя. Метод испытания игольчатым пламенем. »",
+    "ГОСТ IEC 60825-12-2026: новый в базе, статус «Принят», «Безопасность лазерных изделий. Часть 12. Безопасность атмосферных оптических линий связи (АОЛС)»",
+    "ГОСТ IEC 60825-4-2026: новый в базе, статус «Принят», «Безопасность лазерных изделий. Часть 4. Ограждения от лазерного излучения»",
+    "ГОСТ IEC 63403-1-2026: новый в базе, статус «Принят», «Светодиоды корпусированные для тепличного освещения. Часть 1. Эксплуатационные характеристики»",
+    "ГОСТ IEC 63403-2-2026: новый в базе, статус «Принят», «Светодиоды корпусированные для тепличного освещения. Часть 2. Бинирование»",
+    "ГОСТ IEC TR 60825-14-2026: новый в базе, статус «Действует», «Безопасность лазерных изделий. Часть 14. Руководство для пользователя»",
+    "ГОСТ IEC TR 60825-17-2026: новый в базе, статус «Действует», «Безопасность лазерных изделий. Часть 17. Аспекты безопасности при использовании пассивных оптических»",
+    "ГОСТ ISO 10605-2022: новый в базе, статус «Принят», «Транспорт дорожный. Методы испытаний для электрических помех от электростатических разрядов»",
+    "ГОСТ ISO 13766-1-2025: новый в базе, статус «Принят», «Машины землеройные и строительная техника. Электромагнитная совместимость машин с внутренним источни»",
+    "ГОСТ ISO 13766-2-2025: новый в базе, статус «Принят», «Машины землеройные и строительная техника. Электромагнитная совместимость машин с внутренним источни»",
+    "ГОСТ ISO 1833-10-2023: новый в базе, статус «Принят», «Материалы текстильные. Количественный химический анализ. Часть 10. Смеси триацетата или полилактида »",
+    "ГОСТ ISO 1833-11-2022: новый в базе, статус «Принят», «Материалы и изделия текстильные. Количественный химический анализ. Часть 11. Смеси определенных воло»",
+    "ГОСТ ISO 1833-12-2022: новый в базе, статус «Принят», «Материалы и изделия текстильные. Количественный химический анализ. Часть 12. Смеси акриловых, модифи»",
+    "ГОСТ ISO 1833-14-2022: новый в базе, статус «Принят», «Материалы и изделия текстильные. Количественный химический анализ. Часть 14. Смеси ацетата с другими»",
+    "ГОСТ ISO 1833-15-2022: новый в базе, статус «Принят», «Материалы и изделия текстильные. Количественный химический анализ. Часть 15. Смеси джута с определен»",
+    "ГОСТ ISO 1833-16-2023: новый в базе, статус «Принят», «Материалы и изделия текстильные. Количественный химический анализ. Часть 16. Смеси полипропиленовых »",
+    "ГОСТ ISO 1833-17-2022: новый в базе, статус «Принят», «Материалы текстильные. Количественный химический анализ. Часть 17. Смеси целлюлозных волокон и опред»",
+    "ГОСТ ISO 1833-18-2022: новый в базе, статус «Принят», «Материалы текстильные. Количественный химический анализ. Часть 18. Смеси натурального шелкового воло»",
+    "ГОСТ ISO 1833-2-2022: новый в базе, статус «Принят», «Материалы и изделия текстильные. Количественный химический анализ. Часть 2. Трехкомпонентные смеси в»",
+    "ГОСТ ISO 1833-28-2022: новый в базе, статус «Принят», «Материалы текстильные. Количественный химический анализ. Часть 28. Смеси хитозановых и некоторых дру»",
+    "ГОСТ ISO 1833-3-2022: новый в базе, статус «Принят», «Материалы и изделия текстильные. Количественный химический анализ. Часть 3. Смеси ацетатного и некот»",
+    "ГОСТ ISO 1833-9-2023: новый в базе, статус «Принят», «Материалы текстильные. Количественный химический анализ. Часть 9. Смеси ацетата с некоторыми другими»",
+    "ГОСТ ISO 19954-2026: новый в базе, статус «Принят», «Обувь. Методы испытаний готовой обуви. Пригодность к стирке в домашней стиральной машине»",
+    "ГОСТ ISO 20932-1-2026: новый в базе, статус «Принят», «Материалы и изделия текстильные. Определение эластичности материалов. Часть 1. Методы полоски»",
+    "ГОСТ ISO 21294-2024: новый в базе, статус «Принят», «Семена масличных культур. Ручной или автоматический прерывистый отбор проб»",
+    "ГОСТ ISO 24231-2026: новый в базе, статус «Принят», «Система стандартов безопасности труда. Одежда специальная для защиты от воды (атмосферных осадков). »",
+    "ГОСТ ISO 24232-2026: новый в базе, статус «Принят», «Система стандартов безопасности труда. Одежда специальная для защиты от воды (атмосферных осадков). »",
+    "ГОСТ ISO 5398-4-2022: новый в базе, статус «Принят», «Кожа. Химическое определение содержания оксида хрома. Часть 4. Количественное определение методом ин»",
+    "ГОСТ ISO 6259-1-2023: новый в базе, статус «Действует», «Трубы из термопластов. Определение механических свойств при растяжении. Часть 1. Общий метод испытан»",
+    "ГОСТ ISO 874-2017: новый в базе, статус «Принят», «Фрукты и овощи свежие. Отбор проб»",
+    "ГОСТ ISO/IEC 17043-2025: новый в базе, статус «Действует», «Оценка соответствия. Общие требования к компетентности провайдеров проверки квалификации»",
+    "ГОСТ OIML R 76-1-2011: новый в базе, статус «Действует», «Государственная система обеспечения единства измерений. Весы неавтоматического действия. Часть 1. Ме»",
+    "ГОСТ Р 1.1-2020: новый в базе, статус «Действует», «Стандартизация в Российской Федерации. Технические комитеты по стандартизации и проектные технически»",
+    "ГОСТ Р 1.10-2004: новый в базе, статус «Действует», «Стандартизация в Российской Федерации. Правила стандартизации и рекомендации по стандартизации. Поря»",
+    "ГОСТ Р 1.12-2020: новый в базе, статус «Действует», «Стандартизация в Российской Федерации. Термины и определения»",
+    "ГОСТ Р 1.14-2017: новый в базе, статус «Действует», «Стандартизация в Российской Федерации. Программа национальной стандартизации. Требования к структуре»",
+    "ГОСТ Р 1.15-2017: новый в базе, статус «Действует», «Стандартизация в Российской Федерации. Службы стандартизации в организациях. Правила создания и функ»",
+    "ГОСТ Р 1.16-2011: новый в базе, статус «Действует», «Стандартизация в Российской Федерации. Стандарты национальные предварительные. Правила разработки, у»",
+    "ГОСТ Р 1.17-2017: новый в базе, статус «Действует», «Стандартизация в Российской Федерации. Эксперт по стандартизации. Общие требования»",
+    "ГОСТ Р 1.18-2018: новый в базе, статус «Действует», «Стандартизация в Российской Федерации. Реестр технических условий. Правила формирования, ведения и п»",
+    "ГОСТ Р 1.19-2023: новый в базе, статус «Действует», «Стандартизация в Российской Федерации. Своды правил. Правила построения, изложения, оформления и обо»",
+    "ГОСТ Р 1.2-2020: новый в базе, статус «Действует», «Стандартизация в Российской Федерации. Стандарты национальные Российской Федерации. Правила разработ»",
+    "ГОСТ Р 1.20-2025: новый в базе, статус «Действует», «Стандартизация в Российской Федерации. Классификаторы общероссийские. Основные положения и порядок п»",
+    "ГОСТ Р 1.3-2018: новый в базе, статус «Действует», «Стандартизация в Российской Федерации. Технические условия на продукцию. Общие требования к содержан»",
+    "ГОСТ Р 1.4-2004: новый в базе, статус «Действует», «Стандартизация в Российской Федерации. Стандарты организаций. Общие положения»",
+    "ГОСТ Р 1.5-2012: новый в базе, статус «Действует», «Стандартизация в Российской Федерации. Стандарты национальные. Правила построения, изложения, оформл»",
+    "ГОСТ Р 1.6-2013: новый в базе, статус «Действует», «Стандартизация в Российской Федерации. Проекты стандартов. Правила организации и проведения эксперти»",
+    "ГОСТ Р 1.7-2014: новый в базе, статус «Действует», «Стандартизация в Российской Федерации. Стандарты национальные. Правила оформления и обозначения при »",
+    "ГОСТ Р 1.8-2011: новый в базе, статус «Действует», «Стандартизация в Российской Федерации. Стандарты межгосударственные. Правила проведения в Российской»",
+    "ГОСТ Р 1.9-2004: новый в базе, статус «Действует», «Стандартизация в Российской Федерации. Знак соответствия национальным стандартам Российской Федераци»",
+    "ГОСТ Р 2.305-2026: новый в базе, статус «Принят», «Единая система конструкторской документации. Изображения — виды, разрезы, сечения»",
+    "ГОСТ Р 2.306-2026: новый в базе, статус «Принят», «Единая система конструкторской документации. Обозначения материалов графические»",
+    "ГОСТ Р 2.309-2026: новый в базе, статус «Принят», «Единая система конструкторской документации. Обозначение шероховатости поверхностей»",
+    "ГОСТ Р 2.315-2026: новый в базе, статус «Принят», «Единая система конструкторской документации. Изображения упрощенные и условные крепежных изделий»",
+    "ГОСТ Р 2.318-2026: новый в базе, статус «Принят», «Единая система конструкторской документации. Условное изображение и упрощенное указание размеров отв»",
+    "ГОСТ Р 2.321-2026: новый в базе, статус «Принят», «Единая система конструкторской документации. Обозначения буквенные»",
+    "ГОСТ Р 2.601-2019: новый в базе, статус «Действует», «Единая система конструкторской документации. Эксплуатационные документы»",
+    "ГОСТ Р 2.602-2026: новый в базе, статус «Принят», «Единая система конструкторской документации. Ремонтная документация. Основные положения»",
+    "ГОСТ Р 2.610-2019: новый в базе, статус «Действует», «Единая система конструкторской документации. Правила выполнения эксплуатационных документов»",
+    "ГОСТ Р 2.611-2026: новый в базе, статус «Принят», «Единая система конструкторской документации. Каталоги»",
+    "ГОСТ Р 2.620-2026: новый в базе, статус «Принят», «Единая система конструкторской документации. Эксплуатационная документация. Технология модульной раз»",
+    "ГОСТ Р 22.9.08-2026: новый в базе, статус «Действует», «Безопасность в чрезвычайных ситуациях. Системы парашютные специального назначения. Общие технические»",
+    "ГОСТ Р 3.103-2026: новый в базе, статус «Принят», «Единая система технологической документации. Основные надписи»",
+    "ГОСТ Р 3.105-2026: новый в базе, статус «Принят», «Единая система технологической документации. Документы общего назначения»",
+    "ГОСТ Р 44.004-2026: новый в базе, статус «Принят», «Система технологической подготовки производства. Технологичность конструкции изделий. Термины и опре»",
+    "ГОСТ Р 50.04.03-2026: новый в базе, статус «Принят», «Система оценки соответствия в области использования атомной энергии. Оценка соответствия в форме исп»",
+    "ГОСТ Р 50.10.01-2026: новый в базе, статус «Принят», «Система оценки соответствия в области использования атомной энергии. Насосы плунжерные и агрегаты на»",
+    "ГОСТ Р 51143-2026: новый в базе, статус «Принят», «Комплексы стартовые и технические и заправочно-нейтрализационные станции для ракет космического назн»",
+    "ГОСТ Р 51631-2008: новый в базе, статус «Отменён», «Лифты пассажирские. Технические требования доступности, включая доступность для инвалидов и других м»",
+    "ГОСТ Р 51814.7-2026: новый в базе, статус «Принят», «Системы менеджмента качества в автомобилестроении. Оценка систем менеджмента качества»",
+    "ГОСТ Р 52382-2010: новый в базе, статус «Отменён», «Лифты пассажирские. Лифты для пожарных»",
+    "ГОСТ Р 53780-2010: новый в базе, статус «Действует», «Лифты. Общие требования безопасности к устройству и установке»",
+    "ГОСТ Р 53782-2010: новый в базе, статус «Действует», «Лифты. Правила и методы оценки соответствия лифтов при вводе в эксплуатацию»",
+    "ГОСТ Р 53783-2010: новый в базе, статус «Действует», «Лифты. Правила и методы оценки соответствия лифтов в период эксплуатации»",
+    "ГОСТ Р 55964-2022: новый в базе, статус «Действует», «Лифты. Общие требования безопасности при эксплуатации»",
+    "ГОСТ Р 55965-2014: новый в базе, статус «Действует», «Лифты. Общие требования к модернизации находящихся в эксплуатации лифтов»",
+    "ГОСТ Р 55969-2023: новый в базе, статус «Действует», «Лифты. Ввод в эксплуатацию. Общие требования»",
+    "ГОСТ Р 56122-2026: новый в базе, статус «Действует», «Беспилотные авиационные системы. Общие требования»",
+    "ГОСТ Р 57700.2-2026: новый в базе, статус «Принят», «Компьютерные модели и моделирование. Сертификация программного обеспечения компьютерного моделирован»",
+    "ГОСТ Р 59155-2020: новый в базе, статус «Действует», «Лифты. Технические условия»",
+    "ГОСТ Р 59519-2026: новый в базе, статус «Действует», «Беспилотные авиационные системы. Элементы беспилотных авиационных систем. Спецификация и общие требо»",
+    "ГОСТ Р 59693-2026: новый в базе, статус «Принят», «Покрывала для изоляции очага горения. Общие технические требования. Методы испытаний»",
+    "ГОСТ Р 59988.20.3-2026: новый в базе, статус «Действует», «Системы автоматизированного проектирования электроники. Информационное обеспечение. Технические хара»",
+    "ГОСТ Р 70262.3-2026: новый в базе, статус «Принят», «Защита информации. Идентификация и аутентификация. Типовые угрозы и уязвимости идентификации и аутен»",
+    "ГОСТ Р 70400.12-2026: новый в базе, статус «Принят», «Промышленность боеприпасов и спецхимии. Детали типа «втулка». Изготовление методом порошковой металл»",
+    "ГОСТ Р 70400.13-2026: новый в базе, статус «Принят», «Промышленность боеприпасов и спецхимии. Растворы и электролиты, используемые для изготовления металл»",
+    "ГОСТ Р 70400.14-2026: новый в базе, статус «Принят», «Промышленность боеприпасов и спецхимии. Детали типа «корпус». Типовой технологический процесс электр»",
+    "ГОСТ Р 70729-2026: новый в базе, статус «Принят», «Трубы и фитинги пластмассовые. Сварка нагретым инструментом враструб. Общие требования»",
+    "ГОСТ Р 71448-2024: новый в базе, статус «Действует», «Оптика и фотоника. Шероховатость поверхности. Параметры и типы направлений неровностей поверхности»",
+    "ГОСТ Р 72252.5-2026: новый в базе, статус «Принят», «Оптика и фотоника. Алмазный инструмент для обработки оптических деталей. Конструкция и размеры. Част»",
+    "ГОСТ Р 72414-2026: новый в базе, статус «Принят», «Персональные электронно-вычислительные машины. Общие технические условия»",
+    "ГОСТ Р 72420-2026: новый в базе, статус «Принят», «Серверное оборудование. Классификация продукции и порядок ее применения»",
+    "ГОСТ Р 72593.2-2026: новый в базе, статус «Принят», «Оптика и фотоника. Схемы интегральные фотонные. Часть 2. Классификация и условные обозначения»",
+    "ГОСТ Р 72593.3-2026: новый в базе, статус «Принят», «Оптика и фотоника. Схемы интегральные фотонные. Часть 3. Основные параметры»",
+    "ГОСТ Р 72593.4-2026: новый в базе, статус «Принят», «Оптика и фотоника. Схемы интегральные фотонные. Часть 4. Требования к креплению, монтажу и маркировк»",
+    "ГОСТ Р 72602-2026: новый в базе, статус «Принят», «Конструкции для удаления дымовых газов. Общие требования к конструкциям различного типа, монтажу и в»",
+    "ГОСТ Р 72603.1-2026: новый в базе, статус «Принят», «Конструкции для удаления дымовых газов. Общие требования, монтаж и ввод в эксплуатацию. Часть 1. Кон»",
+    "ГОСТ Р 72604.1-2026: новый в базе, статус «Принят», «Конструкции для удаления дымовых газов. Дымоходные системы из бетона. Часть 1. Применение с устройст»",
+    "ГОСТ Р 72665-2026: новый в базе, статус «Принят», «Дороги автомобильные общего пользования. Модель дорожных данных. Общие положения»",
+    "ГОСТ Р 72687-2026: новый в базе, статус «Действует», «Беспилотные авиационные системы. Требования к архитектуре и функционированию линии контроля и управл»",
+    "ГОСТ Р 72689-2026: новый в базе, статус «Действует», «Беспилотные авиационные системы. Методы испытаний характеристик и переключения линий С2, а также исп»",
+    "ГОСТ Р 72696-2026: новый в базе, статус «Действует», «Беспилотные авиационные системы. Радиоэлектронное оборудование. Основные принципы проектирования. Тр»",
+    "ГОСТ Р 72697-2026: новый в базе, статус «Действует», «Беспилотные авиационные системы. Охрана окружающей среды при эксплуатации беспилотных авиационных си»",
+    "ГОСТ Р 72698-2026: новый в базе, статус «Действует», «Беспилотные авиационные системы. Беспилотные воздушные суда. Компоненты. Воздушные винты. Общие техн»",
+    "ГОСТ Р 72699-2026: новый в базе, статус «Действует», «Беспилотные авиационные системы. Метрологическое обеспечение испытаний беспилотных авиационных систе»",
+    "ГОСТ Р 72700-2026: новый в базе, статус «Действует», «Беспилотные авиационные системы. Аэродромы. Оборудование аэродромов, используемых беспилотными авиац»",
+    "ГОСТ Р 72701-2026: новый в базе, статус «Действует», «Беспилотные авиационные системы. Дронопорт. Требования к оператору»",
+    "ГОСТ Р 72702-2026: новый в базе, статус «Действует», «Беспилотные авиационные системы. Безопасность труда при эксплуатации беспилотных авиационных систем.»",
+    "ГОСТ Р 72703-2026: новый в базе, статус «Действует», «Беспилотные авиационные системы. Безопасность. Требования к устойчивости работы в условиях внешних в»",
+    "ГОСТ Р 72704-2026: новый в базе, статус «Действует», «Беспилотные авиационные системы. Безопасность. Требования к устойчивости работы в условиях отсутстви»",
+    "ГОСТ Р 72705-2026: новый в базе, статус «Действует», «Беспилотные авиационные системы. Методы определения соответствия требованиям к летной годности беспи»",
+    "ГОСТ Р 72706-2026: новый в базе, статус «Действует», «Беспилотные авиационные системы. Методы определения соответствия требованиям к летной годности беспи»",
+    "ГОСТ Р 72707-2026: новый в базе, статус «Действует», «Беспилотные авиационные системы. Требования к системам обнаружения и предотвращения столкновений»",
+    "ГОСТ Р 72708-2026: новый в базе, статус «Действует», «Беспилотные авиационные системы. Летная годность беспилотных авиационных систем в составе с БВС с ма»",
+    "ГОСТ Р 72709-2026: новый в базе, статус «Действует», «Беспилотные авиационные системы. Общие требования к системам предотвращения столкновений в воздухе д»",
+    "ГОСТ Р 72747-2026: новый в базе, статус «Действует», «Авиационная техника. Затворы пиротехнические. Технические условия»",
+    "ГОСТ Р 72748-2026: новый в базе, статус «Действует», «Авиационная техника. Пружины спиральные. Технические условия»",
+    "ГОСТ Р 72754-2026: новый в базе, статус «Действует», «Авиационная техника. Штуцера консервации. Технические условия»",
+    "ГОСТ Р 72782.8-2026: новый в базе, статус «Принят», «Машины землеройные. Машины высокоавтоматизированные гибридные землеройные и дорожно-строительные. Оп»",
+    "ГОСТ Р 72795-2026: новый в базе, статус «Принят», «Оптика и фотоника. Обработка заготовок оптических деталей. Термины и определения»",
+    "ГОСТ Р 72816-2026: новый в базе, статус «Принят», «Оптика и фотоника. Элементы оптические. Метод определения полного рассеяния оптического излучения»",
+    "ГОСТ Р 72840-2026: новый в базе, статус «Принят», «Оптика и фотоника. Объективы для оптико-электронных систем. Метод определения смещения плоскости наи»",
+    "ГОСТ Р 72843-2026: новый в базе, статус «Принят», «Оптика и фотоника. Материалы и компоненты оптические для инфракрасного спектрального диапазона. Мето»",
+    "ГОСТ Р 72848-2026: новый в базе, статус «Принят», «Оптика и фотоника. Детали оптические из полимерных материалов. Общие технические условия»",
+    "ГОСТ Р 72850-2026: новый в базе, статус «Принят», «Оптика и фотоника. Детали оптические c асферическими поверхностями. Классификация и основные парамет»",
+    "ГОСТ Р 72853-2026: новый в базе, статус «Принят», «Оптика и фотоника. Фильтры оптические интерференционные диэлектрические вакуумного напыления. Класси»",
+    "ГОСТ Р 72854-2026: новый в базе, статус «Принят», «Легкорельсовые транспортные средства. Требования к электрооборудованию. Методы проверки»",
+    "ГОСТ Р 72856-2026: новый в базе, статус «Принят», «Легкорельсовые транспортные средства. Электробезопасность. Общие требования и номенклатура видов защ»",
+    "ГОСТ Р 72859.2-2026: новый в базе, статус «Принят», «Суда малые. Системы обращения с отходами. Часть 2. Системы обработки сточных вод. Общие технические »",
+    "ГОСТ Р 72860-2026: новый в базе, статус «Принят», «Работы отделочные. Укладка рулонных и модульных напольных покрытий методом приклеивания. Правила и к»",
+    "ГОСТ Р 72864-2026: новый в базе, статус «Принят», «Клеи для склеивания металлических и неметаллических поверхностей радиоэлектронной аппаратуры. Общие »",
+    "ГОСТ Р 72865-2026: новый в базе, статус «Принят», «Покрытия лакокрасочные для металлических и неметаллических поверхностей радиоэлектронной аппаратуры.»",
+    "ГОСТ Р 72867-2026: новый в базе, статус «Принят», «Электромонтаж радиоэлектронной аппаратуры непаяными методами. Общие требования»",
+    "ГОСТ Р 72868-2026: новый в базе, статус «Принят», «Оптика и фотоника. Оборудование для производства оптических деталей. Термины и определения»",
+    "ГОСТ Р 72872-2026: новый в базе, статус «Принят», «Водный транспорт. Система управления безопасностью судов. Методика оценки экологического риска водно»",
+    "ГОСТ Р 72873-2026: новый в базе, статус «Действует», «Буксировочные канатные дороги. Оборудование и системы безопасности. Общие требования»",
+    "ГОСТ Р 72875-2026: новый в базе, статус «Принят», «Трубы. Изготовление методом радиальной намотки пресс-материала АГ-4С. Типовой технологический процес»",
+    "ГОСТ Р 72876.1-2026: новый в базе, статус «Принят», «Оптика и фотоника. Приборы оптические. Методы испытаний на воздействие внешних факторов. Часть 1. Об»",
+    "ГОСТ Р 72877-2026: новый в базе, статус «Принят», «Машины ручные электрические. Общие технические условия»",
+    "ГОСТ Р 72878-2026: новый в базе, статус «Принят», «Машины ручные электрические. Номинальные значения параметров и эксплуатационные характеристики»",
+    "ГОСТ Р 72879-2026: новый в базе, статус «Принят», «Оборудование горно-шахтное. Многофункциональные системы безопасности угольных разрезов. Система опре»",
+    "ГОСТ Р 72880-2026: новый в базе, статус «Принят», «Краска известковая для реставрационных работ. Технические требования»",
+    "ГОСТ Р 72882-2026: новый в базе, статус «Действует», «Дороги автомобильные общего пользования. Швы деформационные резинометаллические пролетных строений м»",
+    "ГОСТ Р 72883-2026: новый в базе, статус «Действует», «Дороги автомобильные общего пользования. Материалы вяжущие нефтяные битумные. Метод определения элас»",
+    "ГОСТ Р 72884-2026: новый в базе, статус «Принят», «Оборудование горно-шахтное. Многофункциональные системы безопасности угольных разрезов. Контроль сей»",
+    "ГОСТ Р 72885-2026: новый в базе, статус «Действует», «Транспорт железнодорожный. Состав подвижной. Батареи для электропитания систем вспомогательного обор»",
+    "ГОСТ Р 72891-2026: новый в базе, статус «Действует», «Дороги автомобильные общего пользования. Швы деформационные с резиновым компенсатором пролетных стро»",
+    "ГОСТ Р 72892-2026: новый в базе, статус «Действует», «Дороги автомобильные общего пользования. Вантовые системы мостовых сооружений. Правила расчета»",
+    "ГОСТ Р 72893-2026: новый в базе, статус «Принят», «Устройство конструкций с применением изделий из ячеистых бетонов автоклавного твердения. Правила, ко»",
+    "ГОСТ Р 72897-2026: новый в базе, статус «Принят», «Покрытия лыжероллерных трасс. Технические требования и методы испытаний»",
+    "ГОСТ Р 72912-2026: новый в базе, статус «Действует», «Дороги автомобильные и улицы. Остановочные пункты маршрутных транспортных средств. Общие требования»",
+    "ГОСТ Р 72914-2026: новый в базе, статус «Принят», «Нефтяная и газовая промышленность. Операции арктические нефтегазовые. Управление персоналом»",
+    "ГОСТ Р 72915-2026: новый в базе, статус «Действует», «Системы автоматизированного проектирования электроники. Подсистема виртуальных испытаний электронной»",
+    "ГОСТ Р 72916-2026: новый в базе, статус «Действует», «Системы автоматизированного проектирования электроники. Подсистема виртуальных испытаний электронной»",
+    "ГОСТ Р 72917-2026: новый в базе, статус «Действует», «Системы автоматизированного проектирования электроники. Подсистема виртуальных испытаний электронной»",
+    "ГОСТ Р 72918-2026: новый в базе, статус «Действует», «Системы автоматизированного проектирования электроники. Подсистема виртуальных испытаний электронной»",
+    "ГОСТ Р 72920-2026: новый в базе, статус «Принят», «Технология полиграфии. Методы настройки цветовоспроизведения печатного процесса в соответствии с наб»",
+    "ГОСТ Р 72923-2026: новый в базе, статус «Принят», «Установки ядерные энергетические судовые. Вода второго контура и основного запаса. Технические требо»",
+    "ГОСТ Р 72925-2026: новый в базе, статус «Принят», «Обитаемые подводные аппараты. Система регенерации воздуха. Требования к составу и эксплуатационным х»",
+    "ГОСТ Р 72927-2026: новый в базе, статус «Принят», «Яичники крупного рогатого скота, овец, коз и свиней замороженные. Технические условия»",
+    "ГОСТ Р 72928-2026: новый в базе, статус «Принят», «Гипофизы крупного рогатого скота, овец, коз и свиней замороженные. Технические условия»",
+    "ГОСТ Р 72929-2026: новый в базе, статус «Принят», «Печень крупного рогатого скота и свиней замороженная. Технические условия»",
+    "ГОСТ Р 72946-2026: новый в базе, статус «Принят», «Гидравлические и гидроаккумулирующие электростанции. Гидротехнические сооружения. Контрольно-измерит»",
+    "ГОСТ Р 72949-2026: новый в базе, статус «Принят», «Беспилотные авиационные системы. Работы, выполняемые с применением беспилотных авиационных систем. Д»",
+    "ГОСТ Р 72957-2026: новый в базе, статус «Принят», «Кухня русская традиционная. Рекомендации по технологии приготовления блюд»",
+    "ГОСТ Р 77.001-2026: новый в базе, статус «Принят», «Система поддержки жизненного цикла изделия. Основные положения»",
+    "ГОСТ Р 77.101-2026: новый в базе, статус «Принят», «Система поддержки жизненного цикла изделия. Общие требования»",
+    "ГОСТ Р 77.102-2026: новый в базе, статус «Принят», «Система поддержки жизненного цикла изделия. Модель жизненного цикла. Основные положения»",
+    "ГОСТ Р 77.402-2026: новый в базе, статус «Принят», «Система поддержки жизненного цикла изделия. Виды программных средств поддержки жизненного цикла»",
+    "ГОСТ Р 77.403-2026: новый в базе, статус «Принят», «Система поддержки жизненного цикла изделия. Интероперабельность программных средств. Основные положе»",
+    "ГОСТ Р 8.1048-2026: новый в базе, статус «Принят», «Государственная система обеспечения единства измерений. Объем природного газа. Вычислители, вычислит»",
+    "ГОСТ Р ИСО 1151-11-2026: новый в базе, статус «Действует», «Системы управления летательными аппаратами. Термины и определения»",
+    "ГОСТ Р ИСО 18162-2026: новый в базе, статус «Принят», «Биотехнологии. Биобанкинг. Требования к нервным стволовым клеткам человека, полученным из плюрипотен»",
+    "ГОСТ Р ИСО 5224-2026: новый в базе, статус «Действует», «Винтокрылые летательные аппараты. Динамика полета. Термины и определения»",
+    "ГОСТ Р МЭК 60086-2-1-2026: новый в базе, статус «Действует», «Элементы и батареи первичные. Часть 2-1. Физические и электрические характеристики элементов и батар»",
+    "ГОСТ Р МЭК 60086-2-2-2026: новый в базе, статус «Действует», «Элементы и батареи первичные. Часть 2-2. Физические и электрические характеристики литиевых элементо»",
+    "ГОСТ Р МЭК 60287-2-1-2026: новый в базе, статус «Принят», «Кабели электрические. Расчет номинальной токовой нагрузки. Часть 2-1. Тепловое сопротивление. Расчет»",
+    "ГОСТ Р МЭК 61674-2026: новый в базе, статус «Принят», «Изделия медицинские электрические. Дозиметры с ионизационными камерами и/или полупроводниковыми дете»",
+    "ПНСТ 1082-2026: новый в базе, статус «Принят», «Система поддержки жизненного цикла изделия. Интероперабельность программных средств. Представление д»",
+    "ПНСТ 1083-2026: новый в базе, статус «Принят», «Система поддержки жизненного цикла изделия. Информационная модель изделия. Основные положения»",
+    "ПНСТ 1084-2026: новый в базе, статус «Принят», «Система поддержки жизненного цикла изделия. Информационная модель изделия. Общие данные об изделии»",
+    "ПНСТ 1085-2026: новый в базе, статус «Принят», «Система поддержки жизненного цикла изделия. Информационная модель изделия. Структура изделия»",
+    "ПНСТ 1086-2026: новый в базе, статус «Принят», «Система поддержки жизненного цикла изделия. Информационная модель изделия. Материалы и их свойства»"
+   ],
+   "seconds": 70.3,
+   "mode": "daily"
+  }
+ ]
+}

@@ -1,0 +1,28 @@
+[
+  {
+    "designation": "СНиП 12-04-2002",
+    "status": "unavailable",
+    "reason": "ConnectionError: HTTPSConnectionPool(host='www.demolition.spb.ru', port=443): Max retries exceeded with url: /docs/5-"
+  },
+  {
+    "designation": "СНиП 3.04.01-87",
+    "status": "unavailable",
+    "reason": "ValueError: недостаточно текста, возможно скан или карточка"
+  },
+  {
+    "designation": "СП 2.1.3678-20",
+    "status": "collected",
+    "source": "https://meganorm.ru/mega_doc/dop_fire_update_01032025/postanovlenie_desyatogo_arbitrazhnogo_apellyatsionnogo_suda/0/postanovlenie_glavnogo_gosudarstvennogo_sanitarnogo_vracha.html",
+    "kind": "html",
+    "characters": 165768,
+    "pages": null
+  },
+  {
+    "designation": "СП 2.1.4284-26",
+    "status": "collected",
+    "source": "https://e-stomatology.ru/info/538/",
+    "kind": "html",
+    "characters": 141265,
+    "pages": null
+  }
+]

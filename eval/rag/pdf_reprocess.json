@@ -1,0 +1,170 @@
+[
+  {
+    "designation": "ГОСТ 12.4.107-2012",
+    "status": "collected",
+    "source": "https://meganorm.ru/Data/533/53393.pdf",
+    "kind": "pdf",
+    "characters": 23252,
+    "pages": 12
+  },
+  {
+    "designation": "ГОСТ 14192-96",
+    "status": "collected",
+    "source": "https://meganorm.ru/Data2/1/4294850/4294850323.pdf",
+    "kind": "pdf",
+    "characters": 69295,
+    "pages": 37
+  },
+  {
+    "designation": "ГОСТ 24297-2013",
+    "status": "collected",
+    "source": "https://meganorm.ru/Data/562/56263.pdf",
+    "kind": "pdf",
+    "characters": 34216,
+    "pages": 20
+  },
+  {
+    "designation": "ГОСТ 30494-2011",
+    "status": "collected",
+    "source": "https://meganorm.ru/Data2/1/4293788/4293788520.pdf",
+    "kind": "pdf",
+    "characters": 41504,
+    "pages": 15
+  },
+  {
+    "designation": "ГОСТ 32489-2013",
+    "status": "collected",
+    "source": "https://meganorm.ru/Data/568/56854.pdf",
+    "kind": "pdf",
+    "characters": 39992,
+    "pages": 15
+  },
+  {
+    "designation": "ГОСТ 34583-2019",
+    "status": "collected",
+    "source": "https://meganorm.ru/Data/721/72167.pdf",
+    "kind": "pdf",
+    "characters": 124891,
+    "pages": 43
+  },
+  {
+    "designation": "ГОСТ 6507-90",
+    "status": "collected",
+    "source": "https://meganorm.ru/Data/108/10856.pdf",
+    "kind": "pdf",
+    "characters": 33220,
+    "pages": 12
+  },
+  {
+    "designation": "ГОСТ Р 12.3.053-2020",
+    "status": "collected",
+    "source": "https://meganorm.ru/Data/744/74411.pdf",
+    "kind": "pdf",
+    "characters": 23534,
+    "pages": 11
+  },
+  {
+    "designation": "ГОСТ 34441-2018",
+    "status": "collected",
+    "source": "https://meganorm.ru/Data/699/69933.pdf",
+    "kind": "pdf",
+    "characters": 22656,
+    "pages": 11
+  },
+  {
+    "designation": "ГОСТ Р 51870-2014",
+    "status": "collected",
+    "source": "https://meganorm.ru/Data2/1/4293767/4293767479.pdf",
+    "kind": "pdf",
+    "characters": 108873,
+    "pages": 36
+  },
+  {
+    "designation": "ГОСТ Р 55964-2022",
+    "status": "collected",
+    "source": "https://meganorm.ru/Data/789/78919.pdf",
+    "kind": "pdf",
+    "characters": 131220,
+    "pages": 28
+  },
+  {
+    "designation": "ГОСТ Р 55965-2014",
+    "status": "collected",
+    "source": "https://meganorm.ru/Data2/1/4293773/4293773291.pdf",
+    "kind": "pdf",
+    "characters": 19435,
+    "pages": 8
+  },
+  {
+    "designation": "ГОСТ Р 57582-2017",
+    "status": "collected",
+    "source": "https://meganorm.ru/Data2/1/4293744/4293744378.pdf",
+    "kind": "pdf",
+    "characters": 25625,
+    "pages": 11
+  },
+  {
+    "designation": "ГОСТ Р 58485-2024",
+    "status": "collected",
+    "source": "https://meganorm.ru/Data/837/83732.pdf",
+    "kind": "pdf",
+    "characters": 71780,
+    "pages": 20
+  },
+  {
+    "designation": "ГОСТ Р ЕН 361-2008",
+    "status": "collected",
+    "source": "https://meganorm.ru/Data2/1/4293830/4293830424.pdf",
+    "kind": "pdf",
+    "characters": 21993,
+    "pages": 12
+  },
+  {
+    "designation": "СНиП 2.03.13-88",
+    "status": "collected",
+    "source": "https://meganorm.ru/Data2/1/4293811/4293811498.pdf",
+    "kind": "pdf",
+    "characters": 227448,
+    "pages": 68
+  },
+  {
+    "designation": "СНиП 3.03.01-87",
+    "status": "collected",
+    "source": "https://meganorm.ru/Data2/1/4293782/4293782487.pdf",
+    "kind": "pdf",
+    "characters": 643173,
+    "pages": 205
+  },
+  {
+    "designation": "СНиП 41-01-2003",
+    "status": "collected",
+    "source": "https://meganorm.ru/Data2/1/4294844/4294844884.pdf",
+    "kind": "pdf",
+    "characters": 270382,
+    "pages": 60
+  },
+  {
+    "designation": "СП 31-110-2003",
+    "status": "collected",
+    "source": "https://meganorm.ru/Data2/1/4294815/4294815197.pdf",
+    "kind": "pdf",
+    "characters": 278539,
+    "pages": 55
+  },
+  {
+    "designation": "СП 70.13330.2012",
+    "status": "collected",
+    "source": "https://meganorm.ru/Data2/1/4293719/4293719695.pdf",
+    "kind": "pdf",
+    "characters": 2226,
+    "pages": 1
+  },
+  {
+    "designation": "СП 76.13330.2016",
+    "status": "collected",
+    "source": "https://meganorm.ru/Data2/1/4293747/4293747637.pdf",
+    "kind": "pdf",
+    "characters": 283063,
+    "pages": 73
+  }
+]

@@ -1,0 +1,46 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: tzcheck/rag/Dockerfile.app
+    image: tzcheck-rag-app:local
+    environment:
+      TZCHECK_RAG: "${TZCHECK_RAG:-0}"
+      TZCHECK_RAG_MODE: "${TZCHECK_RAG_MODE:-}"
+      TZCHECK_RAG_EMBED_MODEL: "${TZCHECK_RAG_EMBED_MODEL:-}"
+      HF_HOME: /model-cache
+      HF_HUB_OFFLINE: "1"
+    volumes:
+      - ./data/norm_corpus:/app/data/norm_corpus:ro
+      - ${TZCHECK_RAG_MODEL_CACHE:-./data/rag-model-cache}:/model-cache
+  rag-index:
+    build:
+      context: .
+      dockerfile: tzcheck/rag/Dockerfile
+    image: tzcheck-rag-index:local
+    command: ["python", "-m", "tzcheck.rag", "build"]
+    environment:
+      TZCHECK_REFDATA_OFFLINE: "1"
+    volumes:
+      - ./data/norm_corpus:/app/data/norm_corpus
+      - refdata:/app/tzcheck/data
+    healthcheck:
+      disable: true
+    restart: "no"
+  rag-embeddings:
+    build:
+      context: .
+      dockerfile: tzcheck/rag/Dockerfile.models
+    image: tzcheck-rag-models:local
+    command: ["python", "-m", "tzcheck.rag.models", "build", "--model", "${TZCHECK_RAG_EMBED_MODEL:-deepvk/USER-bge-m3}"]
+    environment:
+      TZCHECK_REFDATA_OFFLINE: "1"
+      HF_HOME: /model-cache
+      HF_HUB_DISABLE_XET: "1"
+    volumes:
+      - ./data/norm_corpus:/app/data/norm_corpus
+      - ./tzcheck:/app/tzcheck:ro
+      - ${TZCHECK_RAG_MODEL_CACHE:-./data/rag-model-cache}:/model-cache
+    healthcheck:
+      disable: true
+    restart: "no"

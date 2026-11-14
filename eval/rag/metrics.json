@@ -1,0 +1,10 @@
+{
+  "questions": 0,
+  "generator_errors": 15,
+  "recall@1": null,
+  "recall@5": null,
+  "recall@10": null,
+  "mrr": null,
+  "out_of_domain_n": 3,
+  "refusal_rate": 0.6666666666666666
+}

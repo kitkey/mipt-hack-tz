@@ -1,0 +1,31 @@
+---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	parse(parse)
+	security(security)
+	rules(rules)
+	llm_verify_rules(llm_verify_rules)
+	llm_find(llm_find)
+	llm_recheck(llm_recheck)
+	reconcile(reconcile)
+	finish(finish)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> parse;
+	llm_find -.-> llm_recheck;
+	llm_find -.-> reconcile;
+	llm_recheck --> reconcile;
+	llm_verify_rules --> llm_find;
+	parse -. &nbsp;end&nbsp; .-> __end__;
+	parse -.-> security;
+	reconcile --> finish;
+	rules -.-> llm_verify_rules;
+	rules -.-> reconcile;
+	security --> rules;
+	finish --> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc

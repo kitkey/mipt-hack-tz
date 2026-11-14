@@ -1,0 +1,276 @@
+{
+ "source": "laws",
+ "title": "Редакции законов (223-ФЗ, 44-ФЗ, 102-ФЗ, 184-ФЗ, ГК РФ и др.)",
+ "date": "2026-11-13",
+ "runs": [
+  {
+   "at": "2026-11-13T17:54:36+00:00",
+   "via": "actual_api",
+   "via_title": "actual.pravo.gov.ru, API :8000 (HTTP)",
+   "errors": [],
+   "http_errors": [],
+   "version_before": null,
+   "status": "updated",
+   "source_url": "http://actual.pravo.gov.ru/",
+   "version_after": "23.10.2026",
+   "notes": [
+    "publication.pravo.gov.ru: последних федеральных законов 30, по теме закупок и стандартизации 0"
+   ],
+   "counts": {
+    "before": 0,
+    "after": 8,
+    "added": 8,
+    "removed": 0,
+    "changed": 0
+   },
+   "added": [
+    {
+     "key": "102-ФЗ",
+     "record": {
+      "act": "102-ФЗ",
+      "name": "Об обеспечении единства измерений",
+      "number": "102-ФЗ",
+      "signed": "26.06.2008",
+      "docstate": "Действует с изменениями",
+      "hash": "1b489dbb725f80cbba977a2bffb2ec76e9e9a8c68f7ee98f99543f1bc21ca619",
+      "docid": 112360,
+      "redactions": 4,
+      "current": {
+       "redid": 448150,
+       "date": "01.01.2026",
+       "caption": "с 01.01.2026, актуальная, есть не вступившие в силу редакции"
+      },
+      "future": [
+       {
+        "redid": 495367,
+        "date": "01.03.2027",
+        "caption": "на 01.03.2027, не вступившая в силу редакция"
+       }
+      ],
+      "source": "Официальный интернет-портал правовой информации, actual.pravo.gov.ru",
+      "source_url": "http://actual.pravo.gov.ru/",
+      "api_url": "http://actual.pravo.gov.ru:8000/api/ebpi/redactions/?bpa=ebpi&t={\"hash\": \"1b489dbb725f80cbba977a2bffb2ec76e9e9a8c68f7ee98f99543f1bc21ca619\", \"ttl\": 4}",
+      "checked_at": "2026-11-13T17:53:51+00:00",
+      "consultant_url": "https://www.consultant.ru/document/cons_doc_LAW_77904/",
+      "consultant_last": "от 08.08.2024 N 232-ФЗ",
+      "consultant_checked_at": "2026-11-13T17:54:11+00:00"
+     }
+    },
+    {
+     "key": "135-ФЗ",
+     "record": {
+      "act": "135-ФЗ",
+      "name": "О защите конкуренции",
+      "number": "135-ФЗ",
+      "signed": "26.07.2006",
+      "docstate": "Действует с изменениями",
+      "hash": "10f224e8aeb1151b77ee3153d3a0f78e8a8f3e4faa73de03b3c37064de9a140b",
+      "docid": 97645,
+      "redactions": 16,
+      "current": {
+       "redid": 493680,
+       "date": "09.09.2026",
+       "caption": "с 09.09.2026, актуальная, есть не вступившие в силу редакции"
+      },
+      "future": [
+       {
+        "redid": 485981,
+        "date": "01.01.2027",
+        "caption": "на 01.01.2027, не вступившая в силу редакция"
+       }
+      ],
+      "source": "Официальный интернет-портал правовой информации, actual.pravo.gov.ru",
+      "source_url": "http://actual.pravo.gov.ru/",
+      "api_url": "http://actual.pravo.gov.ru:8000/api/ebpi/redactions/?bpa=ebpi&t={\"hash\": \"10f224e8aeb1151b77ee3153d3a0f78e8a8f3e4faa73de03b3c37064de9a140b\", \"ttl\": 4}",
+      "checked_at": "2026-11-13T17:53:55+00:00",
+      "consultant_url": "https://www.consultant.ru/document/cons_doc_LAW_61763/",
+      "consultant_last": "от 29.04.2026 N 29",
+      "consultant_checked_at": "2026-11-13T17:54:21+00:00"
+     }
+    },
+    {
+     "key": "162-ФЗ",
+     "record": {
+      "act": "162-ФЗ",
+      "name": "О стандартизации в Российской Федерации",
+      "number": "162-ФЗ",
+      "signed": "29.06.2015",
+      "docstate": "Действует с изменениями",
+      "hash": "bfaf8caa9ffd401018a8ccf070d759d454ea4b294f96bc3489c778843b88c7b3",
+      "docid": 174339,
+      "redactions": 1,
+      "current": {
+       "redid": 496016,
+       "date": "04.08.2026",
+       "caption": "с 04.08.2026, актуальная"
+      },
+      "future": [],
+      "source": "Официальный интернет-портал правовой информации, actual.pravo.gov.ru",
+      "source_url": "http://actual.pravo.gov.ru/",
+      "api_url": "http://actual.pravo.gov.ru:8000/api/ebpi/redactions/?bpa=ebpi&t={\"hash\": \"bfaf8caa9ffd401018a8ccf070d759d454ea4b294f96bc3489c778843b88c7b3\", \"ttl\": 4}",
+      "checked_at": "2026-11-13T17:53:57+00:00",
+      "consultant_url": "https://www.consultant.ru/document/cons_doc_LAW_181810/",
+      "consultant_last": "от 04.08.2026 N 330-ФЗ",
+      "consultant_checked_at": "2026-11-13T17:54:26+00:00"
+     }
+    },
+    {
+     "key": "184-ФЗ",
+     "record": {
+      "act": "184-ФЗ",
+      "name": "О техническом регулировании",
+      "number": "184-ФЗ",
+      "signed": "27.12.2002",
+      "docstate": "Действует с изменениями",
+      "hash": "1cba23c4eb681a4bcc709b48cd1b216cbf6ef0b594a75fba6996faf49465f4cc",
+      "docid": 69599,
+      "redactions": 6,
+      "current": {
+       "redid": 491469,
+       "date": "01.09.2026",
+       "caption": "с 01.09.2026, актуальная, есть не вступившие в силу редакции"
+      },
+      "future": [
+       {
+        "redid": 496092,
+        "date": "01.03.2027",
+        "caption": "на 01.03.2027, не вступившая в силу редакция"
+       }
+      ],
+      "source": "Официальный интернет-портал правовой информации, actual.pravo.gov.ru",
+      "source_url": "http://actual.pravo.gov.ru/",
+      "api_url": "http://actual.pravo.gov.ru:8000/api/ebpi/redactions/?bpa=ebpi&t={\"hash\": \"1cba23c4eb681a4bcc709b48cd1b216cbf6ef0b594a75fba6996faf49465f4cc\", \"ttl\": 4}",
+      "checked_at": "2026-11-13T17:53:53+00:00",
+      "consultant_url": "https://www.consultant.ru/document/cons_doc_LAW_40241/",
+      "consultant_last": "от 02.05.2026 N 126-ФЗ",
+      "consultant_checked_at": "2026-11-13T17:54:16+00:00"
+     }
+    },
+    {
+     "key": "223-ФЗ",
+     "record": {
+      "act": "223-ФЗ",
+      "name": "О закупках товаров, работ, услуг отдельными видами юридических лиц",
+      "number": "223-ФЗ",
+      "signed": "18.07.2011",
+      "docstate": "Действует с изменениями",
+      "hash": "35e492536434c0db56b2b63b46c5cc0fd13a05dc1f6604ba1001b2f97ac8ec34",
+      "docid": 138955,
+      "redactions": 11,
+      "current": {
+       "redid": 457537,
+       "date": "01.01.2025",
+       "caption": "с 01.01.2025, актуальная"
+      },
+      "future": [],
+      "source": "Официальный интернет-портал правовой информации, actual.pravo.gov.ru",
+      "source_url": "http://actual.pravo.gov.ru/",
+      "api_url": "http://actual.pravo.gov.ru:8000/api/ebpi/redactions/?bpa=ebpi&t={\"hash\": \"35e492536434c0db56b2b63b46c5cc0fd13a05dc1f6604ba1001b2f97ac8ec34\", \"ttl\": 4}",
+      "checked_at": "2026-11-13T17:53:47+00:00",
+      "consultant_url": "https://www.consultant.ru/document/cons_doc_LAW_116964/",
+      "consultant_last": "от 08.08.2024 N 318-ФЗ",
+      "consultant_checked_at": "2026-11-13T17:54:03+00:00"
+     }
+    },
+    {
+     "key": "44-ФЗ",
+     "record": {
+      "act": "44-ФЗ",
+      "name": "О контрактной системе в сфере закупок",
+      "number": "44-ФЗ",
+      "signed": "05.04.2013",
+      "docstate": "Действует с изменениями",
+      "hash": "34fb2dd9469485e526248192597d65ebbdcf212404604b86238557881cce4b16",
+      "docid": 153613,
+      "redactions": 34,
+      "current": {
+       "redid": 495891,
+       "date": "01.10.2026",
+       "caption": "с 01.10.2026, актуальная, есть не вступившие в силу редакции"
+      },
+      "future": [
+       {
+        "redid": 495892,
+        "date": "01.01.2027",
+        "caption": "на 01.01.2027, не вступившая в силу редакция"
+       }
+      ],
+      "source": "Официальный интернет-портал правовой информации, actual.pravo.gov.ru",
+      "source_url": "http://actual.pravo.gov.ru/",
+      "api_url": "http://actual.pravo.gov.ru:8000/api/ebpi/redactions/?bpa=ebpi&t={\"hash\": \"34fb2dd9469485e526248192597d65ebbdcf212404604b86238557881cce4b16\", \"ttl\": 4}",
+      "checked_at": "2026-11-13T17:53:49+00:00",
+      "consultant_url": "https://www.consultant.ru/document/cons_doc_LAW_144624/",
+      "consultant_last": "от 09.04.2020 N 16",
+      "consultant_checked_at": "2026-11-13T17:54:06+00:00"
+     }
+    },
+    {
+     "key": "ГК ч.1",
+     "record": {
+      "act": "ГК ч.1",
+      "name": "Гражданский кодекс Российской Федерации (часть первая)",
+      "number": "51-ФЗ",
+      "signed": "30.11.1994",
+      "docstate": "Действует с изменениями",
+      "hash": "ba747b7c430fdfb9405741d818463a26af1577a680f7a9ab6318cc6f4faa1121",
+      "docid": 23209,
+      "redactions": 31,
+      "current": {
+       "redid": 498756,
+       "date": "23.10.2026",
+       "caption": "с 23.10.2026, актуальная"
+      },
+      "future": [],
+      "source": "Официальный интернет-портал правовой информации, actual.pravo.gov.ru",
+      "source_url": "http://actual.pravo.gov.ru/",
+      "api_url": "http://actual.pravo.gov.ru:8000/api/ebpi/redactions/?bpa=ebpi&t={\"hash\": \"ba747b7c430fdfb9405741d818463a26af1577a680f7a9ab6318cc6f4faa1121\", \"ttl\": 4}",
+      "checked_at": "2026-11-13T17:53:59+00:00",
+      "consultant_url": "https://www.consultant.ru/document/cons_doc_LAW_5142/",
+      "consultant_last": "от 22.10.2026 N 61",
+      "consultant_checked_at": "2026-11-13T17:54:31+00:00"
+     }
+    },
+    {
+     "key": "ГК ч.2",
+     "record": {
+      "act": "ГК ч.2",
+      "name": "Гражданский кодекс Российской Федерации (часть вторая)",
+      "number": "14-ФЗ",
+      "signed": "26.01.1996",
+      "docstate": "Действует с изменениями",
+      "hash": "c5515b06c932bdfbd67b34f5b856bb8317deaabded3eacae2ebadfd4c6703785",
+      "docid": 29248,
+      "redactions": 8,
+      "current": {
+       "redid": 493400,
+       "date": "10.06.2026",
+       "caption": "с 10.06.2026, актуальная"
+      },
+      "future": [],
+      "source": "Официальный интернет-портал правовой информации, actual.pravo.gov.ru",
+      "source_url": "http://actual.pravo.gov.ru/",
+      "api_url": "http://actual.pravo.gov.ru:8000/api/ebpi/redactions/?bpa=ebpi&t={\"hash\": \"c5515b06c932bdfbd67b34f5b856bb8317deaabded3eacae2ebadfd4c6703785\", \"ttl\": 4}",
+      "checked_at": "2026-11-13T17:54:01+00:00",
+      "consultant_url": "https://www.consultant.ru/document/cons_doc_LAW_9027/",
+      "consultant_last": "от 09.06.2026 N 38",
+      "consultant_checked_at": "2026-11-13T17:54:36+00:00"
+     }
+    }
+   ],
+   "removed": [],
+   "changed": [],
+   "lines": [
+    "102-ФЗ: действующая редакция с 01.01.2026, будущие: 01.03.2027",
+    "135-ФЗ: действующая редакция с 09.09.2026, будущие: 01.01.2027",
+    "162-ФЗ: действующая редакция с 04.08.2026",
+    "184-ФЗ: действующая редакция с 01.09.2026, будущие: 01.03.2027",
+    "223-ФЗ: действующая редакция с 01.01.2025",
+    "44-ФЗ: действующая редакция с 01.10.2026, будущие: 01.01.2027",
+    "ГК ч.1: действующая редакция с 23.10.2026",
+    "ГК ч.2: действующая редакция с 10.06.2026"
+   ],
+   "seconds": 50.3,
+   "mode": "daily"
+  }
+ ]
+}

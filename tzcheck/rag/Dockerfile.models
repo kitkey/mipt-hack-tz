@@ -1,0 +1,7 @@
+﻿FROM python:3.12-slim
+WORKDIR /app
+RUN python -m pip install --no-cache-dir --retries 10 --timeout 120 --index-url https://download.pytorch.org/whl/cpu torch
+RUN python -m pip install --no-cache-dir --retries 10 --timeout 120 --index-url https://pypi.org/simple sentence-transformers pymorphy3 pymorphy3-dicts-ru
+COPY tzcheck ./tzcheck
+COPY eval/rag ./eval/rag
+ENV HF_HOME=/model-cache TZCHECK_REFDATA_OFFLINE=1

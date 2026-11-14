@@ -1,0 +1,2891 @@
+{
+ "engine": {
+  "name": "PaddleOCR PP-OCRv5",
+  "det": "mobile",
+  "mkldnn": "1",
+  "rec": "eslav_PP-OCRv5_mobile_rec",
+  "device": "cpu"
+ },
+ "engine_load_and_first_page_s": 634.3,
+ "worker_restarts": 1,
+ "pages": [
+  {
+   "name": "lift_src",
+   "page": 1,
+   "dpi": 150,
+   "kind": "clean",
+   "seconds": 5.21,
+   "lines": 48,
+   "cer": 0.0057827344072697235,
+   "wer": 0.042105263157894736,
+   "words_bag": {
+    "matched": 281,
+    "reference": 285
+   },
+   "numbers": {
+    "matched": 8,
+    "reference": 8
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 2421
+  },
+  {
+   "name": "lift_src",
+   "page": 1,
+   "dpi": 150,
+   "kind": "degraded",
+   "seconds": 5.98,
+   "lines": 47,
+   "cer": 0.0322180916976456,
+   "wer": 0.08070175438596491,
+   "words_bag": {
+    "matched": 271,
+    "reference": 285
+   },
+   "numbers": {
+    "matched": 7,
+    "reference": 8
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 2421
+  },
+  {
+   "name": "lift_src",
+   "page": 1,
+   "dpi": 300,
+   "kind": "clean",
+   "seconds": 11.72,
+   "lines": 48,
+   "cer": 0.02808756712102437,
+   "wer": 0.14035087719298245,
+   "words_bag": {
+    "matched": 258,
+    "reference": 285
+   },
+   "numbers": {
+    "matched": 8,
+    "reference": 8
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 2421
+  },
+  {
+   "name": "lift_src",
+   "page": 1,
+   "dpi": 300,
+   "kind": "degraded",
+   "seconds": 8.44,
+   "lines": 47,
+   "cer": 0.04006608839322594,
+   "wer": 0.10526315789473684,
+   "words_bag": {
+    "matched": 265,
+    "reference": 285
+   },
+   "numbers": {
+    "matched": 7,
+    "reference": 8
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 2421
+  },
+  {
+   "name": "lift_src",
+   "page": 2,
+   "dpi": 150,
+   "kind": "clean",
+   "seconds": 5.87,
+   "lines": 51,
+   "cer": 0.009976247030878859,
+   "wer": 0.03636363636363636,
+   "words_bag": {
+    "matched": 266,
+    "reference": 275
+   },
+   "numbers": {
+    "matched": 30,
+    "reference": 32
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 2105
+  },
+  {
+   "name": "lift_src",
+   "page": 2,
+   "dpi": 150,
+   "kind": "degraded",
+   "seconds": 5.23,
+   "lines": 51,
+   "cer": 0.01330166270783848,
+   "wer": 0.04,
+   "words_bag": {
+    "matched": 266,
+    "reference": 275
+   },
+   "numbers": {
+    "matched": 31,
+    "reference": 32
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 2105
+  },
+  {
+   "name": "lift_src",
+   "page": 2,
+   "dpi": 300,
+   "kind": "clean",
+   "seconds": 8.59,
+   "lines": 51,
+   "cer": 0.022327790973871733,
+   "wer": 0.09454545454545454,
+   "words_bag": {
+    "matched": 250,
+    "reference": 275
+   },
+   "numbers": {
+    "matched": 31,
+    "reference": 32
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 2105
+  },
+  {
+   "name": "lift_src",
+   "page": 2,
+   "dpi": 300,
+   "kind": "degraded",
+   "seconds": 7.8,
+   "lines": 50,
+   "cer": 0.04180522565320665,
+   "wer": 0.07272727272727272,
+   "words_bag": {
+    "matched": 256,
+    "reference": 275
+   },
+   "numbers": {
+    "matched": 30,
+    "reference": 32
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 2105
+  },
+  {
+   "name": "lift_src",
+   "page": 3,
+   "dpi": 150,
+   "kind": "clean",
+   "seconds": 4.42,
+   "lines": 45,
+   "cer": 0.012454212454212455,
+   "wer": 0.06217616580310881,
+   "words_bag": {
+    "matched": 182,
+    "reference": 193
+   },
+   "numbers": {
+    "matched": 27,
+    "reference": 28
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 1365
+  },
+  {
+   "name": "lift_src",
+   "page": 3,
+   "dpi": 150,
+   "kind": "degraded",
+   "seconds": 4.27,
+   "lines": 45,
+   "cer": 0.014652014652014652,
+   "wer": 0.07772020725388601,
+   "words_bag": {
+    "matched": 179,
+    "reference": 193
+   },
+   "numbers": {
+    "matched": 27,
+    "reference": 28
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 1365
+  },
+  {
+   "name": "lift_src",
+   "page": 3,
+   "dpi": 300,
+   "kind": "clean",
+   "seconds": 6.04,
+   "lines": 45,
+   "cer": 0.018315018315018316,
+   "wer": 0.08808290155440414,
+   "words_bag": {
+    "matched": 176,
+    "reference": 193
+   },
+   "numbers": {
+    "matched": 27,
+    "reference": 28
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 1365
+  },
+  {
+   "name": "lift_src",
+   "page": 3,
+   "dpi": 300,
+   "kind": "degraded",
+   "seconds": 6.57,
+   "lines": 45,
+   "cer": 0.021245421245421246,
+   "wer": 0.10880829015544041,
+   "words_bag": {
+    "matched": 175,
+    "reference": 193
+   },
+   "numbers": {
+    "matched": 27,
+    "reference": 28
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 1365
+  },
+  {
+   "name": "lift_src",
+   "page": 4,
+   "dpi": 150,
+   "kind": "clean",
+   "seconds": 5.99,
+   "lines": 50,
+   "cer": 0.01252723311546841,
+   "wer": 0.06827309236947791,
+   "words_bag": {
+    "matched": 233,
+    "reference": 249
+   },
+   "numbers": {
+    "matched": 42,
+    "reference": 42
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 1836
+  },
+  {
+   "name": "lift_src",
+   "page": 4,
+   "dpi": 150,
+   "kind": "degraded",
+   "seconds": 5.58,
+   "lines": 50,
+   "cer": 0.013616557734204794,
+   "wer": 0.07228915662650602,
+   "words_bag": {
+    "matched": 233,
+    "reference": 249
+   },
+   "numbers": {
+    "matched": 41,
+    "reference": 42
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 1836
+  },
+  {
+   "name": "lift_src",
+   "page": 4,
+   "dpi": 300,
+   "kind": "clean",
+   "seconds": 8.14,
+   "lines": 50,
+   "cer": 0.03159041394335512,
+   "wer": 0.14859437751004015,
+   "words_bag": {
+    "matched": 215,
+    "reference": 249
+   },
+   "numbers": {
+    "matched": 39,
+    "reference": 42
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 1836
+  },
+  {
+   "name": "lift_src",
+   "page": 4,
+   "dpi": 300,
+   "kind": "degraded",
+   "seconds": 7.1,
+   "lines": 50,
+   "cer": 0.017973856209150325,
+   "wer": 0.08032128514056225,
+   "words_bag": {
+    "matched": 230,
+    "reference": 249
+   },
+   "numbers": {
+    "matched": 41,
+    "reference": 42
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 1836
+  },
+  {
+   "name": "lift_src",
+   "page": 5,
+   "dpi": 150,
+   "kind": "clean",
+   "seconds": 6.06,
+   "lines": 52,
+   "cer": 0.005366726296958855,
+   "wer": 0.011940298507462687,
+   "words_bag": {
+    "matched": 332,
+    "reference": 335
+   },
+   "numbers": {
+    "matched": 8,
+    "reference": 8
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 2795
+  },
+  {
+   "name": "lift_src",
+   "page": 5,
+   "dpi": 150,
+   "kind": "degraded",
+   "seconds": 5.7,
+   "lines": 52,
+   "cer": 0.0064400715563506265,
+   "wer": 0.014925373134328358,
+   "words_bag": {
+    "matched": 332,
+    "reference": 335
+   },
+   "numbers": {
+    "matched": 8,
+    "reference": 8
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 2795
+  },
+  {
+   "name": "lift_src",
+   "page": 5,
+   "dpi": 300,
+   "kind": "clean",
+   "seconds": 10.26,
+   "lines": 52,
+   "cer": 0.036493738819320214,
+   "wer": 0.14626865671641792,
+   "words_bag": {
+    "matched": 287,
+    "reference": 335
+   },
+   "numbers": {
+    "matched": 8,
+    "reference": 8
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 2795
+  },
+  {
+   "name": "lift_src",
+   "page": 5,
+   "dpi": 300,
+   "kind": "degraded",
+   "seconds": 9.09,
+   "lines": 52,
+   "cer": 0.014311270125223614,
+   "wer": 0.029850746268656716,
+   "words_bag": {
+    "matched": 328,
+    "reference": 335
+   },
+   "numbers": {
+    "matched": 8,
+    "reference": 8
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 2795
+  },
+  {
+   "name": "lift_src",
+   "page": 6,
+   "dpi": 150,
+   "kind": "clean",
+   "seconds": 5.55,
+   "lines": 52,
+   "cer": 0.005,
+   "wer": 0.022727272727272728,
+   "words_bag": {
+    "matched": 344,
+    "reference": 352
+   },
+   "numbers": {
+    "matched": 40,
+    "reference": 40
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 2600
+  },
+  {
+   "name": "lift_src",
+   "page": 6,
+   "dpi": 150,
+   "kind": "degraded",
+   "seconds": 4.94,
+   "lines": 52,
+   "cer": 0.009230769230769232,
+   "wer": 0.03409090909090909,
+   "words_bag": {
+    "matched": 341,
+    "reference": 352
+   },
+   "numbers": {
+    "matched": 40,
+    "reference": 40
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 2600
+  },
+  {
+   "name": "lift_src",
+   "page": 6,
+   "dpi": 300,
+   "kind": "clean",
+   "seconds": 9.34,
+   "lines": 52,
+   "cer": 0.030384615384615385,
+   "wer": 0.16193181818181818,
+   "words_bag": {
+    "matched": 298,
+    "reference": 352
+   },
+   "numbers": {
+    "matched": 40,
+    "reference": 40
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 2600
+  },
+  {
+   "name": "lift_src",
+   "page": 6,
+   "dpi": 300,
+   "kind": "degraded",
+   "seconds": 7.85,
+   "lines": 52,
+   "cer": 0.015384615384615385,
+   "wer": 0.04261363636363636,
+   "words_bag": {
+    "matched": 337,
+    "reference": 352
+   },
+   "numbers": {
+    "matched": 40,
+    "reference": 40
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 2600
+  },
+  {
+   "name": "lift_src",
+   "page": 7,
+   "dpi": 150,
+   "kind": "clean",
+   "seconds": 2.06,
+   "lines": 10,
+   "cer": 0.006578947368421052,
+   "wer": 0.03225806451612903,
+   "words_bag": {
+    "matched": 60,
+    "reference": 62
+   },
+   "numbers": {
+    "matched": 5,
+    "reference": 5
+   },
+   "okpd": {
+    "matched": 1,
+    "reference": 1
+   },
+   "ref_chars": 456
+  },
+  {
+   "name": "lift_src",
+   "page": 7,
+   "dpi": 150,
+   "kind": "degraded",
+   "seconds": 1.87,
+   "lines": 10,
+   "cer": 0.008771929824561403,
+   "wer": 0.03225806451612903,
+   "words_bag": {
+    "matched": 62,
+    "reference": 62
+   },
+   "numbers": {
+    "matched": 5,
+    "reference": 5
+   },
+   "okpd": {
+    "matched": 1,
+    "reference": 1
+   },
+   "ref_chars": 456
+  },
+  {
+   "name": "lift_src",
+   "page": 7,
+   "dpi": 300,
+   "kind": "clean",
+   "seconds": 4.05,
+   "lines": 10,
+   "cer": 0.010964912280701754,
+   "wer": 0.04838709677419355,
+   "words_bag": {
+    "matched": 61,
+    "reference": 62
+   },
+   "numbers": {
+    "matched": 5,
+    "reference": 5
+   },
+   "okpd": {
+    "matched": 1,
+    "reference": 1
+   },
+   "ref_chars": 456
+  },
+  {
+   "name": "lift_src",
+   "page": 7,
+   "dpi": 300,
+   "kind": "degraded",
+   "seconds": 4.05,
+   "lines": 10,
+   "cer": 0.006578947368421052,
+   "wer": 0.03225806451612903,
+   "words_bag": {
+    "matched": 61,
+    "reference": 62
+   },
+   "numbers": {
+    "matched": 5,
+    "reference": 5
+   },
+   "okpd": {
+    "matched": 1,
+    "reference": 1
+   },
+   "ref_chars": 456
+  },
+  {
+   "name": "metro_src",
+   "page": 1,
+   "dpi": 150,
+   "kind": "clean",
+   "seconds": 6.76,
+   "lines": 64,
+   "cer": 0.012,
+   "wer": 0.04619565217391304,
+   "words_bag": {
+    "matched": 352,
+    "reference": 368
+   },
+   "numbers": {
+    "matched": 84,
+    "reference": 86
+   },
+   "okpd": {
+    "matched": 14,
+    "reference": 14
+   },
+   "ref_chars": 2250
+  },
+  {
+   "name": "metro_src",
+   "page": 1,
+   "dpi": 150,
+   "kind": "degraded",
+   "seconds": 6.91,
+   "lines": 64,
+   "cer": 0.012888888888888889,
+   "wer": 0.043478260869565216,
+   "words_bag": {
+    "matched": 352,
+    "reference": 368
+   },
+   "numbers": {
+    "matched": 85,
+    "reference": 86
+   },
+   "okpd": {
+    "matched": 14,
+    "reference": 14
+   },
+   "ref_chars": 2250
+  },
+  {
+   "name": "metro_src",
+   "page": 1,
+   "dpi": 300,
+   "kind": "clean",
+   "seconds": 11.42,
+   "lines": 64,
+   "cer": 0.020444444444444446,
+   "wer": 0.09239130434782608,
+   "words_bag": {
+    "matched": 337,
+    "reference": 368
+   },
+   "numbers": {
+    "matched": 80,
+    "reference": 86
+   },
+   "okpd": {
+    "matched": 14,
+    "reference": 14
+   },
+   "ref_chars": 2250
+  },
+  {
+   "name": "metro_src",
+   "page": 1,
+   "dpi": 300,
+   "kind": "degraded",
+   "seconds": 9.77,
+   "lines": 64,
+   "cer": 0.014666666666666666,
+   "wer": 0.05434782608695652,
+   "words_bag": {
+    "matched": 348,
+    "reference": 368
+   },
+   "numbers": {
+    "matched": 84,
+    "reference": 86
+   },
+   "okpd": {
+    "matched": 14,
+    "reference": 14
+   },
+   "ref_chars": 2250
+  },
+  {
+   "name": "metro_src",
+   "page": 2,
+   "dpi": 150,
+   "kind": "clean",
+   "seconds": 6.04,
+   "lines": 68,
+   "cer": 0.007328072153325817,
+   "wer": 0.02142857142857143,
+   "words_bag": {
+    "matched": 274,
+    "reference": 280
+   },
+   "numbers": {
+    "matched": 56,
+    "reference": 57
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 1774
+  },
+  {
+   "name": "metro_src",
+   "page": 2,
+   "dpi": 150,
+   "kind": "degraded",
+   "seconds": 5.8,
+   "lines": 68,
+   "cer": 0.009019165727170236,
+   "wer": 0.025,
+   "words_bag": {
+    "matched": 273,
+    "reference": 280
+   },
+   "numbers": {
+    "matched": 56,
+    "reference": 57
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 1774
+  },
+  {
+   "name": "metro_src",
+   "page": 2,
+   "dpi": 300,
+   "kind": "clean",
+   "seconds": 9.39,
+   "lines": 68,
+   "cer": 0.02536640360766629,
+   "wer": 0.12857142857142856,
+   "words_bag": {
+    "matched": 246,
+    "reference": 280
+   },
+   "numbers": {
+    "matched": 47,
+    "reference": 57
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 1774
+  },
+  {
+   "name": "metro_src",
+   "page": 2,
+   "dpi": 300,
+   "kind": "degraded",
+   "seconds": 9.08,
+   "lines": 68,
+   "cer": 0.019729425028184894,
+   "wer": 0.08571428571428572,
+   "words_bag": {
+    "matched": 256,
+    "reference": 280
+   },
+   "numbers": {
+    "matched": 48,
+    "reference": 57
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 1774
+  },
+  {
+   "name": "metro_src",
+   "page": 3,
+   "dpi": 150,
+   "kind": "clean",
+   "seconds": 9.27,
+   "lines": 71,
+   "cer": 0.036684782608695655,
+   "wer": 0.07251908396946564,
+   "words_bag": {
+    "matched": 490,
+    "reference": 524
+   },
+   "numbers": {
+    "matched": 58,
+    "reference": 59
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 3680
+  },
+  {
+   "name": "metro_src",
+   "page": 3,
+   "dpi": 150,
+   "kind": "degraded",
+   "seconds": 8.36,
+   "lines": 69,
+   "cer": 0.03152173913043478,
+   "wer": 0.07251908396946564,
+   "words_bag": {
+    "matched": 486,
+    "reference": 524
+   },
+   "numbers": {
+    "matched": 59,
+    "reference": 59
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 3680
+  },
+  {
+   "name": "metro_src",
+   "page": 3,
+   "dpi": 300,
+   "kind": "clean",
+   "seconds": 10.89,
+   "lines": 71,
+   "cer": 0.036141304347826086,
+   "wer": 0.08396946564885496,
+   "words_bag": {
+    "matched": 481,
+    "reference": 524
+   },
+   "numbers": {
+    "matched": 55,
+    "reference": 59
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 3680
+  },
+  {
+   "name": "metro_src",
+   "page": 3,
+   "dpi": 300,
+   "kind": "degraded",
+   "seconds": 9.88,
+   "lines": 71,
+   "cer": 0.036684782608695655,
+   "wer": 0.08015267175572519,
+   "words_bag": {
+    "matched": 485,
+    "reference": 524
+   },
+   "numbers": {
+    "matched": 58,
+    "reference": 59
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 3680
+  },
+  {
+   "name": "metro_src",
+   "page": 4,
+   "dpi": 150,
+   "kind": "clean",
+   "seconds": 7.19,
+   "lines": 69,
+   "cer": 0.024068578964721397,
+   "wer": 0.04906542056074766,
+   "words_bag": {
+    "matched": 410,
+    "reference": 428
+   },
+   "numbers": {
+    "matched": 64,
+    "reference": 64
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 3033
+  },
+  {
+   "name": "metro_src",
+   "page": 4,
+   "dpi": 150,
+   "kind": "degraded",
+   "seconds": 6.89,
+   "lines": 69,
+   "cer": 0.02637652489284537,
+   "wer": 0.06775700934579439,
+   "words_bag": {
+    "matched": 401,
+    "reference": 428
+   },
+   "numbers": {
+    "matched": 60,
+    "reference": 64
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 3033
+  },
+  {
+   "name": "metro_src",
+   "page": 4,
+   "dpi": 300,
+   "kind": "clean",
+   "seconds": 9.13,
+   "lines": 69,
+   "cer": 0.027035938015166502,
+   "wer": 0.04906542056074766,
+   "words_bag": {
+    "matched": 411,
+    "reference": 428
+   },
+   "numbers": {
+    "matched": 64,
+    "reference": 64
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 3033
+  },
+  {
+   "name": "metro_src",
+   "page": 4,
+   "dpi": 300,
+   "kind": "degraded",
+   "seconds": 9.55,
+   "lines": 69,
+   "cer": 0.04978569073524563,
+   "wer": 0.10046728971962617,
+   "words_bag": {
+    "matched": 390,
+    "reference": 428
+   },
+   "numbers": {
+    "matched": 54,
+    "reference": 64
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 3033
+  },
+  {
+   "name": "metro_src",
+   "page": 5,
+   "dpi": 150,
+   "kind": "clean",
+   "seconds": 9.32,
+   "lines": 69,
+   "cer": 0.008273894436519259,
+   "wer": 0.006741573033707865,
+   "words_bag": {
+    "matched": 442,
+    "reference": 445
+   },
+   "numbers": {
+    "matched": 31,
+    "reference": 31
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 3505
+  },
+  {
+   "name": "metro_src",
+   "page": 5,
+   "dpi": 150,
+   "kind": "degraded",
+   "seconds": 7.93,
+   "lines": 68,
+   "cer": 0.03851640513552068,
+   "wer": 0.058426966292134834,
+   "words_bag": {
+    "matched": 419,
+    "reference": 445
+   },
+   "numbers": {
+    "matched": 28,
+    "reference": 31
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 3505
+  },
+  {
+   "name": "metro_src",
+   "page": 5,
+   "dpi": 300,
+   "kind": "clean",
+   "seconds": 10.67,
+   "lines": 69,
+   "cer": 0.011412268188302425,
+   "wer": 0.02247191011235955,
+   "words_bag": {
+    "matched": 437,
+    "reference": 445
+   },
+   "numbers": {
+    "matched": 30,
+    "reference": 31
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 3505
+  },
+  {
+   "name": "metro_src",
+   "page": 5,
+   "dpi": 300,
+   "kind": "degraded",
+   "seconds": 10.25,
+   "lines": 69,
+   "cer": 0.015121255349500713,
+   "wer": 0.038202247191011236,
+   "words_bag": {
+    "matched": 429,
+    "reference": 445
+   },
+   "numbers": {
+    "matched": 30,
+    "reference": 31
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 3505
+  },
+  {
+   "name": "metro_src",
+   "page": 6,
+   "dpi": 150,
+   "kind": "clean",
+   "seconds": 3.05,
+   "lines": 14,
+   "cer": 0.006944444444444444,
+   "wer": 0.00909090909090909,
+   "words_bag": {
+    "matched": 109,
+    "reference": 110
+   },
+   "numbers": {
+    "matched": 6,
+    "reference": 6
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 864
+  },
+  {
+   "name": "metro_src",
+   "page": 6,
+   "dpi": 150,
+   "kind": "degraded",
+   "seconds": 2.57,
+   "lines": 14,
+   "cer": 0.006944444444444444,
+   "wer": 0.00909090909090909,
+   "words_bag": {
+    "matched": 109,
+    "reference": 110
+   },
+   "numbers": {
+    "matched": 6,
+    "reference": 6
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 864
+  },
+  {
+   "name": "metro_src",
+   "page": 6,
+   "dpi": 300,
+   "kind": "clean",
+   "seconds": 5.01,
+   "lines": 14,
+   "cer": 0.013888888888888888,
+   "wer": 0.00909090909090909,
+   "words_bag": {
+    "matched": 109,
+    "reference": 110
+   },
+   "numbers": {
+    "matched": 6,
+    "reference": 6
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 864
+  },
+  {
+   "name": "metro_src",
+   "page": 6,
+   "dpi": 300,
+   "kind": "degraded",
+   "seconds": 5.18,
+   "lines": 14,
+   "cer": 0.013888888888888888,
+   "wer": 0.00909090909090909,
+   "words_bag": {
+    "matched": 109,
+    "reference": 110
+   },
+   "numbers": {
+    "matched": 6,
+    "reference": 6
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 864
+  },
+  {
+   "name": "lift_fin",
+   "page": 1,
+   "dpi": 150,
+   "kind": "clean",
+   "seconds": 6.94,
+   "lines": 48,
+   "cer": 0.006139991813344249,
+   "wer": 0.04152249134948097,
+   "words_bag": {
+    "matched": 285,
+    "reference": 289
+   },
+   "numbers": {
+    "matched": 8,
+    "reference": 8
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 2443
+  },
+  {
+   "name": "lift_fin",
+   "page": 1,
+   "dpi": 150,
+   "kind": "degraded",
+   "seconds": 5.57,
+   "lines": 47,
+   "cer": 0.03192795742939009,
+   "wer": 0.0726643598615917,
+   "words_bag": {
+    "matched": 276,
+    "reference": 289
+   },
+   "numbers": {
+    "matched": 8,
+    "reference": 8
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 2443
+  },
+  {
+   "name": "lift_fin",
+   "page": 1,
+   "dpi": 300,
+   "kind": "clean",
+   "seconds": 11.39,
+   "lines": 48,
+   "cer": 0.02865329512893983,
+   "wer": 0.1245674740484429,
+   "words_bag": {
+    "matched": 263,
+    "reference": 289
+   },
+   "numbers": {
+    "matched": 8,
+    "reference": 8
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 2443
+  },
+  {
+   "name": "lift_fin",
+   "page": 1,
+   "dpi": 300,
+   "kind": "degraded",
+   "seconds": 9.25,
+   "lines": 47,
+   "cer": 0.03765861645517806,
+   "wer": 0.08650519031141868,
+   "words_bag": {
+    "matched": 274,
+    "reference": 289
+   },
+   "numbers": {
+    "matched": 8,
+    "reference": 8
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 2443
+  },
+  {
+   "name": "lift_fin",
+   "page": 2,
+   "dpi": 150,
+   "kind": "clean",
+   "seconds": 6.69,
+   "lines": 51,
+   "cer": 0.008137865007180469,
+   "wer": 0.025547445255474453,
+   "words_bag": {
+    "matched": 267,
+    "reference": 274
+   },
+   "numbers": {
+    "matched": 31,
+    "reference": 32
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 2089
+  },
+  {
+   "name": "lift_fin",
+   "page": 2,
+   "dpi": 150,
+   "kind": "degraded",
+   "seconds": 5.38,
+   "lines": 51,
+   "cer": 0.014839636189564385,
+   "wer": 0.040145985401459854,
+   "words_bag": {
+    "matched": 265,
+    "reference": 274
+   },
+   "numbers": {
+    "matched": 31,
+    "reference": 32
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 2089
+  },
+  {
+   "name": "lift_fin",
+   "page": 2,
+   "dpi": 300,
+   "kind": "clean",
+   "seconds": 8.78,
+   "lines": 51,
+   "cer": 0.02537099090473911,
+   "wer": 0.09124087591240876,
+   "words_bag": {
+    "matched": 250,
+    "reference": 274
+   },
+   "numbers": {
+    "matched": 31,
+    "reference": 32
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 2089
+  },
+  {
+   "name": "lift_fin",
+   "page": 2,
+   "dpi": 300,
+   "kind": "degraded",
+   "seconds": 8.95,
+   "lines": 50,
+   "cer": 0.04260411680229775,
+   "wer": 0.072992700729927,
+   "words_bag": {
+    "matched": 255,
+    "reference": 274
+   },
+   "numbers": {
+    "matched": 30,
+    "reference": 32
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 2089
+  },
+  {
+   "name": "lift_fin",
+   "page": 3,
+   "dpi": 150,
+   "kind": "clean",
+   "seconds": 4.62,
+   "lines": 45,
+   "cer": 0.011721611721611722,
+   "wer": 0.06217616580310881,
+   "words_bag": {
+    "matched": 182,
+    "reference": 193
+   },
+   "numbers": {
+    "matched": 27,
+    "reference": 28
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 1365
+  },
+  {
+   "name": "lift_fin",
+   "page": 3,
+   "dpi": 150,
+   "kind": "degraded",
+   "seconds": 4.55,
+   "lines": 45,
+   "cer": 0.014652014652014652,
+   "wer": 0.07772020725388601,
+   "words_bag": {
+    "matched": 179,
+    "reference": 193
+   },
+   "numbers": {
+    "matched": 27,
+    "reference": 28
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 1365
+  },
+  {
+   "name": "lift_fin",
+   "page": 3,
+   "dpi": 300,
+   "kind": "clean",
+   "seconds": 6.86,
+   "lines": 45,
+   "cer": 0.017582417582417582,
+   "wer": 0.08290155440414508,
+   "words_bag": {
+    "matched": 177,
+    "reference": 193
+   },
+   "numbers": {
+    "matched": 28,
+    "reference": 28
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 1365
+  },
+  {
+   "name": "lift_fin",
+   "page": 3,
+   "dpi": 300,
+   "kind": "degraded",
+   "seconds": 7.08,
+   "lines": 45,
+   "cer": 0.02197802197802198,
+   "wer": 0.11917098445595854,
+   "words_bag": {
+    "matched": 174,
+    "reference": 193
+   },
+   "numbers": {
+    "matched": 27,
+    "reference": 28
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 1365
+  },
+  {
+   "name": "lift_fin",
+   "page": 4,
+   "dpi": 150,
+   "kind": "clean",
+   "seconds": 5.94,
+   "lines": 50,
+   "cer": 0.01252723311546841,
+   "wer": 0.06827309236947791,
+   "words_bag": {
+    "matched": 233,
+    "reference": 249
+   },
+   "numbers": {
+    "matched": 42,
+    "reference": 42
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 1836
+  },
+  {
+   "name": "lift_fin",
+   "page": 4,
+   "dpi": 150,
+   "kind": "degraded",
+   "seconds": 5.94,
+   "lines": 50,
+   "cer": 0.013616557734204794,
+   "wer": 0.07228915662650602,
+   "words_bag": {
+    "matched": 233,
+    "reference": 249
+   },
+   "numbers": {
+    "matched": 41,
+    "reference": 42
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 1836
+  },
+  {
+   "name": "lift_fin",
+   "page": 4,
+   "dpi": 300,
+   "kind": "clean",
+   "seconds": 8.43,
+   "lines": 50,
+   "cer": 0.03159041394335512,
+   "wer": 0.14859437751004015,
+   "words_bag": {
+    "matched": 215,
+    "reference": 249
+   },
+   "numbers": {
+    "matched": 39,
+    "reference": 42
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 1836
+  },
+  {
+   "name": "lift_fin",
+   "page": 4,
+   "dpi": 300,
+   "kind": "degraded",
+   "seconds": 6.88,
+   "lines": 50,
+   "cer": 0.017973856209150325,
+   "wer": 0.08032128514056225,
+   "words_bag": {
+    "matched": 230,
+    "reference": 249
+   },
+   "numbers": {
+    "matched": 41,
+    "reference": 42
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 1836
+  },
+  {
+   "name": "lift_fin",
+   "page": 5,
+   "dpi": 150,
+   "kind": "clean",
+   "seconds": 5.6,
+   "lines": 52,
+   "cer": 0.005055976886962802,
+   "wer": 0.008823529411764706,
+   "words_bag": {
+    "matched": 338,
+    "reference": 340
+   },
+   "numbers": {
+    "matched": 10,
+    "reference": 10
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 2769
+  },
+  {
+   "name": "lift_fin",
+   "page": 5,
+   "dpi": 150,
+   "kind": "degraded",
+   "seconds": 5.41,
+   "lines": 52,
+   "cer": 0.00577825929938606,
+   "wer": 0.014705882352941176,
+   "words_bag": {
+    "matched": 337,
+    "reference": 340
+   },
+   "numbers": {
+    "matched": 10,
+    "reference": 10
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 2769
+  },
+  {
+   "name": "lift_fin",
+   "page": 5,
+   "dpi": 300,
+   "kind": "clean",
+   "seconds": 449.02,
+   "lines": 52,
+   "cer": 0.0263633080534489,
+   "wer": 0.09411764705882353,
+   "words_bag": {
+    "matched": 311,
+    "reference": 340
+   },
+   "numbers": {
+    "matched": 10,
+    "reference": 10
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 2769
+  },
+  {
+   "name": "lift_fin",
+   "page": 5,
+   "dpi": 300,
+   "kind": "degraded",
+   "seconds": 8.73,
+   "lines": 52,
+   "cer": 0.015167930660888408,
+   "wer": 0.03529411764705882,
+   "words_bag": {
+    "matched": 335,
+    "reference": 340
+   },
+   "numbers": {
+    "matched": 9,
+    "reference": 10
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 2769
+  },
+  {
+   "name": "lift_fin",
+   "page": 6,
+   "dpi": 150,
+   "kind": "clean",
+   "seconds": 6.21,
+   "lines": 52,
+   "cer": 0.005376344086021506,
+   "wer": 0.025423728813559324,
+   "words_bag": {
+    "matched": 345,
+    "reference": 354
+   },
+   "numbers": {
+    "matched": 40,
+    "reference": 40
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 2604
+  },
+  {
+   "name": "lift_fin",
+   "page": 6,
+   "dpi": 150,
+   "kind": "degraded",
+   "seconds": 5.24,
+   "lines": 52,
+   "cer": 0.01152073732718894,
+   "wer": 0.03672316384180791,
+   "words_bag": {
+    "matched": 342,
+    "reference": 354
+   },
+   "numbers": {
+    "matched": 40,
+    "reference": 40
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 2604
+  },
+  {
+   "name": "lift_fin",
+   "page": 6,
+   "dpi": 300,
+   "kind": "clean",
+   "seconds": 9.42,
+   "lines": 52,
+   "cer": 0.02457757296466974,
+   "wer": 0.11581920903954802,
+   "words_bag": {
+    "matched": 316,
+    "reference": 354
+   },
+   "numbers": {
+    "matched": 40,
+    "reference": 40
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 2604
+  },
+  {
+   "name": "lift_fin",
+   "page": 6,
+   "dpi": 300,
+   "kind": "degraded",
+   "seconds": 6.91,
+   "lines": 52,
+   "cer": 0.016897081413210446,
+   "wer": 0.05084745762711865,
+   "words_bag": {
+    "matched": 337,
+    "reference": 354
+   },
+   "numbers": {
+    "matched": 39,
+    "reference": 40
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 2604
+  },
+  {
+   "name": "lift_fin",
+   "page": 7,
+   "dpi": 150,
+   "kind": "clean",
+   "seconds": 2.64,
+   "lines": 24,
+   "cer": 0.004748338081671415,
+   "wer": 0.012987012987012988,
+   "words_bag": {
+    "matched": 153,
+    "reference": 154
+   },
+   "numbers": {
+    "matched": 19,
+    "reference": 19
+   },
+   "okpd": {
+    "matched": 2,
+    "reference": 2
+   },
+   "ref_chars": 1053
+  },
+  {
+   "name": "lift_fin",
+   "page": 7,
+   "dpi": 150,
+   "kind": "degraded",
+   "seconds": 2.79,
+   "lines": 24,
+   "cer": 0.007597340930674264,
+   "wer": 0.032467532467532464,
+   "words_bag": {
+    "matched": 150,
+    "reference": 154
+   },
+   "numbers": {
+    "matched": 18,
+    "reference": 19
+   },
+   "okpd": {
+    "matched": 2,
+    "reference": 2
+   },
+   "ref_chars": 1053
+  },
+  {
+   "name": "lift_fin",
+   "page": 7,
+   "dpi": 300,
+   "kind": "clean",
+   "seconds": 5.14,
+   "lines": 24,
+   "cer": 0.008547008547008548,
+   "wer": 0.045454545454545456,
+   "words_bag": {
+    "matched": 148,
+    "reference": 154
+   },
+   "numbers": {
+    "matched": 19,
+    "reference": 19
+   },
+   "okpd": {
+    "matched": 2,
+    "reference": 2
+   },
+   "ref_chars": 1053
+  },
+  {
+   "name": "lift_fin",
+   "page": 7,
+   "dpi": 300,
+   "kind": "degraded",
+   "seconds": 4.84,
+   "lines": 24,
+   "cer": 0.005698005698005698,
+   "wer": 0.01948051948051948,
+   "words_bag": {
+    "matched": 152,
+    "reference": 154
+   },
+   "numbers": {
+    "matched": 19,
+    "reference": 19
+   },
+   "okpd": {
+    "matched": 2,
+    "reference": 2
+   },
+   "ref_chars": 1053
+  },
+  {
+   "name": "metro_fin",
+   "page": 1,
+   "dpi": 150,
+   "kind": "clean",
+   "seconds": 6.77,
+   "lines": 60,
+   "cer": 0.006089604175728578,
+   "wer": 0.01598173515981735,
+   "words_bag": {
+    "matched": 431,
+    "reference": 438
+   },
+   "numbers": {
+    "matched": 129,
+    "reference": 131
+   },
+   "okpd": {
+    "matched": 32,
+    "reference": 32
+   },
+   "ref_chars": 2299
+  },
+  {
+   "name": "metro_fin",
+   "page": 1,
+   "dpi": 150,
+   "kind": "degraded",
+   "seconds": 6.92,
+   "lines": 60,
+   "cer": 0.013484123531970421,
+   "wer": 0.0319634703196347,
+   "words_bag": {
+    "matched": 425,
+    "reference": 438
+   },
+   "numbers": {
+    "matched": 127,
+    "reference": 131
+   },
+   "okpd": {
+    "matched": 32,
+    "reference": 32
+   },
+   "ref_chars": 2299
+  },
+  {
+   "name": "metro_fin",
+   "page": 1,
+   "dpi": 300,
+   "kind": "clean",
+   "seconds": 9.07,
+   "lines": 60,
+   "cer": 0.01478903871248369,
+   "wer": 0.0410958904109589,
+   "words_bag": {
+    "matched": 420,
+    "reference": 438
+   },
+   "numbers": {
+    "matched": 130,
+    "reference": 131
+   },
+   "okpd": {
+    "matched": 32,
+    "reference": 32
+   },
+   "ref_chars": 2299
+  },
+  {
+   "name": "metro_fin",
+   "page": 1,
+   "dpi": 300,
+   "kind": "degraded",
+   "seconds": 8.61,
+   "lines": 60,
+   "cer": 0.010439321444106133,
+   "wer": 0.02968036529680365,
+   "words_bag": {
+    "matched": 425,
+    "reference": 438
+   },
+   "numbers": {
+    "matched": 129,
+    "reference": 131
+   },
+   "okpd": {
+    "matched": 32,
+    "reference": 32
+   },
+   "ref_chars": 2299
+  },
+  {
+   "name": "metro_fin",
+   "page": 2,
+   "dpi": 150,
+   "kind": "clean",
+   "seconds": 2.25,
+   "lines": 41,
+   "cer": 0.0180623973727422,
+   "wer": 0.028368794326241134,
+   "words_bag": {
+    "matched": 139,
+    "reference": 141
+   },
+   "numbers": {
+    "matched": 45,
+    "reference": 45
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 609
+  },
+  {
+   "name": "metro_fin",
+   "page": 2,
+   "dpi": 150,
+   "kind": "degraded",
+   "seconds": 2.25,
+   "lines": 41,
+   "cer": 0.0049261083743842365,
+   "wer": 0.028368794326241134,
+   "words_bag": {
+    "matched": 139,
+    "reference": 141
+   },
+   "numbers": {
+    "matched": 45,
+    "reference": 45
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 609
+  },
+  {
+   "name": "metro_fin",
+   "page": 2,
+   "dpi": 300,
+   "kind": "clean",
+   "seconds": 4.54,
+   "lines": 41,
+   "cer": 0.021346469622331693,
+   "wer": 0.028368794326241134,
+   "words_bag": {
+    "matched": 139,
+    "reference": 141
+   },
+   "numbers": {
+    "matched": 45,
+    "reference": 45
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 609
+  },
+  {
+   "name": "metro_fin",
+   "page": 2,
+   "dpi": 300,
+   "kind": "degraded",
+   "seconds": 4.59,
+   "lines": 41,
+   "cer": 0.008210180623973728,
+   "wer": 0.028368794326241134,
+   "words_bag": {
+    "matched": 139,
+    "reference": 141
+   },
+   "numbers": {
+    "matched": 45,
+    "reference": 45
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 609
+  },
+  {
+   "name": "metro_fin",
+   "page": 3,
+   "dpi": 150,
+   "kind": "clean",
+   "seconds": 5.96,
+   "lines": 53,
+   "cer": 0.011526232114467409,
+   "wer": 0.030959752321981424,
+   "words_bag": {
+    "matched": 313,
+    "reference": 323
+   },
+   "numbers": {
+    "matched": 29,
+    "reference": 29
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 2516
+  },
+  {
+   "name": "metro_fin",
+   "page": 3,
+   "dpi": 150,
+   "kind": "degraded",
+   "seconds": 5.45,
+   "lines": 53,
+   "cer": 0.04689984101748808,
+   "wer": 0.07430340557275542,
+   "words_bag": {
+    "matched": 299,
+    "reference": 323
+   },
+   "numbers": {
+    "matched": 29,
+    "reference": 29
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 2516
+  },
+  {
+   "name": "metro_fin",
+   "page": 3,
+   "dpi": 300,
+   "kind": "clean",
+   "seconds": 8.1,
+   "lines": 52,
+   "cer": 0.04332273449920509,
+   "wer": 0.058823529411764705,
+   "words_bag": {
+    "matched": 304,
+    "reference": 323
+   },
+   "numbers": {
+    "matched": 28,
+    "reference": 29
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 2516
+  },
+  {
+   "name": "metro_fin",
+   "page": 3,
+   "dpi": 300,
+   "kind": "degraded",
+   "seconds": 7.63,
+   "lines": 53,
+   "cer": 0.021462639109697933,
+   "wer": 0.043343653250773995,
+   "words_bag": {
+    "matched": 309,
+    "reference": 323
+   },
+   "numbers": {
+    "matched": 29,
+    "reference": 29
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 2516
+  },
+  {
+   "name": "metro_fin",
+   "page": 4,
+   "dpi": 150,
+   "kind": "clean",
+   "seconds": 7.26,
+   "lines": 68,
+   "cer": 0.012431776834445117,
+   "wer": 0.018518518518518517,
+   "words_bag": {
+    "matched": 425,
+    "reference": 432
+   },
+   "numbers": {
+    "matched": 41,
+    "reference": 42
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 3298
+  },
+  {
+   "name": "metro_fin",
+   "page": 4,
+   "dpi": 150,
+   "kind": "degraded",
+   "seconds": 6.22,
+   "lines": 68,
+   "cer": 0.017283201940570043,
+   "wer": 0.032407407407407406,
+   "words_bag": {
+    "matched": 419,
+    "reference": 432
+   },
+   "numbers": {
+    "matched": 39,
+    "reference": 42
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 3298
+  },
+  {
+   "name": "metro_fin",
+   "page": 4,
+   "dpi": 300,
+   "kind": "clean",
+   "seconds": 8.03,
+   "lines": 68,
+   "cer": 0.021224984839296544,
+   "wer": 0.018518518518518517,
+   "words_bag": {
+    "matched": 425,
+    "reference": 432
+   },
+   "numbers": {
+    "matched": 41,
+    "reference": 42
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 3298
+  },
+  {
+   "name": "metro_fin",
+   "page": 4,
+   "dpi": 300,
+   "kind": "degraded",
+   "seconds": 8.6,
+   "lines": 68,
+   "cer": 0.015463917525773196,
+   "wer": 0.023148148148148147,
+   "words_bag": {
+    "matched": 424,
+    "reference": 432
+   },
+   "numbers": {
+    "matched": 42,
+    "reference": 42
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 3298
+  },
+  {
+   "name": "metro_fin",
+   "page": 5,
+   "dpi": 150,
+   "kind": "clean",
+   "seconds": 6.72,
+   "lines": 67,
+   "cer": 0.014538558786346398,
+   "wer": 0.014150943396226415,
+   "words_bag": {
+    "matched": 418,
+    "reference": 424
+   },
+   "numbers": {
+    "matched": 31,
+    "reference": 35
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 3164
+  },
+  {
+   "name": "metro_fin",
+   "page": 5,
+   "dpi": 150,
+   "kind": "degraded",
+   "seconds": 6.55,
+   "lines": 67,
+   "cer": 0.016118836915297093,
+   "wer": 0.025943396226415096,
+   "words_bag": {
+    "matched": 413,
+    "reference": 424
+   },
+   "numbers": {
+    "matched": 32,
+    "reference": 35
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 3164
+  },
+  {
+   "name": "metro_fin",
+   "page": 5,
+   "dpi": 300,
+   "kind": "clean",
+   "seconds": 9.03,
+   "lines": 67,
+   "cer": 0.021807838179519597,
+   "wer": 0.01650943396226415,
+   "words_bag": {
+    "matched": 417,
+    "reference": 424
+   },
+   "numbers": {
+    "matched": 32,
+    "reference": 35
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 3164
+  },
+  {
+   "name": "metro_fin",
+   "page": 5,
+   "dpi": 300,
+   "kind": "degraded",
+   "seconds": 8.83,
+   "lines": 67,
+   "cer": 0.014854614412136535,
+   "wer": 0.018867924528301886,
+   "words_bag": {
+    "matched": 416,
+    "reference": 424
+   },
+   "numbers": {
+    "matched": 34,
+    "reference": 35
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 3164
+  },
+  {
+   "name": "metro_fin",
+   "page": 6,
+   "dpi": 150,
+   "kind": "clean",
+   "seconds": 7.57,
+   "lines": 67,
+   "cer": 0.018832391713747645,
+   "wer": 0.020833333333333332,
+   "words_bag": {
+    "matched": 424,
+    "reference": 432
+   },
+   "numbers": {
+    "matched": 47,
+    "reference": 48
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 3186
+  },
+  {
+   "name": "metro_fin",
+   "page": 6,
+   "dpi": 150,
+   "kind": "degraded",
+   "seconds": 7.02,
+   "lines": 67,
+   "cer": 0.025423728813559324,
+   "wer": 0.04398148148148148,
+   "words_bag": {
+    "matched": 413,
+    "reference": 432
+   },
+   "numbers": {
+    "matched": 45,
+    "reference": 48
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 3186
+  },
+  {
+   "name": "metro_fin",
+   "page": 6,
+   "dpi": 300,
+   "kind": "clean",
+   "seconds": 8.95,
+   "lines": 67,
+   "cer": 0.02824858757062147,
+   "wer": 0.032407407407407406,
+   "words_bag": {
+    "matched": 418,
+    "reference": 432
+   },
+   "numbers": {
+    "matched": 46,
+    "reference": 48
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 3186
+  },
+  {
+   "name": "metro_fin",
+   "page": 6,
+   "dpi": 300,
+   "kind": "degraded",
+   "seconds": 9.5,
+   "lines": 67,
+   "cer": 0.018832391713747645,
+   "wer": 0.041666666666666664,
+   "words_bag": {
+    "matched": 414,
+    "reference": 432
+   },
+   "numbers": {
+    "matched": 47,
+    "reference": 48
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 3186
+  },
+  {
+   "name": "metro_fin",
+   "page": 7,
+   "dpi": 150,
+   "kind": "clean",
+   "seconds": 6.18,
+   "lines": 68,
+   "cer": 0.009464655427388346,
+   "wer": 0.008888888888888889,
+   "words_bag": {
+    "matched": 446,
+    "reference": 450
+   },
+   "numbers": {
+    "matched": 37,
+    "reference": 38
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 3381
+  },
+  {
+   "name": "metro_fin",
+   "page": 7,
+   "dpi": 150,
+   "kind": "degraded",
+   "seconds": 6.36,
+   "lines": 68,
+   "cer": 0.011830819284235433,
+   "wer": 0.02666666666666667,
+   "words_bag": {
+    "matched": 438,
+    "reference": 450
+   },
+   "numbers": {
+    "matched": 36,
+    "reference": 38
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 3381
+  },
+  {
+   "name": "metro_fin",
+   "page": 7,
+   "dpi": 300,
+   "kind": "clean",
+   "seconds": 8.87,
+   "lines": 67,
+   "cer": 0.034900916888494525,
+   "wer": 0.02666666666666667,
+   "words_bag": {
+    "matched": 439,
+    "reference": 450
+   },
+   "numbers": {
+    "matched": 37,
+    "reference": 38
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 3381
+  },
+  {
+   "name": "metro_fin",
+   "page": 7,
+   "dpi": 300,
+   "kind": "degraded",
+   "seconds": 9.51,
+   "lines": 68,
+   "cer": 0.017450458444247263,
+   "wer": 0.03111111111111111,
+   "words_bag": {
+    "matched": 436,
+    "reference": 450
+   },
+   "numbers": {
+    "matched": 35,
+    "reference": 38
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 3381
+  },
+  {
+   "name": "metro_fin",
+   "page": 8,
+   "dpi": 150,
+   "kind": "clean",
+   "seconds": 8.92,
+   "lines": 68,
+   "cer": 0.007403625223385244,
+   "wer": 0.010101010101010102,
+   "words_bag": {
+    "matched": 490,
+    "reference": 495
+   },
+   "numbers": {
+    "matched": 29,
+    "reference": 31
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 3917
+  },
+  {
+   "name": "metro_fin",
+   "page": 8,
+   "dpi": 150,
+   "kind": "degraded",
+   "seconds": 9.04,
+   "lines": 68,
+   "cer": 0.012254276231810059,
+   "wer": 0.01818181818181818,
+   "words_bag": {
+    "matched": 488,
+    "reference": 495
+   },
+   "numbers": {
+    "matched": 30,
+    "reference": 31
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 3917
+  },
+  {
+   "name": "metro_fin",
+   "page": 8,
+   "dpi": 300,
+   "kind": "clean",
+   "seconds": 11.55,
+   "lines": 67,
+   "cer": 0.036762828695430176,
+   "wer": 0.046464646464646465,
+   "words_bag": {
+    "matched": 476,
+    "reference": 495
+   },
+   "numbers": {
+    "matched": 28,
+    "reference": 31
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 3917
+  },
+  {
+   "name": "metro_fin",
+   "page": 8,
+   "dpi": 300,
+   "kind": "degraded",
+   "seconds": 10.57,
+   "lines": 68,
+   "cer": 0.012764871074802144,
+   "wer": 0.01818181818181818,
+   "words_bag": {
+    "matched": 487,
+    "reference": 495
+   },
+   "numbers": {
+    "matched": 29,
+    "reference": 31
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 3917
+  },
+  {
+   "name": "metro_fin",
+   "page": 9,
+   "dpi": 150,
+   "kind": "clean",
+   "seconds": 2.75,
+   "lines": 14,
+   "cer": 0.006493506493506494,
+   "wer": 0.0,
+   "words_bag": {
+    "matched": 99,
+    "reference": 99
+   },
+   "numbers": {
+    "matched": 2,
+    "reference": 2
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 770
+  },
+  {
+   "name": "metro_fin",
+   "page": 9,
+   "dpi": 150,
+   "kind": "degraded",
+   "seconds": 2.88,
+   "lines": 14,
+   "cer": 0.003896103896103896,
+   "wer": 0.0,
+   "words_bag": {
+    "matched": 99,
+    "reference": 99
+   },
+   "numbers": {
+    "matched": 2,
+    "reference": 2
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 770
+  },
+  {
+   "name": "metro_fin",
+   "page": 9,
+   "dpi": 300,
+   "kind": "clean",
+   "seconds": 5.05,
+   "lines": 14,
+   "cer": 0.012987012987012988,
+   "wer": 0.020202020202020204,
+   "words_bag": {
+    "matched": 97,
+    "reference": 99
+   },
+   "numbers": {
+    "matched": 2,
+    "reference": 2
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 770
+  },
+  {
+   "name": "metro_fin",
+   "page": 9,
+   "dpi": 300,
+   "kind": "degraded",
+   "seconds": 5.21,
+   "lines": 14,
+   "cer": 0.006493506493506494,
+   "wer": 0.0,
+   "words_bag": {
+    "matched": 99,
+    "reference": 99
+   },
+   "numbers": {
+    "matched": 2,
+    "reference": 2
+   },
+   "okpd": {
+    "matched": 0,
+    "reference": 0
+   },
+   "ref_chars": 770
+  }
+ ],
+ "summary": {
+  "150dpi_clean": {
+   "pages": 29,
+   "cer_weighted": 0.0106,
+   "wer_mean": 0.0249,
+   "seconds_per_page_median": 6.04,
+   "words_bag_recall": 0.979,
+   "numbers_recall": 0.9809,
+   "okpd_recall": 1.0
+  },
+  "150dpi_degraded": {
+   "pages": 29,
+   "cer_weighted": 0.0177,
+   "wer_mean": 0.0384,
+   "seconds_per_page_median": 5.58,
+   "words_bag_recall": 0.9648,
+   "numbers_recall": 0.9685,
+   "okpd_recall": 1.0
+  },
+  "300dpi_clean": {
+   "pages": 29,
+   "cer_weighted": 0.024,
+   "wer_mean": 0.0617,
+   "seconds_per_page_median": 8.95,
+   "words_bag_recall": 0.945,
+   "numbers_recall": 0.9598,
+   "okpd_recall": 1.0
+  },
+  "300dpi_degraded": {
+   "pages": 29,
+   "cer_weighted": 0.0209,
+   "wer_mean": 0.0466,
+   "seconds_per_page_median": 8.6,
+   "words_bag_recall": 0.9587,
+   "numbers_recall": 0.9589,
+   "okpd_recall": 1.0
+  }
+ },
+ "documents": [
+  {
+   "name": "lift_src",
+   "kind": "clean",
+   "pages": 7,
+   "seconds_total": 242.0,
+   "cer_vs_docx": 0.0129,
+   "numbers_vs_docx": {
+    "matched": 156,
+    "reference": 163
+   },
+   "okpd_vs_docx": {
+    "matched": 1,
+    "reference": 1
+   },
+   "findings_scan_vs_docx": {
+    "matched": 15,
+    "reference": 18,
+    "candidate": 17,
+    "method": "same category and quote similarity >= 0.7, greedy one-to-one"
+   },
+   "findings_scan_vs_textpdf": {
+    "matched": 15,
+    "reference": 18,
+    "candidate": 17,
+    "method": "same category and quote similarity >= 0.7, greedy one-to-one"
+   },
+   "findings_textpdf_vs_docx": {
+    "matched": 18,
+    "reference": 18,
+    "candidate": 18,
+    "method": "same category and quote similarity >= 0.7, greedy one-to-one"
+   }
+  },
+  {
+   "name": "lift_src",
+   "kind": "degraded",
+   "pages": 7,
+   "seconds_total": 50.7,
+   "cer_vs_docx": 0.0155,
+   "numbers_vs_docx": {
+    "matched": 159,
+    "reference": 163
+   },
+   "okpd_vs_docx": {
+    "matched": 1,
+    "reference": 1
+   },
+   "findings_scan_vs_docx": {
+    "matched": 12,
+    "reference": 18,
+    "candidate": 18,
+    "method": "same category and quote similarity >= 0.7, greedy one-to-one"
+   },
+   "findings_scan_vs_textpdf": {
+    "matched": 12,
+    "reference": 18,
+    "candidate": 18,
+    "method": "same category and quote similarity >= 0.7, greedy one-to-one"
+   },
+   "findings_textpdf_vs_docx": {
+    "matched": 18,
+    "reference": 18,
+    "candidate": 18,
+    "method": "same category and quote similarity >= 0.7, greedy one-to-one"
+   }
+  },
+  {
+   "name": "metro_src",
+   "kind": "clean",
+   "pages": 6,
+   "seconds_total": 52.9,
+   "cer_vs_docx": 0.1056,
+   "numbers_vs_docx": {
+    "matched": 276,
+    "reference": 280
+   },
+   "okpd_vs_docx": {
+    "matched": 28,
+    "reference": 28
+   },
+   "findings_scan_vs_docx": {
+    "matched": 63,
+    "reference": 93,
+    "candidate": 83,
+    "method": "same category and quote similarity >= 0.7, greedy one-to-one"
+   },
+   "findings_scan_vs_textpdf": {
+    "matched": 63,
+    "reference": 93,
+    "candidate": 83,
+    "method": "same category and quote similarity >= 0.7, greedy one-to-one"
+   },
+   "findings_textpdf_vs_docx": {
+    "matched": 92,
+    "reference": 93,
+    "candidate": 93,
+    "method": "same category and quote similarity >= 0.7, greedy one-to-one"
+   }
+  },
+  {
+   "name": "metro_src",
+   "kind": "degraded",
+   "pages": 6,
+   "seconds_total": 51.4,
+   "cer_vs_docx": 0.1151,
+   "numbers_vs_docx": {
+    "matched": 271,
+    "reference": 280
+   },
+   "okpd_vs_docx": {
+    "matched": 28,
+    "reference": 28
+   },
+   "findings_scan_vs_docx": {
+    "matched": 63,
+    "reference": 93,
+    "candidate": 78,
+    "method": "same category and quote similarity >= 0.7, greedy one-to-one"
+   },
+   "findings_scan_vs_textpdf": {
+    "matched": 63,
+    "reference": 93,
+    "candidate": 78,
+    "method": "same category and quote similarity >= 0.7, greedy one-to-one"
+   },
+   "findings_textpdf_vs_docx": {
+    "matched": 92,
+    "reference": 93,
+    "candidate": 93,
+    "method": "same category and quote similarity >= 0.7, greedy one-to-one"
+   }
+  }
+ ],
+ "summary_raw": {
+  "150dpi_clean": {
+   "pages": 29,
+   "cer_weighted": 0.0115,
+   "wer_mean": 0.0301,
+   "seconds_per_page_median": 6.04,
+   "words_bag_recall": 0.9744,
+   "numbers_recall": 0.9809,
+   "okpd_recall": 1.0
+  },
+  "150dpi_degraded": {
+   "pages": 29,
+   "cer_weighted": 0.0185,
+   "wer_mean": 0.0433,
+   "seconds_per_page_median": 5.58,
+   "words_bag_recall": 0.9606,
+   "numbers_recall": 0.9685,
+   "okpd_recall": 1.0
+  },
+  "300dpi_clean": {
+   "pages": 29,
+   "cer_weighted": 0.0265,
+   "wer_mean": 0.0761,
+   "seconds_per_page_median": 8.95,
+   "words_bag_recall": 0.9319,
+   "numbers_recall": 0.9598,
+   "okpd_recall": 1.0
+  },
+  "300dpi_degraded": {
+   "pages": 29,
+   "cer_weighted": 0.0218,
+   "wer_mean": 0.0531,
+   "seconds_per_page_median": 8.6,
+   "words_bag_recall": 0.9535,
+   "numbers_recall": 0.9589,
+   "okpd_recall": 1.0
+  }
+ }
+}

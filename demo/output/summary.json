@@ -1,0 +1,482 @@
+[
+  {
+    "case": "01_metro_src",
+    "inputs": [
+      "samples/metro_src.docx"
+    ],
+    "file": "metro_src.docx",
+    "status": "ok",
+    "mode": "rules",
+    "seconds": 2.3,
+    "findings": 92,
+    "by_severity": {
+      "high": 1,
+      "medium": 79,
+      "low": 12
+    },
+    "by_category": {
+      "Неверный или общий код ОКПД 2": 6,
+      "Неполнота или комплектность": 36,
+      "Стандарты (ГОСТ, поверка)": 13,
+      "Некорректная характеристика": 12,
+      "Ограничение конкуренции": 17,
+      "Лишнее в ТЗ": 6,
+      "Гарантийные условия": 2
+    },
+    "needs_review": 67,
+    "warnings": 0,
+    "pii_in_document": {}
+  },
+  {
+    "case": "02_lift_src",
+    "inputs": [
+      "samples/lift_src.docx"
+    ],
+    "file": "lift_src.docx",
+    "status": "ok",
+    "mode": "rules",
+    "seconds": 0.5,
+    "findings": 18,
+    "by_severity": {
+      "high": 5,
+      "medium": 7,
+      "low": 6
+    },
+    "by_category": {
+      "Противоречие": 4,
+      "Ограничение конкуренции": 1,
+      "Стандарты (ГОСТ, поверка)": 6,
+      "Гарантийные условия": 1,
+      "Предмет закупки или наименование": 1,
+      "Неверный или общий код ОКПД 2": 1,
+      "Оформление по внутреннему стандарту": 4
+    },
+    "needs_review": 8,
+    "warnings": 0,
+    "pii_in_document": {}
+  },
+  {
+    "case": "03_lift_src_pdf",
+    "inputs": [
+      "samples/pdf/lift_src.pdf"
+    ],
+    "file": "lift_src.pdf",
+    "status": "ok",
+    "mode": "rules",
+    "seconds": 0.8,
+    "findings": 18,
+    "by_severity": {
+      "high": 5,
+      "medium": 7,
+      "low": 6
+    },
+    "by_category": {
+      "Противоречие": 4,
+      "Ограничение конкуренции": 1,
+      "Стандарты (ГОСТ, поверка)": 6,
+      "Гарантийные условия": 1,
+      "Предмет закупки или наименование": 1,
+      "Неверный или общий код ОКПД 2": 1,
+      "Оформление по внутреннему стандарту": 4
+    },
+    "needs_review": 8,
+    "warnings": 0,
+    "pii_in_document": {}
+  },
+  {
+    "case": "04_lift_fin",
+    "inputs": [
+      "samples/lift_fin.docx"
+    ],
+    "file": "lift_fin.docx",
+    "status": "ok",
+    "mode": "rules",
+    "seconds": 0.5,
+    "findings": 7,
+    "by_severity": {
+      "high": 3,
+      "medium": 1,
+      "low": 3
+    },
+    "by_category": {
+      "Ограничение конкуренции": 1,
+      "Стандарты (ГОСТ, поверка)": 4,
+      "Лишнее в ТЗ": 1,
+      "Оформление по внутреннему стандарту": 1
+    },
+    "needs_review": 2,
+    "warnings": 0,
+    "pii_in_document": {}
+  },
+  {
+    "case": "05_metro_fin",
+    "inputs": [
+      "samples/metro_fin.docx"
+    ],
+    "file": "metro_fin.docx",
+    "status": "ok",
+    "mode": "rules",
+    "seconds": 3.5,
+    "findings": 8,
+    "by_severity": {
+      "medium": 1,
+      "low": 7
+    },
+    "by_category": {
+      "Некорректная характеристика": 1,
+      "Неверный или общий код ОКПД 2": 4,
+      "Неполнота или комплектность": 2,
+      "Оформление по внутреннему стандарту": 1
+    },
+    "needs_review": 7,
+    "warnings": 0,
+    "pii_in_document": {}
+  },
+  {
+    "case": "06_compare_metro",
+    "status": "ok",
+    "summary": "Исправлено 90, осталось 2, новых 6.",
+    "fixed": 90,
+    "remained": 2,
+    "added": 6
+  },
+  {
+    "case": "07_eis_server_msu",
+    "inputs": [
+      "data_raw/eis_more/07_МГУ_сервер.docx"
+    ],
+    "file": "07_МГУ_сервер.docx",
+    "status": "ok",
+    "mode": "rules",
+    "seconds": 0.1,
+    "findings": 4,
+    "by_severity": {
+      "medium": 4
+    },
+    "by_category": {
+      "Неполнота или комплектность": 2,
+      "Ограничение конкуренции": 1,
+      "Некорректная характеристика": 1
+    },
+    "needs_review": 4,
+    "warnings": 0,
+    "pii_in_document": {
+      "PERSON": 6
+    }
+  },
+  {
+    "case": "08_eis_repair_mtusi",
+    "inputs": [
+      "data_raw/eis_more/08_МТУСИ_ремонт_помещений.docx"
+    ],
+    "file": "08_МТУСИ_ремонт_помещений.docx",
+    "status": "ok",
+    "mode": "rules",
+    "seconds": 0.1,
+    "findings": 4,
+    "by_severity": {
+      "low": 4
+    },
+    "by_category": {
+      "Неверный или общий код ОКПД 2": 1,
+      "Стандарты (ГОСТ, поверка)": 3
+    },
+    "needs_review": 4,
+    "warnings": 0,
+    "pii_in_document": {}
+  },
+  {
+    "case": "09_eis_cleaning",
+    "inputs": [
+      "data_raw/eis_more/eis_32616557989.docx"
+    ],
+    "file": "eis_32616557989.docx",
+    "status": "ok",
+    "mode": "rules",
+    "seconds": 0.7,
+    "findings": 4,
+    "by_severity": {
+      "medium": 3,
+      "low": 1
+    },
+    "by_category": {
+      "Неполнота или комплектность": 1,
+      "Некорректная характеристика": 2,
+      "Стандарты (ГОСТ, поверка)": 1
+    },
+    "needs_review": 4,
+    "warnings": 0,
+    "pii_in_document": {
+      "PERSON": 1
+    }
+  },
+  {
+    "case": "10_eis_medical_volggmu",
+    "inputs": [
+      "data_raw/eis_more/12_ВолгГМУ_нейродиагностика.docx"
+    ],
+    "file": "12_ВолгГМУ_нейродиагностика.docx",
+    "status": "ok",
+    "mode": "rules",
+    "seconds": 1.7,
+    "findings": 2,
+    "by_severity": {
+      "medium": 2
+    },
+    "by_category": {
+      "Неполнота или комплектность": 1,
+      "Стандарты (ГОСТ, поверка)": 1
+    },
+    "needs_review": 2,
+    "warnings": 0,
+    "pii_in_document": {
+      "EMAIL": 2,
+      "PHONE": 2,
+      "PASSPORT": 1,
+      "PERSON": 3
+    }
+  },
+  {
+    "case": "11_eis_lift_with_appendices",
+    "inputs": [
+      "eval/reconcile/split/02/main.docx",
+      "eval/reconcile/split/02/Приложение 3_часть1.docx",
+      "eval/reconcile/split/02/Приложение 4_часть2.docx",
+      "eval/reconcile/split/02/Приложение 5_часть3.docx"
+    ],
+    "file": "main.docx",
+    "status": "ok",
+    "mode": "rules",
+    "seconds": 0.2,
+    "findings": 5,
+    "by_severity": {
+      "medium": 3,
+      "low": 2
+    },
+    "by_category": {
+      "Некорректная характеристика": 1,
+      "Ограничение конкуренции": 1,
+      "Противоречие": 1,
+      "Стандарты (ГОСТ, поверка)": 2
+    },
+    "needs_review": 5,
+    "warnings": 0,
+    "pii_in_document": {
+      "EMAIL": 1,
+      "PASSPORT": 1,
+      "PERSON": 5
+    }
+  },
+  {
+    "case": "12_broken_files",
+    "results": [
+      {
+        "file": "empty.docx",
+        "status": "error",
+        "error": "файл пустой",
+        "summary": "Документ не проверен: файл пустой"
+      },
+      {
+        "file": "not_a_docx.docx",
+        "status": "error",
+        "error": "файл повреждён или это не docx (не открывается как документ Word)",
+        "summary": "Документ не проверен: файл повреждён или это не docx (не открывается как документ Word)"
+      },
+      {
+        "file": "truncated.pdf",
+        "status": "error",
+        "error": "PDF повреждён и не открывается",
+        "summary": "Документ не проверен: PDF повреждён и не открывается"
+      }
+    ]
+  },
+  {
+    "case": "13_lift_src_rag",
+    "inputs": [
+      "samples/lift_src.docx"
+    ],
+    "file": "lift_src.docx",
+    "status": "ok",
+    "mode": "rules",
+    "seconds": 1.5,
+    "findings": 18,
+    "by_severity": {
+      "high": 5,
+      "medium": 7,
+      "low": 6
+    },
+    "by_category": {
+      "Противоречие": 4,
+      "Ограничение конкуренции": 1,
+      "Стандарты (ГОСТ, поверка)": 6,
+      "Гарантийные условия": 1,
+      "Предмет закупки или наименование": 1,
+      "Неверный или общий код ОКПД 2": 1,
+      "Оформление по внутреннему стандарту": 4
+    },
+    "needs_review": 9,
+    "warnings": 0,
+    "pii_in_document": {},
+    "with_norm_quote": 12
+  },
+  {
+    "case": "15_injection",
+    "inputs": [
+      "samples/injection.docx"
+    ],
+    "file": "injection.docx",
+    "status": "ok",
+    "mode": "rules",
+    "seconds": 0.2,
+    "findings": 7,
+    "by_severity": {
+      "high": 3,
+      "medium": 1,
+      "low": 3
+    },
+    "by_category": {
+      "Ограничение конкуренции": 1,
+      "Стандарты (ГОСТ, поверка)": 4,
+      "Лишнее в ТЗ": 1,
+      "Оформление по внутреннему стандарту": 1
+    },
+    "needs_review": 2,
+    "warnings": 2,
+    "pii_in_document": {}
+  },
+  {
+    "case": "14_lift_scan_ocr",
+    "inputs": [
+      "samples/scan/lift_src_scan.pdf"
+    ],
+    "built_in": "docker WITH_OCR=1",
+    "file": "lift_src_scan.pdf",
+    "status": "ok",
+    "mode": "rules",
+    "seconds": 22.7,
+    "findings": 16,
+    "by_severity": {
+      "high": 4,
+      "medium": 7,
+      "low": 5
+    },
+    "by_category": {
+      "Противоречие": 4,
+      "Ограничение конкуренции": 1,
+      "Стандарты (ГОСТ, поверка)": 5,
+      "Гарантийные условия": 1,
+      "Предмет закупки или наименование": 1,
+      "Неверный или общий код ОКПД 2": 1,
+      "Оформление по внутреннему стандарту": 3
+    },
+    "needs_review": 9,
+    "warnings": 7,
+    "pii_in_document": {}
+  },
+  {
+    "case": "16_lift_src_llm_linear",
+    "built_by": "demo/run_llm_cases.py",
+    "orchestrator": "linear",
+    "from_model": 20,
+    "file": "lift_src.docx",
+    "status": "ok",
+    "mode": "rules+llm",
+    "seconds": 378.4,
+    "findings": 38,
+    "by_severity": {
+      "high": 5,
+      "medium": 7,
+      "low": 6
+    },
+    "by_category": {
+      "Противоречие": 4,
+      "Ограничение конкуренции": 1,
+      "Стандарты (ГОСТ, поверка)": 6,
+      "Гарантийные условия": 1,
+      "Предмет закупки или наименование": 1,
+      "Неверный или общий код ОКПД 2": 1,
+      "Оформление по внутреннему стандарту": 4
+    },
+    "needs_review": 3,
+    "warnings": 0,
+    "pii_in_document": {}
+  },
+  {
+    "case": "17_lift_src_llm_graph",
+    "built_by": "demo/run_llm_cases.py",
+    "orchestrator": "graph",
+    "from_model": 18,
+    "file": "lift_src.docx",
+    "status": "ok",
+    "mode": "rules+llm",
+    "seconds": 666.3,
+    "findings": 36,
+    "by_severity": {
+      "high": 5,
+      "medium": 7,
+      "low": 6
+    },
+    "by_category": {
+      "Противоречие": 4,
+      "Ограничение конкуренции": 1,
+      "Стандарты (ГОСТ, поверка)": 6,
+      "Гарантийные условия": 1,
+      "Предмет закупки или наименование": 1,
+      "Неверный или общий код ОКПД 2": 1,
+      "Оформление по внутреннему стандарту": 4
+    },
+    "needs_review": 3,
+    "warnings": 0,
+    "pii_in_document": {}
+  },
+  {
+    "case": "18_lift_fin_llm_linear",
+    "built_by": "demo/run_llm_cases.py",
+    "orchestrator": "linear",
+    "from_model": 25,
+    "file": "lift_fin.docx",
+    "status": "ok",
+    "mode": "rules+llm",
+    "seconds": 602.3,
+    "findings": 32,
+    "by_severity": {
+      "high": 3,
+      "medium": 1,
+      "low": 3
+    },
+    "by_category": {
+      "Ограничение конкуренции": 1,
+      "Стандарты (ГОСТ, поверка)": 4,
+      "Лишнее в ТЗ": 1,
+      "Оформление по внутреннему стандарту": 1
+    },
+    "needs_review": 2,
+    "warnings": 0,
+    "pii_in_document": {}
+  },
+  {
+    "case": "19_lift_fin_llm_graph",
+    "built_by": "demo/run_llm_cases.py",
+    "orchestrator": "graph",
+    "from_model": 29,
+    "file": "lift_fin.docx",
+    "status": "ok",
+    "mode": "rules+llm",
+    "seconds": 681.7,
+    "findings": 36,
+    "by_severity": {
+      "high": 3,
+      "medium": 1,
+      "low": 3
+    },
+    "by_category": {
+      "Ограничение конкуренции": 1,
+      "Стандарты (ГОСТ, поверка)": 4,
+      "Лишнее в ТЗ": 1,
+      "Оформление по внутреннему стандарту": 1
+    },
+    "needs_review": 2,
+    "warnings": 0,
+    "pii_in_document": {}
+  }
+]

@@ -1,0 +1,7 @@
+# RAG: эмбеддинги, гибрид и реранкер (BM25 работает и без этого файла)
+torch>=2.4
+sentence-transformers>=5.0
+transformers>=4.51
+numpy>=1.26
+pymorphy3>=2.0
+pymorphy3-dicts-ru>=2.4
