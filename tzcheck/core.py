@@ -8,6 +8,7 @@ find — дефекты по позиции или разделу; ref — об�
 по доводу, и всё, на чём довод стоит. Она оставляет замечание, только если дефект виден из текста, понижает то, что зависит
 от сведений вне комплекта, и снимает остальное; повысить замечание она не может."""
 import json
+import os
 import re
 
 from . import chunks, confidence, passport, search, tables
@@ -757,47 +758,67 @@ def verify(doc, scr, findings: list[Finding]) -> list[Finding]:
         size += len(text)
     if cur:
         batches.append(cur)
-    decided = {}
+    def run(stage: str, step: str, title: str) -> tuple[dict, dict]:
+        """Один проход второй проверки по всем кускам моделью шага stage: решения и id вызовов по номерам замечаний."""
+        decided, calls = {}, {}
 
-    def work(batch):
-        ns = [n for _, part in batch for n in part]
-        prompt = VERIFY_PROMPT.format(passport=pline, practice=practice + "\n" if practice else "", items=wrap("\n\n".join(t for t, _ in batch)),
-                                      count=len(ns), numbers=", ".join(str(n) for n in ns))
-        unit = unit_of("finding", f"замечаний: {len(ns)}", [findings[n].block_id for n in ns])
-        # бюджет ответа по числу замечаний: зациклившийся ответ не занимает модель на минуты (нижнюю границу задаёт TZCHECK_LLM_MAX_TOKENS)
-        data = {}
-        for _ in range(2):
-            # ответ без единого годного решения (у части моделей JSON-режим изредка отдаёт мусор) запрашивается ещё раз
-            data = ask(doc, prompt, min(4000, 500 + 300 * len(ns)), "вторая проверка", "verify", "Вторая проверка замечаний", unit) or {}
-            if any(isinstance(d, dict) and str(d.get("decision")) in ("keep", "lower", "reject") for d in data.get("decisions") or []):
-                break
-        return ns, data
+        def work(batch):
+            ns = [n for _, part in batch for n in part]
+            prompt = VERIFY_PROMPT.format(passport=pline, practice=practice + "\n" if practice else "", items=wrap("\n\n".join(t for t, _ in batch)),
+                                          count=len(ns), numbers=", ".join(str(n) for n in ns))
+            unit = unit_of("finding", f"замечаний: {len(ns)}", [findings[n].block_id for n in ns])
+            # бюджет ответа по числу замечаний: зациклившийся ответ не занимает модель на минуты (нижнюю границу задаёт TZCHECK_LLM_MAX_TOKENS)
+            data = {}
+            for _ in range(2):
+                # ответ без единого годного решения (у части моделей JSON-режим изредка отдаёт мусор) запрашивается ещё раз
+                data = ask(doc, prompt, min(4000, 500 + 300 * len(ns)), step, stage, title, unit) or {}
+                if any(isinstance(d, dict) and str(d.get("decision")) in ("keep", "lower", "reject") for d in data.get("decisions") or []):
+                    break
+            return ns, data
 
-    calls = {}
-    for ns, data in pmap(work, batches):
-        for n in ns:
-            calls[n] = data.get("_call", "")
-        for d in data.get("decisions") or []:
-            try:
-                n = int(d.get("n"))
-            except (TypeError, ValueError, AttributeError):
-                continue
-            if n in ns:
-                decided[n] = d
+        for ns, data in pmap(work, batches):
+            for n in ns:
+                calls[n] = data.get("_call", "")
+            for d in data.get("decisions") or []:
+                try:
+                    n = int(d.get("n"))
+                except (TypeError, ValueError, AttributeError):
+                    continue
+                if n in ns and isinstance(d, dict):
+                    decided[n] = d
+        return decided, calls
+
+    decided, calls = run("verify", "вторая проверка", "Вторая проверка замечаний")
+    # TZCHECK_VERIFY2_MODEL: те же замечания независимо решает вторая модель; итог по двум решениям (см. _two_checks)
+    second = run("verify2", "вторая проверка, вторая модель", "Вторая проверка замечаний второй моделью") if os.environ.get("TZCHECK_VERIFY2_MODEL") else None
+    names = {"keep": "подтверждено", "lower": "понижено", "reject": "снято"}
     out = []
     for n, f in enumerate(findings):
         d = decided.get(n)
+        dec = str(d.get("decision")) if d else ""
+        if second is not None:
+            d2 = second[0].get(n)
+            dec2 = str(d2.get("decision")) if d2 else ""
+            f.trace.append({"step": "verify", "call": calls.get(n, ""), "item": d, "text": "первая модель: " + names.get(dec, dec or "решения нет")
+                            + (f": {scr.restore(str(d.get('reason') or ''))}" if d and d.get("reason") else "")})
+            f.trace.append({"step": "verify2", "call": second[1].get(n, ""), "item": d2, "text": "вторая модель: " + names.get(dec2, dec2 or "решения нет")
+                            + (f": {scr.restore(str(d2.get('reason') or ''))}" if d2 and d2.get("reason") else "")})
+            f.evidence["вторая проверка, две модели"] = f"{names.get(dec, 'решения нет')} / {names.get(dec2, 'решения нет')}"
+            if d2 and d2.get("reason"):
+                f.evidence["довод второй модели"] = scr.restore(str(d2.get("reason") or ""))
+            dec, d = _two_checks(dec, dec2), d or d2
+        elif d:
+            f.trace.append({"step": "verify", "call": calls.get(n, ""), "item": d,
+                            "text": names.get(dec, dec) + (f": {scr.restore(str(d.get('reason') or ''))}" if d.get("reason") else "")})
         if not d:
             f.evidence["вторая проверка"] = "не проведена"
             f.needs_review = True
-            f.trace.append({"step": "verify", "call": calls.get(n, ""), "item": None, "text": "решения нет: на ручную проверку"})
+            if second is None:
+                f.trace.append({"step": "verify", "call": calls.get(n, ""), "item": None, "text": "решения нет: на ручную проверку"})
             out.append(f)
             continue
-        dec = str(d.get("decision"))
-        f.trace.append({"step": "verify", "call": calls.get(n, ""), "item": d,
-                        "text": {"keep": "подтверждено", "lower": "понижено", "reject": "снято"}.get(dec, dec)
-                        + (f": {scr.restore(str(d.get('reason') or ''))}" if d.get("reason") else "")})
-        f.evidence["вторая проверка"] = {"keep": "подтверждено", "lower": "понижено: на ручную проверку", "reject": "снято"}.get(dec, dec)
+        f.evidence["вторая проверка"] = {"keep": "подтверждено", "lower": "понижено: на ручную проверку", "reject": "снято",
+                                         "split": "подтверждено одной из двух моделей: на ручную проверку"}.get(dec, dec)
         f.evidence["довод проверки"] = scr.restore(str(d.get("reason") or ""))
         confidence.set_model_score(f, d.get("confidence"), confidence.STAGE_VERIFY)
         if dec == "reject":
@@ -805,9 +826,18 @@ def verify(doc, scr, findings: list[Finding]) -> list[Finding]:
             continue
         if dec == "lower":
             f.severity = SEV[max(0, SEV.index(f.severity) - 1)]
+        if dec != "keep":
             f.needs_review = True
         out.append(f)
     return out
+
+
+def _two_checks(first: str, second: str) -> str:
+    """Итог двух независимых вторых проверок: подтверждено, если подтвердили обе; снято, если сняли обе; подтвердила только одна —
+    "split" (на ручную проверку без понижения важности); остальное понижено."""
+    if first == second and first in ("keep", "reject"):
+        return first
+    return "split" if "keep" in (first, second) else "lower"
 
 
 def _distinct(a: Finding, b: Finding) -> bool:
