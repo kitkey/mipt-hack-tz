@@ -25,7 +25,9 @@ def ask(doc, prompt: str, max_tokens: int = 4000, step: str = "", stage: str = "
     journal = getattr(doc, "journal", None)
     try:
         with llm.journal_scope(journal, stage or step, title or step, unit), _scope(doc):
-            data = llm._call(prompt, max_tokens)
+            # шаг со своей моделью (TZCHECK_VERIFY_MODEL и подобные) идёт в неё, остальные в общую
+            own = bool(stage and os.environ.get(f"TZCHECK_{stage.upper()}_MODEL"))
+            data = llm._call(prompt, max_tokens, stage=stage) if own else llm._call(prompt, max_tokens)
             call = llm.last_call_id()
     except Exception as e:
         doc.warnings.append(f"Модель: шаг «{step}» пропущен ({type(e).__name__}: {str(e)[:120]})")

@@ -2,6 +2,7 @@
 привязывает цитату дословно и отдаёт модели кандидатов поиска."""
 import json
 import sys
+from types import SimpleNamespace
 
 import pytest
 from conftest import fake_litellm
@@ -179,6 +180,31 @@ def test_find_prompt_defines_categories_and_asks_for_every_defect(stub):
     assert "- Противоречие: " in notes and "- Гарантийные условия: " in notes and "Ограничение конкуренции" not in notes
     assert "каждый назови отдельным замечанием со своей цитатой" in p
     assert set(core.CATEGORIES) == set(core.CATEGORY_NOTES)
+
+
+def test_second_check_can_use_its_own_model(monkeypatch):
+    """TZCHECK_VERIFY_MODEL отдаёт вторую проверку другой модели: поиск идёт в общую, вторая проверка в свою, со своим адресом."""
+    seen = []
+
+    def completion(**kw):
+        seen.append((kw["model"], kw.get("api_base"), kw["messages"][-1]["content"].split(".")[0]))
+        text = json.dumps({"findings": [], "decisions": [], "lookups": []})
+        return SimpleNamespace(choices=[SimpleNamespace(finish_reason="stop", message=SimpleNamespace(content=text))], usage=None)
+    monkeypatch.setitem(sys.modules, "litellm", SimpleNamespace(completion=completion))
+    monkeypatch.setenv("TZCHECK_LLM_MODEL", "stub/find")
+    monkeypatch.setenv("TZCHECK_LLM_API_BASE", "http://common")
+    monkeypatch.setenv("TZCHECK_VERIFY_MODEL", "stub/verify")
+    monkeypatch.setenv("TZCHECK_VERIFY_API_BASE", "http://verify")
+    doc = spec_doc()
+    pipeline.start_core(doc)
+    from tzcheck.ask import ask
+    ask(doc, "Задача: найти дефекты. x", 100, "поиск дефектов", "find")
+    ask(doc, "Задача: независимая вторая проверка. x", 100, "вторая проверка", "verify")
+    assert [(m, b) for m, b, _ in seen] == [("stub/find", "http://common"), ("stub/verify", "http://verify")]
+    assert [c["model"] for c in doc.journal.calls] == ["stub/find", "stub/verify"]
+    monkeypatch.delenv("TZCHECK_VERIFY_API_BASE")
+    ask(doc, "Задача: независимая вторая проверка. x", 100, "вторая проверка", "verify")
+    assert seen[-1][:2] == ("stub/verify", None)
 
 
 def _finding(**kw):

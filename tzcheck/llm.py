@@ -161,20 +161,32 @@ def _reasoning_body(model: str, custom_base: bool) -> dict:
     return {}
 
 
-def _call(prompt: str, max_tokens: int = 4000, doc_flags: dict | None = None) -> dict:
-    """doc_flags: флаги документа для запрета внешней отправки (в основной копии); в этой ветке принимаются для совместимости."""
+def stage_setting(name: str, stage: str = "") -> str:
+    """Настройка модели для шага ядра: TZCHECK_<ШАГ>_<ИМЯ> (TZCHECK_VERIFY_MODEL, TZCHECK_VERIFY_API_BASE, TZCHECK_VERIFY_API_KEY),
+    без неё общая TZCHECK_LLM_<ИМЯ>. Так вторую проверку можно отдать другой модели, чем поиск."""
+    own = os.environ.get(f"TZCHECK_{stage.upper()}_{name}", "") if stage else ""
+    return own or os.environ.get(f"TZCHECK_LLM_{name}", "")
+
+
+def _call(prompt: str, max_tokens: int = 4000, doc_flags: dict | None = None, stage: str = "") -> dict:
+    """doc_flags: флаги документа для запрета внешней отправки (в основной копии); в этой ветке принимаются для совместимости.
+    stage: шаг ядра, для которого заданы свои настройки модели (stage_setting)."""
     import litellm
     kwargs = dict(
-        model=os.environ["TZCHECK_LLM_MODEL"],
+        model=stage_setting("MODEL", stage) or os.environ["TZCHECK_LLM_MODEL"],
         messages=[{"role": "system", "content": SYSTEM}, {"role": "user", "content": prompt}],
         temperature=float(os.environ.get("TZCHECK_LLM_TEMPERATURE", "0")),
         max_tokens=max(max_tokens, int(os.environ.get("TZCHECK_LLM_MAX_TOKENS", "24000"))),
         timeout=float(os.environ.get("TZCHECK_LLM_TIMEOUT", "900")),
     )
-    if os.environ.get("TZCHECK_LLM_API_BASE"):
-        kwargs["api_base"] = os.environ["TZCHECK_LLM_API_BASE"]
-    if os.environ.get("TZCHECK_LLM_API_KEY"):
-        kwargs["api_key"] = os.environ["TZCHECK_LLM_API_KEY"]
+    own = bool(stage and os.environ.get(f"TZCHECK_{stage.upper()}_MODEL"))
+    # у шага со своей моделью свой адрес и ключ; общий адрес к чужой модели не подставляется
+    base = os.environ.get(f"TZCHECK_{stage.upper()}_API_BASE", "") if own else os.environ.get("TZCHECK_LLM_API_BASE", "")
+    key = (os.environ.get(f"TZCHECK_{stage.upper()}_API_KEY", "") if own else "") or os.environ.get("TZCHECK_LLM_API_KEY", "")
+    if base:
+        kwargs["api_base"] = base
+    if key and (base or not own):
+        kwargs["api_key"] = key
     if os.environ.get("TZCHECK_LLM_JSON_MODE", "1") == "1":
         kwargs["response_format"] = {"type": "json_object"}
     extra = _reasoning_body(kwargs["model"], bool(kwargs.get("api_base")))
