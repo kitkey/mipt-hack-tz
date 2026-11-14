@@ -65,6 +65,8 @@ def ev_value(key: str, v) -> str:
         head = ", ".join(x for x in (v.get("designation") or "", f"п. {v['clause']}" if v.get("clause") else "",
                                      GOST_STATUS.get(v.get("status"), v.get("status") or "")) if x)
         return head + (f": «{v['quote']}»" if v.get("quote") else "")
+    if key == "блок отчёта" and isinstance(v, str):
+        return re.sub(r"^на проверку: ", "«На проверку», ", v)
     if key == "применимость ГОСТ" and isinstance(v, dict):
         return "; ".join(x for x in (v.get("why") or "", f"«{v['quote']}»" if v.get("quote") else "") if x)
     if isinstance(v, bool):
@@ -81,7 +83,7 @@ def _evidence(f: dict) -> str:
     ev = f.get("evidence") or {}
     items = [f"<li>{esc(ev_label(k))}: {esc(ev_value(k, v))}</li>" for k, v in ev.items()
              if k not in EV_SKIP and v not in (None, "", [], {})]
-    return f"<details><summary>Как проверено</summary><ul>{''.join(items)}</ul></details>" if items else ""
+    return f"<details><summary>Основание</summary><ul>{''.join(items)}</ul></details>" if items else ""
 
 
 CONF_JS = """
@@ -106,7 +108,7 @@ CONF_JS = """
     let n = 0;
     rows.forEach(r => { const c = conf(r); const vis = c === null ? none.checked : c >= min;
       r.style.display = vis ? '' : 'none'; n += vis; body.appendChild(r); });
-    shown.textContent = n;
+    shown.textContent = n; shown.parentElement.hidden = n === rows.length;
   }
   [rng, none, sort].forEach(el => el.addEventListener('input', apply));
   apply();
@@ -126,9 +128,9 @@ def _conf_controls(total: int) -> str:
     t = show_threshold()
     return (f'<div class="ctl"><label>Порядок: <select id="csort"><option value="idx">по риску</option>'
             '<option value="desc">уверенность: сначала высокая</option><option value="asc">уверенность: сначала низкая</option></select></label>'
-            f'<label>Показывать от <input type="range" id="cmin" min="0" max="100" step="5" value="{t}"> <span id="cminv">{t} %</span></label>'
+            f'<label>Уверенность от <input type="range" id="cmin" min="0" max="100" step="5" value="{t}"> <span id="cminv">{t} %</span></label>'
             '<label><input type="checkbox" id="cnone" checked> без оценки</label>'
-            f'<span>показано <span id="cshown">{total}</span> из {total}</span></div>')
+            f'<span id="cshownw" hidden>показано <span id="cshown">{total}</span> из {total}</span></div>')
 
 
 def basis_title(basis: str) -> str:
@@ -150,7 +152,7 @@ def _model_table(rows: list[str], block: dict | None = None) -> str:
     sev_chips = "".join(f"<li>{SEV_RU.get(k, k)} риск: {sev[k]}</li>" for k in ("high", "medium", "low") if sev.get(k))
     cat_chips = "".join(f"<li>{esc(k)}: {v}</li>" for k, v in sorted(block.get("by_category", {}).items(), key=lambda x: -x[1]))
     table = ('<table><thead><tr><th>№</th><th>Риск и статус</th><th>Уверенность</th><th>Категория</th><th>Где и цитата</th><th>Почему</th>'
-             f'<th>Как исправить</th><th>Основание</th></tr></thead><tbody id="mrows">{"".join(rows)}</tbody></table>')
+             f'<th>Как исправить</th><th>Норма</th></tr></thead><tbody id="mrows">{"".join(rows)}</tbody></table>')
     return f'<h2>На проверку ({len(rows)})</h2><ul class="chips">{sev_chips}</ul><ul class="chips">{cat_chips}</ul>{table}'
 
 
@@ -158,7 +160,7 @@ def _unchecked_table(rows: list[str], block: dict | None = None) -> str:
     if not rows:
         return ""
     table = ('<table><thead><tr><th>№</th><th>Риск и статус</th><th>Уверенность</th><th>Категория</th><th>Где и цитата</th><th>Что не найдено</th>'
-             f'<th>Что сделать</th><th>Основание</th></tr></thead><tbody id="urows">{"".join(rows)}</tbody></table>')
+             f'<th>Что сделать</th><th>Норма</th></tr></thead><tbody id="urows">{"".join(rows)}</tbody></table>')
     return f'<h2>Не проверено ({len(rows)})</h2><div class="meta">Сведений нет в переданных файлах.</div>' + table
 
 
@@ -218,7 +220,7 @@ def to_html(result: dict, run_id: str | None = None) -> str:
 <div class="summary">{esc(result.get('summary', ''))}</div>{_model_note(stats.get('model_block'))}
 <ul class="chips">{sts}</ul>{f'<ul class="chips">{groups}</ul>' if groups else ''}<ul class="chips">{cats}</ul>{f'<div class="warn"><b>Предупреждения</b><ul>{warn}</ul></div>' if warn else ''}
 {_conf_controls(len(rows))}
-<table><thead><tr><th>№</th><th>Риск и статус</th><th>Уверенность</th><th>Категория</th><th>Где и цитата</th><th>Почему</th><th>Как исправить</th><th>Основание</th></tr></thead>
+<table><thead><tr><th>№</th><th>Риск и статус</th><th>Уверенность</th><th>Категория</th><th>Где и цитата</th><th>Почему</th><th>Как исправить</th><th>Норма</th></tr></thead>
 <tbody id="frows">{''.join(rows)}</tbody></table>{_model_table(model_rows, stats.get('model_block'))}{_unchecked_table(unchecked_rows)}{_passport_html(result)}<h2>Текст документов</h2>{sources}{CONF_JS}{FB_JS if run_id else ''}</body></html>"""
 
 
@@ -311,7 +313,7 @@ def to_docx_comments(result: dict, src_path: str, out_path: str) -> bool:
             text += f" Второе место: {ev.get('второе место', '')}, «{ev['вторая цитата']}»."
         norms = [result["norms"][n]["title"] for n in f["norm_ids"] if n in result.get("norms", {})]
         if norms:
-            text += " Основание: " + "; ".join(norms) + "."
+            text += " Норма: " + "; ".join(norms) + "."
         if ev.get("пункт нормы") and ev.get("цитата нормы"):
             text += f" Пункт нормы {ev['пункт нормы']}: «{ev['цитата нормы']}»."
         try:

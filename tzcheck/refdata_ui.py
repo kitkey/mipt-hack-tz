@@ -162,7 +162,7 @@ def source_rows() -> list[dict]:
             "changed_from_journal": bool(changed_run),
             "via": meta.get("via") or meta.get("source_type"), "via_title": meta.get("via_title") or meta.get("provenance") or meta.get("source_type"),
             "source_url": meta.get("source_url"), "version": meta.get("version_label") or meta.get("source_version") or meta.get("version"),
-            "status": status, "status_ru": changes.STATUS_RU.get(status, "нет записей в журнале") if status else "нет записей в журнале",
+            "status": status, "status_ru": changes.STATUS_RU.get(status, "нет сведений об обновлении") if status else "нет сведений об обновлении",
             "reason": reason, "counts": (run or {}).get("counts"), "seconds": (run or {}).get("seconds"), "mode": (run or {}).get("mode"),
             "notes": ((run or {}).get("notes") or meta.get("notes") or [])[:8], "warning": meta.get("lag_warning"),
             "chain": info["chain"], "errors": errors,
@@ -399,13 +399,25 @@ ICON = {
 }
 
 CSS = """
-:root{--fg:#1d1d1f;--muted:#666;--line:#dcdfe5;--bg:#fff;--soft:#f4f6fa;--accent:#3b5bdb;--hi:#c92a2a;--mid:#d9480f;--ok:#2b8a3e}
-*{box-sizing:border-box}body{font-family:system-ui,Segoe UI,Arial,sans-serif;max-width:1180px;margin:0 auto;padding:0 16px 48px;color:var(--fg);background:var(--bg)}
-nav.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:20px 0 22px}nav.tabs a{padding:10px 14px;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;margin-bottom:-1px;font-size:15px}
-nav.tabs a.on{color:var(--fg);border-bottom-color:var(--accent);font-weight:600}
-h1{font-size:22px;margin:0 0 6px}h2{font-size:17px;margin:0 0 12px}h3{font-size:15px;margin:18px 0 8px}
+@font-face{font-family:Manrope;font-weight:400;font-display:swap;src:url(/static/fonts/manrope-cyrillic-400.woff2) format("woff2");unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:Manrope;font-weight:400;font-display:swap;src:url(/static/fonts/manrope-latin-400.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:Manrope;font-weight:500;font-display:swap;src:url(/static/fonts/manrope-cyrillic-500.woff2) format("woff2");unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:Manrope;font-weight:500;font-display:swap;src:url(/static/fonts/manrope-latin-500.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:Manrope;font-weight:600;font-display:swap;src:url(/static/fonts/manrope-cyrillic-600.woff2) format("woff2");unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:Manrope;font-weight:600;font-display:swap;src:url(/static/fonts/manrope-latin-600.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+:root{--fg:#111418;--muted:#4B5563;--line:#D5D9DF;--bg:#fff;--soft:#F6F7F9;--accent:#1F4FD1;--ink:#111418;--hi:#c92a2a;--mid:#d9480f;--ok:#2b8a3e;--top-h:64px}
+*{box-sizing:border-box}body{margin:0;font:400 15px/22px Manrope,system-ui,"Segoe UI",Arial,sans-serif;color:var(--fg);background:var(--bg)}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px 48px}
+.top{position:sticky;top:0;z-index:20;height:var(--top-h);display:flex;align-items:center;gap:24px;padding:0 32px;background:rgba(255,255,255,.92);backdrop-filter:saturate(1.4) blur(12px);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:baseline;gap:12px;text-decoration:none;color:var(--fg);min-width:0}
+.brand-name{font-weight:600;font-size:18px;letter-spacing:-.01em}.brand-sub{color:var(--muted);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav{margin-left:auto;display:flex;gap:4px;overflow-x:auto}
+.nav a{display:flex;align-items:center;height:40px;padding:0 14px;border-radius:999px;color:var(--muted);text-decoration:none;font-weight:500;font-size:15px;white-space:nowrap}
+.nav a:hover{color:var(--fg);background:var(--soft)}.nav a[aria-current="page"]{color:#fff;background:var(--ink)}
+@media(max-width:760px){.top{padding:0 16px;gap:12px}.brand-sub{display:none}.nav a{padding:0 10px;font-size:14px}}
+h1{font-size:32px;line-height:40px;font-weight:600;letter-spacing:-.01em;margin:32px 0 8px}h2{font-size:17px;font-weight:600;margin:0 0 12px}h3{font-size:15px;font-weight:600;margin:18px 0 8px}
 .muted{color:var(--muted)}.small{font-size:13px}p{line-height:1.45}
-section{border:1px solid var(--line);border-radius:10px;padding:18px 22px;margin:16px 0}
+section{border:1px solid var(--line);border-radius:12px;padding:18px 22px;margin:16px 0}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin:14px 0}
 .cell{background:var(--soft);border-radius:8px;padding:12px 14px}.cell .k{font-size:12px;color:var(--muted);margin-bottom:4px}.cell .v{font-size:15px}
 table{border-collapse:collapse;width:100%;font-size:14px}th,td{border:1px solid var(--line);padding:7px 8px;vertical-align:top;text-align:left}
@@ -413,7 +425,7 @@ th{background:#f0f2f5;font-weight:600}td.n{text-align:right;white-space:nowrap;f
 .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px;background:var(--muted)}
 .s-updated .dot,.s-ok .dot{background:var(--ok)}.s-unchanged .dot{background:#8c96a5}.s-keep .dot,.s-warn .dot{background:var(--mid)}.s-err .dot{background:var(--hi)}.s-run .dot{background:var(--accent)}
 .s-keep,.s-warn{color:var(--mid)}.s-err{color:var(--hi)}
-button,.btn{display:inline-flex;align-items:center;gap:7px;background:var(--accent);color:#fff;border:0;border-radius:6px;padding:9px 16px;font-size:14px;cursor:pointer;font-family:inherit}
+button,.btn{display:inline-flex;align-items:center;gap:7px;background:var(--ink);color:#fff;border:0;border-radius:10px;padding:9px 16px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
 button.ghost{background:#fff;color:var(--fg);border:1px solid var(--line)}button:disabled{opacity:.55;cursor:default}
 select,input[type=text],input[type=time]{font:inherit;font-size:14px;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:#fff}
 .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:10px 0}label{font-size:14px}
@@ -428,6 +440,11 @@ code{background:var(--soft);padding:1px 5px;border-radius:4px;font-size:12.5px}
 
 NAV = ('<nav class="tabs"><a href="/#/"{a}>Проверка</a><a href="/#/history">История</a><a href="/#/norms">Нормативная база</a>'
        '<a href="/refdata"{b}>Справочники</a></nav>')
+
+
+TOP = ('<header class="top"><a class="brand" href="/#/"><span class="brand-name">tzcheck</span><span class="brand-sub">Проверка ТЗ по 223-ФЗ</span></a>'
+       '<nav class="nav"><a href="/#/">Проверка</a><a href="/#/history">История</a><a href="/#/norms">Нормативная база</a>'
+       '<a href="/refdata" aria-current="page">Справочники</a></nav></header>')
 
 
 def nav(active: str) -> str:
@@ -447,10 +464,8 @@ def _mode_block(m: dict, sch: dict) -> str:
         upd = (f'<span class="s-warn"><span class="dot"></span></span>сервис обновления не отвечает{ago}. '
                'Запрос «Обновить сейчас» выполнится после его запуска.')
     else:
-        upd = '<span class="s-ok"><span class="dot"></span></span>обновление идёт в веб-приложении.'
-        if not (hb and hb.get("fresh")):
-            upd += ' Планировщик не запущен, обновление по расписанию не сработает.'
-    check = ("справочники берутся только из локальных копий, при проверке ТЗ запросов в сеть нет" if m["offline"] else
+        upd = '<span class="s-warn"><span class="dot"></span></span>только вручную: сервис обновления не запущен, расписание не работает.'
+    check = ("только локальные копии справочников, без запросов в сеть" if m["offline"] else
              "если стандарта или прибора нет в копии, приложение само спрашивает rst.gov.ru и ФГИС «Аршин»")
     return (f'<div class="grid"><div class="cell"><div class="k">Обновление справочников</div><div class="v small">{upd}</div></div>'
             f'<div class="cell"><div class="k">Проверка ТЗ</div><div class="v small">{check}.</div></div></div>')
@@ -466,24 +481,24 @@ def _next_text(sch: dict) -> str:
 
 def _sources_table(rows: list[dict]) -> str:
     out = ['<div class="tablewrap"><table class="src"><thead><tr><th style="width:24%">Справочник</th><th>Проверено</th><th>Данные менялись</th>'
-           '<th style="width:22%">Откуда взято</th><th>Записей</th><th>Последний запуск:<br>добавлено, удалено, изменено</th>'
+           '<th style="width:22%">Источник</th><th>Записей</th><th>Изменения</th>'
            '<th style="width:20%">Итог</th></tr></thead><tbody>']
     for r in rows:
         c = r["counts"] or {}
         if not r["exists"]:
-            result = '<span class="s-keep"><span class="dot"></span>нет локальной копии</span><div class="small muted">ещё не обновлялся</div>'
+            result = '<span class="s-keep"><span class="dot"></span>не загружен</span>'
         else:
             result = f'<span class="{_status_cls(r["status"])}"><span class="dot"></span>{e(r["status_ru"])}</span>'
             if r["reason"]:
                 result += f'<div class="small muted">{e(r["reason"][:300])}</div>'
             if r["seconds"] is not None:
-                result += f'<div class="small muted">{e(r["seconds"])} с' + (", полный обход" if r["mode"] == "full" else "") + "</div>"
+                result += f'<div class="small muted">{_sec(r["seconds"])} с' + (", полный обход" if r["mode"] == "full" else "") + "</div>"
         if r["warning"]:
             result += f'<div class="small s-warn">{e(r["warning"])}</div>'
         changed = _msk(r["changed_at"]) if r["changed_at"] else "нет данных"
         if r["changed_at"] and not r["changed_from_journal"]:
-            changed += '<div class="small muted">время получения файла, в журнале изменений нет</div>'
-        via = e(r["via_title"] or "нет данных")
+            changed += '<div class="small muted">время получения файла</div>'
+        via = e(_via(r["via_title"]) or "нет данных")
         if r["source_url"]:
             via += f'<div class="small url"><a href="{e(r["source_url"])}" target="_blank" rel="noopener">{e(r["source_url"])}</a></div>'
         out.append(f'<tr><td><b>{e(r["title"])}</b><div class="small muted">{e(r["purpose"])}</div></td>'
@@ -505,7 +520,21 @@ def _local(stamp: str | None) -> str:
 def _counts(c: dict) -> str:
     if not c:
         return '<span class="muted">нет</span>'
-    return f'+{c.get("added", 0)} &nbsp;−{c.get("removed", 0)} &nbsp;~{c.get("changed", 0)}'
+    parts = [f"{w} {c.get(k)}" for k, w in (("added", "добавлено"), ("removed", "удалено"), ("changed", "изменено")) if c.get(k)]
+    return "<br>".join(parts) or '<span class="muted">нет</span>'
+
+
+def _sec(v) -> str:
+    try:
+        return f"{float(v):.1f}".rstrip("0").rstrip(".").replace(".", ",")
+    except (TypeError, ValueError):
+        return str(v)
+
+
+def _via(s: str | None) -> str:
+    """Подпись источника без служебных деталей: протокол, порт, имена библиотек; «·» заменяется запятой."""
+    s = re.sub(r"\s*\((?:HTTP|Playwright[^)]*)\)", "", str(s or ""))
+    return re.sub(r",?\s*API :\d+", "", s).replace(" API eapi", " API").replace(" · ", ", ").strip()
 
 
 def plural(n: int, one: str, few: str, many: str) -> str:
@@ -539,7 +568,7 @@ def _gost_block(g: dict) -> str:
 <p>Известно {g["known"]} {plural(g["known"], "стандарт", "стандарта", "стандартов")}.</p><p class="small">{_coverage(g)}</p>
 <p class="small muted">Проверено {_msk(g["checked_at"]) or "нет данных"}. Отслеживается {g["targets"]} {plural(g["targets"], "обозначение", "обозначения", "обозначений")}.
 Полный обход каталога: {full}.</p>
-<div class="cols"><div><h3>Что отслеживается</h3><table><thead><tr><th>Откуда обозначение</th><th>Обозначений</th></tr></thead><tbody>{groups}
+<div class="cols"><div><h3>Что отслеживается</h3><table><thead><tr><th>Источник обозначения</th><th>Обозначений</th></tr></thead><tbody>{groups}
 <tr><td>новые стандарты из лент protect.gost.ru ({feed})</td><td class="n">{sum(n for _, n in g["feed"])}</td></tr></tbody></table>
 <p class="small muted">Нет в каталоге при последней проверке: {missing}.</p>
 <h3>Как получены записи</h3><table><tbody>{vias}</tbody></table>
@@ -564,7 +593,7 @@ def _how_block(rows: list[dict]) -> str:
         steps.append("<li><b>прежняя копия</b>, если пути выше не сработали или данные не прошли проверку</li>")
         always = "".join(f"<li>{e(_no_env(x))}</li>" for x in h.get("always", []))
         always = f'<p class="small">При каждом запуске:</p><ul>{always}</ul>' if always else ""
-        parts.append(f"""<details><summary><b>{e(r["title"])}</b> <span class="chain">{" → ".join(e(t.split(" (")[0]) for _, t in r["chain"])} → прежняя копия</span></summary>
+        parts.append(f"""<details><summary><b>{e(r["title"])}</b> <span class="chain">{" → ".join(e(_via(t.split(" (")[0])) for _, t in r["chain"])} → прежняя копия</span></summary>
 <ol>{"".join(steps)}</ol>{always}
 <p class="small"><b>Что уходит наружу:</b> {e(h.get("sends", ""))}.</p></details>""")
     return '<section id="how"><h2>Как обновляется</h2>' + "".join(parts) + "</section>"
@@ -584,7 +613,7 @@ def _schedule_block(sch: dict) -> str:
         seen = ("сервис обновления принял настройки" if sch["updater_seen"] else "сервис обновления ещё не перечитал настройки")
         confirm = f'<div class="small muted" id="sch-seen">{seen}; по его часам следующее обновление {_local(sch["updater_next"])}</div>'
     else:
-        confirm = '<div class="small muted" id="sch-seen">планировщик не на связи, настройки применятся после его запуска</div>'
+        confirm = '<div class="small muted" id="sch-seen">Сервис обновления не запущен, настройки применятся после его запуска.</div>'
     saved = f'Сохранено {_local(s["saved_at"])}' if s.get("saved_at") else "Настройки по умолчанию"
     return f"""<section id="schedule"><h2>{ICON["clock"]} Расписание</h2>
 <form id="sch" class="row" onsubmit="return false">
@@ -593,7 +622,7 @@ def _schedule_block(sch: dict) -> str:
 <label>полный обход каталогов <select id="sch-wd">{wd}</select></label></form>
 <div class="row srcs small" id="sch-src">{srcs}</div>
 <div class="row"><button type="button" id="sch-save">{ICON["save"]}Сохранить</button><span class="msg" id="sch-msg"></span></div>
-<div class="small">Следующее обновление: <b id="sch-next">{_next_text(sch)}</b>. <span class="muted">{saved}.</span></div>
+<div class="small">{"Следующее обновление" if sch["updater_next"] else "По расписанию"}: <b id="sch-next">{_next_text(sch)}</b>. <span class="muted">{saved}.</span></div>
 {confirm}</section>"""
 
 
@@ -606,7 +635,7 @@ def _short_names() -> dict:
 
 def _run_block(run: dict) -> str:
     opts = '<option value="">все справочники</option>' + "".join(f'<option value="{n}">{e(t)}</option>' for n, t in _short_names().items())
-    return f"""<section id="run"><h2>Обновить сейчас</h2>
+    return f"""<section id="run"><h2>Ручное обновление</h2>
 <div class="row"><label>Что обновить <select id="run-src">{opts}</select></label>
 <label><input type="checkbox" id="run-full"> полный обход, около часа</label>
 <button type="button" id="run-go">{ICON["refresh"]}Обновить сейчас</button></div>
@@ -640,7 +669,7 @@ def _history_block(hist: list[dict]) -> str:
         cls = "s-ok" if h.get("code") == 0 else ("s-keep" if h.get("code") in (1, 3) else "s-err")
         rows.append(f'<tr><td class="n">{_local(h.get("started_at"))}</td><td>{e(TRIGGER_RU.get(h.get("trigger"), h.get("trigger")))}</td>'
                     f'<td>{e(", ".join(_short_names().get(s, s) for s in h.get("sources") or []))}{", полный обход" if h.get("full") else ""}</td>'
-                    f'<td>{e("сервис обновления" if h.get("runner") == "updater" else "веб-приложение")}</td><td class="n">{e(h.get("seconds"))} с</td>'
+                    f'<td>{e("сервис обновления" if h.get("runner") == "updater" else "веб-приложение")}</td><td class="n">{_sec(h.get("seconds"))} с</td>'
                     f'<td><span class="{cls}"><span class="dot"></span>{e(h.get("outcome"))}</span></td></tr>')
     return ('<section id="history"><h2>Журнал запусков</h2><div class="tablewrap"><table><thead><tr><th>Начало</th><th>Как запущено</th><th>Что</th>'
             '<th>Где выполнялось</th><th>Длилось</th><th>Итог</th></tr></thead><tbody>' + "".join(rows) + "</tbody></table></div></section>")
@@ -658,7 +687,7 @@ function dmy(s) { return s ? s.slice(8, 10) + '.' + s.slice(5, 7) + '.' + s.slic
 function secsSince(s) { return s ? Math.max(0, Math.round((Date.now() - new Date(s).getTime()) / 1000)) : 0; }
 function renderRun(info) {
   const st = info.state, box = $('run-state'), log = $('run-log'), go = $('run-go');
-  if (!st) { box.innerHTML = '<span class="muted">Запусков с этой вкладки ещё не было.</span>'; return false; }
+  if (!st) { box.innerHTML = '<span class="muted">Ручных запусков ещё не было.</span>'; return false; }
   const what = (st.sources || []).map(s => SHORT[s] || s).join(', ') + (st.full ? ', полный обход' : '');
   let html = '';
   const active = st.state === 'running' || st.state === 'queued';
@@ -667,7 +696,7 @@ function renderRun(info) {
   else if (st.state === 'lost') html = '<span class="s-err"><span class="dot"></span>' + esc(st.outcome) + '</span>';
   else {
     const cls = st.code === 0 ? 's-ok' : (st.code === 1 || st.code === 3 ? 's-keep' : 's-err');
-    html = '<span class="' + cls + '"><span class="dot"></span>Последний запуск ' + (TRIGGER[st.trigger] || '') + ' (' + esc(what) + '), ' + esc(dmy(st.finished_at)) + ', ' + esc(st.seconds) + ' с: ' + esc(st.outcome) + '</span>';
+    html = '<span class="' + cls + '"><span class="dot"></span>Последний запуск ' + (TRIGGER[st.trigger] || '') + ' (' + esc(what) + '), ' + esc(dmy(st.finished_at)) + ', ' + esc(String(st.seconds).replace('.', ',')) + ' с: ' + esc(st.outcome) + '</span>';
   }
   box.innerHTML = html;
   if (info.log && info.log.length) { log.hidden = false; const atEnd = log.scrollTop + log.clientHeight >= log.scrollHeight - 8; log.textContent = info.log.join('\\n'); if (atEnd || active) log.scrollTop = log.scrollHeight; }
@@ -742,9 +771,9 @@ def page() -> str:
     js = (JS.replace("%SHORT%", json.dumps(_short_names(), ensure_ascii=False)).replace("%PLUS%", json.dumps(ICON["plus"]))
           .replace("%LINK%", json.dumps(ICON["link"])))
     return f"""<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Справочники</title><style>{CSS}</style></head><body>{nav("refdata")}
+<title>Справочники</title><style>{CSS}</style></head><body>{TOP}<main class="wrap">
 <h1>Справочники</h1>
-<p class="muted small">Последняя проверка источников {_msk(last) or "не выполнялась"}, следующее обновление {_next_text(sch)}.</p>
+<p class="muted small">Последняя проверка источников {_msk(last) or "не выполнялась"}{f", следующее обновление {_next_text(sch)}" if m["via"] == "updater" else ""}.</p>
 {_mode_block(m, sch)}
 {_run_block(st["run"])}
 <section id="sources"><h2>Все справочники</h2>{_sources_table(rows)}</section>
@@ -753,7 +782,7 @@ def page() -> str:
 {_how_block(rows)}
 {_lexicon_block(st["lexicon"])}
 {_history_block(st["history"])}
-{js}</body></html>"""
+</main>{js}</body></html>"""
 
 
 @router.get("/refdata", response_class=HTMLResponse)

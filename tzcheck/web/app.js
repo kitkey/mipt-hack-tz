@@ -311,7 +311,7 @@ function applySnapshot(ctl, j) {
   ctl.job = j;
   if (j.files && j.files.length) {
     document.getElementById("job-file").textContent = j.files[0];
-    const parts = [j.use_llm ? "с моделью" : "без модели"];
+    const parts = j.use_llm === false ? ["без модели"] : [];
     if (j.files.length > 1) parts.push(`приложений: ${j.files.length - 1}`);
     const only = onlyGroups(groupTitles(j.checks));
     if (only) parts.push(only);
@@ -463,6 +463,7 @@ function evValue(k, v) {
     const head = [v.designation, v.clause && `п. ${v.clause}`, GOST_STATUS[v.status] || v.status].filter(Boolean).join(", ");
     return head + (v.quote ? `: «${v.quote}»` : "");
   }
+  if (k === "блок отчёта") return String(v).replace(/^на проверку: /, "«На проверку», ");
   if (k === "применимость ГОСТ" && v && typeof v === "object") return [v.why, v.quote && `«${v.quote}»`].filter(Boolean).join("; ");
   return plain(v);
 }
@@ -488,14 +489,14 @@ const TRACE_STEP = {
   verify: "Вторая проверка",
   dedupe: "Объединение повторов",
   repeats: "Объединение повторов",
-  gost: "Чеклист ГОСТ",
+  gost: "Чек-лист ГОСТ",
   route: "Раздел отчёта",
   final: "Итог",
 };
 const STAGE_TITLE = {
-  passport: "Паспорт закупки", roles: "Роли фрагментов", tables: "Разметка таблиц", find: "Поиск дефектов",
+  passport: "Паспорт закупки", roles: "Роли разделов", tables: "Разметка таблиц", find: "Поиск замечаний",
   refs: "Сверка со справочниками", gost: "Применимость ГОСТ", gost_check: "Сверка с ГОСТ", absent: "Проверка «не указано»",
-  cross: "Сверка частей", verify: "Вторая проверка", summary: "Заключение",
+  cross: "Сверка частей комплекта", verify: "Вторая проверка", summary: "Заключение",
 };
 
 async function getTrace(rv) {
@@ -516,10 +517,10 @@ function pretty(v) {
   return JSON.stringify(v, null, 2);
 }
 
-function callMeta(c) {
+function callMeta(c, full) {
   if (!c) return "";
-  const tok = c.tokens && (c.tokens.in || c.tokens.out) ? `токены ${c.tokens.in || 0} / ${c.tokens.out || 0}` : "";
-  return [c.id, c.seconds != null ? fmtSec(c.seconds) : "", tok, c.retry ? `повтор: ${c.retry}` : "", c.error ? `ошибка: ${c.error}` : ""].filter(Boolean).join(", ");
+  const tok = full && c.tokens && (c.tokens.in || c.tokens.out) ? `токены ${c.tokens.in || 0} / ${c.tokens.out || 0}` : "";
+  return [c.seconds != null ? fmtSec(c.seconds) : "", tok, c.retry ? `повтор: ${c.retry}` : "", c.error ? `ошибка: ${c.error}` : ""].filter(Boolean).join(", ");
 }
 
 const UNIT_KIND = {document: "документ", table: "таблица", position: "позиции", section: "раздел", pair: "две части документа", finding: "замечания"};
@@ -543,11 +544,12 @@ function unitHtml(c) {
   const blocks = u.blocks || [];
   const title = String(u.title || "");
   const kind = UNIT_KIND[u.kind] || u.kind || "";
-  const head = title && title.length <= 110 && !title.includes("; ") ? title : `${kind}${blocks.length ? `, фрагментов ${blocks.length}` : ""}`;
-  if (!blocks.length) return `<p class="small"><b>Вход:</b> ${esc(head)}</p>`;
+  const n = blocks.length;
+  const head = title && title.length <= 110 && !title.includes("; ") ? title : n ? `${n} ${plural(n, "фрагмент", "фрагмента", "фрагментов")}${kind ? ` (${kind})` : ""}` : kind;
+  if (!n) return `<p class="small"><b>Передано модели:</b> ${esc(head)}</p>`;
   const texts = blockTexts(c.prompt, blocks);
   const items = blocks.map(b => `<li><span class="u-id">${esc(b)}</span><span class="u-text">${esc(texts.get(b) || "текст фрагмента есть в запросе к модели")}</span></li>`).join("");
-  return `<details class="io unit"><summary><b>Вход:</b> ${esc(head)}</summary><ol class="unit-list">${items}</ol></details>`;
+  return `<details class="io unit"><summary><b>Передано модели:</b> ${esc(head)}</summary><ol class="unit-list">${items}</ol></details>`;
 }
 
 function callBody(c) {
@@ -555,7 +557,7 @@ function callBody(c) {
   const unit = unitHtml(c);
   return `${unit}
     ${c.system ? `<details class="io"><summary>Системная инструкция модели</summary><pre>${esc(c.system)}</pre></details>` : ""}
-    <details class="io"><summary>Запрос к модели <span class="muted small">${esc(String((c.prompt || "").length))} знаков</span></summary><pre>${esc(c.prompt || "")}</pre></details>
+    <details class="io"><summary>Запрос к модели <span class="muted small">${(c.prompt || "").length} ${plural((c.prompt || "").length, "знак", "знака", "знаков")}</span></summary><pre>${esc(c.prompt || "")}</pre></details>
     <details class="io"><summary>Ответ модели</summary><pre>${esc(pretty(c.parsed != null ? c.parsed : c.response))}</pre>${c.parsed != null && c.response ? `<details class="io raw"><summary>Сырой текст ответа</summary><pre>${esc(c.response)}</pre></details>` : ""}</details>`;
 }
 
@@ -565,7 +567,7 @@ function traceStepHtml(rv, s, i) {
   return `<li class="t-step t-${esc(s.step)}">
     <span class="t-n">${i + 1}</span>
     <div class="t-body">
-      <div class="t-title">${esc(title)}${s.call ? ` <span class="muted small">${esc(callMeta(c) || s.call)}</span>` : ""}</div>
+      <div class="t-title">${esc(title)}${callMeta(c) ? ` <span class="muted small">${esc(callMeta(c))}</span>` : ""}</div>
       ${s.text ? `<p class="t-text">${esc(s.text)}</p>` : ""}
       ${s.quote ? `<blockquote class="quote small">${esc(s.quote)}</blockquote>` : ""}
       ${Array.isArray(s.records) && s.records.length ? `<details class="io"><summary>Справочные записи: ${s.records.length}</summary><pre>${esc(s.records.join("\n\n"))}</pre></details>` : ""}
@@ -594,16 +596,22 @@ function rejectedHtml(rv) {
   </article>`).join("");
 }
 
+const STEP_STATE = {"выполнен": "готово", "неприменим": "пропущено", "не выполнен": "не выполнено"};
+
+function stepState(s) {
+  return STEP_STATE[s.state] || s.state || "";
+}
+
 function journalHtml(rv) {
   const calls = (rv.trace && rv.trace.calls) || [];
   const steps = rv.data.steps_status || [];
-  const stepRows = steps.map(s => `<li><b>${esc(s.title || s.id)}</b> <span class="muted">${esc(s.state || "")}${s.reason ? `: ${esc(s.reason)}` : ""}</span></li>`).join("");
+  const stepRows = steps.map(s => `<li><b>${esc(s.title || s.id)}</b><span class="muted">: ${esc(stepState(s))}${s.reason ? `, ${esc(s.reason)}` : ""}</span></li>`).join("");
   const byStage = new Map();
   for (const c of calls) { if (!byStage.has(c.stage)) byStage.set(c.stage, []); byStage.get(c.stage).push(c); }
-  const groups = [...byStage.entries()].map(([st, cs]) => `<details class="io stage"><summary><b>${esc(STAGE_TITLE[st] || st)}</b> <span class="muted small">вызовов ${cs.length}, ${fmtSec(cs.reduce((a, c) => a + (c.seconds || 0), 0))}</span></summary>
-    ${cs.map(c => `<details class="io call"><summary>${esc(c.title || c.id)} <span class="muted small">${esc(callMeta(c))}</span></summary>${callBody(c)}</details>`).join("")}</details>`).join("");
+  const groups = [...byStage.entries()].map(([st, cs]) => `<details class="io stage"><summary><b>${esc(STAGE_TITLE[st] || st)}</b> <span class="muted small">запросов: ${cs.length}, ${fmtSec(cs.reduce((a, c) => a + (c.seconds || 0), 0))}</span></summary>
+    ${cs.map(c => `<details class="io call"><summary>${esc(c.title || c.id)} <span class="muted small">${esc(callMeta(c, true))}</span></summary>${callBody(c)}</details>`).join("")}</details>`).join("");
   return `${stepRows ? `<h4>Шаги</h4><ul class="j-steps">${stepRows}</ul>` : ""}
-    <h4>Вызовы модели${calls.length ? `: ${calls.length}` : ""}</h4>
+    <h4>Запросы к модели${calls.length ? `: ${calls.length}` : ""}</h4>
     ${calls.length ? groups : '<p class="muted small">Модель не вызывалась.</p>'}`;
 }
 
@@ -643,7 +651,7 @@ function renderList(rv) {
   const shown = list.slice(0, rv.limit);
   const box = document.getElementById("r-list");
   const total = rv.data.findings.filter(f => sectionOf(f) === rv.section).length;
-  document.getElementById("r-count").textContent = `Показано ${shown.length} из ${list.length}${list.length !== total ? ` (в разделе ${total})` : ""}`;
+  document.getElementById("r-count").textContent = shown.length === total ? "" : `Показано ${shown.length} из ${list.length}${list.length !== total ? ` (в разделе ${total})` : ""}`;
   if (!list.length) {
     const any = rv.group !== "all" || rv.statuses.size || rv.q;
     box.innerHTML = `<div class="empty">${any ? `Под фильтр ничего не попало. <button type="button" class="link-btn inline" id="r-reset">Сбросить фильтры</button>` : rv.section === "main" ? "В основном списке замечаний нет." : "В этом разделе пусто."}</div>`;
@@ -668,10 +676,9 @@ function renderTabs(rv) {
   secBox.hidden = secList.length < 2;
   secBox.innerHTML = secList.map(([k, t, n]) => `<button type="button" data-sec="${esc(k)}" aria-pressed="${rv.section === k}">${esc(t[0].toUpperCase() + t.slice(1))}${n != null ? ` <span class="n">${n}</span>` : ""}</button>`).join("");
   document.querySelector(".tabs-row").hidden = document.querySelector(".filters").hidden = rv.section === "rejected";
-  document.getElementById("r-status").innerHTML = STATUS_ORDER.map(s => {
-    const n = inSec.filter(f => f.status === s).length;
-    return `<button type="button" class="dot-btn ${STATUS_CLS[s]}" data-st="${esc(s)}" aria-pressed="${rv.statuses.has(s)}"><i></i>${esc(statusTitle(s))} <span class="n">${n}</span></button>`;
-  }).join("");
+  const chips = STATUS_ORDER.map(s => [s, inSec.filter(f => f.status === s).length]).filter(([s, n]) => n || rv.statuses.has(s));
+  document.getElementById("r-status").innerHTML = chips.length < 2 && !rv.statuses.size ? "" : chips.map(([s, n]) =>
+    `<button type="button" class="dot-btn ${STATUS_CLS[s]}" data-st="${esc(s)}" aria-pressed="${rv.statuses.has(s)}"><i></i>${esc(statusTitle(s))} <span class="n">${n}</span></button>`).join("");
 }
 
 function renderRunHead(rv) {
@@ -706,7 +713,7 @@ function renderRunHead(rv) {
   const inc = d.completeness && d.completeness.complete === false;
   const incBox = document.getElementById("r-incomplete");
   if ((inc || d.full_check === false || d.status === "incomplete") && !/^Проверка неполная/.test(d.verdict || "")) {
-    const steps = ((d.completeness && d.completeness.incomplete_steps) || []).map(s => typeof s === "string" ? s : `${s.title || s.id}: ${s.state || ""}${s.reason ? ", " + s.reason : ""}`);
+    const steps = ((d.completeness && d.completeness.incomplete_steps) || []).map(s => typeof s === "string" ? s : `${s.title || s.id}: ${stepState(s)}${s.reason ? ", " + s.reason : ""}`);
     const only = d.full_check === false ? onlyGroups(d.check_groups || []) : "";
     incBox.hidden = false;
     incBox.innerHTML = `<b>Проверка неполная.</b> ${only ? `Проверены ${esc(only)}. ` : ""}${steps.length ? `Не выполнено: ${esc(steps.join("; "))}.` : ""}`;
@@ -720,7 +727,7 @@ function renderRunHead(rv) {
 
   const jr = document.getElementById("r-journal");
   if (jr) {
-    jr.querySelector("summary").innerHTML = `Журнал проверки <span class="muted small">${d.trace_calls ? `вызовов модели: ${d.trace_calls}` : "модель не вызывалась"}</span>`;
+    jr.querySelector("summary").textContent = "Журнал проверки";
     jr.addEventListener("toggle", async () => {
       if (!jr.open || jr.dataset.ready) return;
       jr.dataset.ready = "1";
@@ -731,8 +738,12 @@ function renderRunHead(rv) {
     });
   }
   const main = d.findings.filter(f => sectionOf(f) === "main");
-  document.getElementById("r-stats").innerHTML = `<div class="stat"><span class="stat-n">${main.length}</span><span class="stat-l">всего</span></div>` +
-    STATUS_ORDER.map(s => `<div class="stat ${STATUS_CLS[s]}"><span class="stat-n">${main.filter(f => f.status === s).length}</span><span class="stat-l"><i></i>${esc(statusTitle(s))}</span></div>`).join("");
+  const present = STATUS_ORDER.filter(s => main.some(f => f.status === s));
+  const stats = document.getElementById("r-stats");
+  stats.hidden = present.length < 2;
+  stats.style.setProperty("--n", String(present.length + 1));
+  stats.innerHTML = present.length < 2 ? "" : `<div class="stat"><span class="stat-n">${main.length}</span><span class="stat-l">всего</span></div>` +
+    present.map(s => `<div class="stat ${STATUS_CLS[s]}"><span class="stat-n">${main.filter(f => f.status === s).length}</span><span class="stat-l"><i></i>${esc(statusTitle(s))}</span></div>`).join("");
 }
 
 async function postDecision(rv, fid, decision, btn) {
@@ -802,6 +813,11 @@ async function renderRun(id) {
 const HIST_PAGE = 30;
 let histView = null;
 
+function plural(n, one, few, many) {
+  const a = Math.abs(n) % 100, b = a % 10;
+  return a > 10 && a < 20 ? many : b === 1 ? one : b > 1 && b < 5 ? few : many;
+}
+
 function histCard(it) {
   const c = it.counts || {};
   const dec = it.decisions || {};
@@ -816,10 +832,10 @@ function histCard(it) {
       <p class="muted small">${[fmtDate(it.created_at), it.user, groups, mode, it.previous_file ? `сопоставлено с ${it.previous_file}` : ""].filter(Boolean).map(esc).join(", ")}</p>
     </div>
     <div class="h-nums">
-      <div><span class="stat-n">${c.total ?? 0}</span><span class="stat-l">замечаний</span></div>
-      <div class="s-error"><span class="stat-n">${c.errors ?? 0}</span><span class="stat-l"><i></i>ошибок</span></div>
+      <div><span class="stat-n">${c.total ?? 0}</span><span class="stat-l">${plural(c.total ?? 0, "замечание", "замечания", "замечаний")}</span></div>
+      <div class="s-error"><span class="stat-n">${c.errors ?? 0}</span><span class="stat-l"><i></i>${plural(c.errors ?? 0, "ошибка", "ошибки", "ошибок")}</span></div>
       <div><span class="stat-n">${c.high ?? 0}</span><span class="stat-l">высокий риск</span></div>
-      <div><span class="stat-n">${decN}</span><span class="stat-l">${decN ? `решений: принято ${dec["принято"] || 0}, отклонено ${dec["отклонено"] || 0}` : "решений"}</span></div>
+      <div><span class="stat-n">${decN}</span><span class="stat-l">${plural(decN, "решение", "решения", "решений")}${decN ? `: принято ${dec["принято"] || 0}, отклонено ${dec["отклонено"] || 0}` : ""}</span></div>
     </div>
   </a>`;
 }
@@ -877,12 +893,15 @@ async function renderHistory() {
 }
 
 
-const KIND_TITLE = {internal: "Внутренние стандарты заказчика", customer_practice: "Практика заказчика", corpus: "Законы и стандарты", edition: "Тексты новых редакций ГОСТ"};
+const KIND_TITLE = {internal: "Внутренние стандарты заказчика", customer_practice: "Практика заказчика", corpus: "Законы и стандарты", edition: "Тексты редакций ГОСТ"};
 const ICON_TRASH = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 let normsView = null;
 
 function normRow(d) {
-  const meta = [d.edition, (d.status || "").replace(/\s*\([^)]*\.json\)/g, ""), d.customer && `заказчик: ${d.customer}`, d.blocks ? `пунктов ${d.blocks}` : "", d.uploaded_at && `загружен ${fmtDate(d.uploaded_at)}`].filter(Boolean).join(", ");
+  const status = (d.status || "").replace(/\s*\([^)]*\.json\)/g, "");
+  const st = /^правила практики/.test(status) ? "" : status.charAt(0).toLowerCase() + status.slice(1);
+  const named = d.customer && String(d.document || "").includes(d.customer);
+  const meta = [d.edition, st, !named && d.customer && `заказчик: ${d.customer}`, d.blocks ? `пунктов ${d.blocks}` : "", d.uploaded_at && `загружен ${fmtDate(d.uploaded_at)}`].filter(Boolean).join(", ");
   const file = String(d.source || "").replace(/^загружен через интерфейс:\s*/, "файл ");
   const src = d.source && /^https?:/.test(d.source) ? `<a href="${esc(d.source)}" target="_blank" rel="noopener">источник</a>` : file ? esc(file) : "";
   return `<li class="n-row" data-id="${esc(d.id)}">
@@ -983,7 +1002,7 @@ async function loadProfiles(nv) {
   const r = await fetch("/api/gost_profiles").catch(() => null);
   nv.profiles = r && r.ok ? await r.json() : [];
   if (!nv.profiles.length) {
-    box.innerHTML = '<div class="empty">Чеклисты ещё не собраны.</div>';
+    box.innerHTML = '<div class="empty">Чек-листы ещё не собраны.</div>';
     return;
   }
   box.innerHTML = nv.profiles.map(p => {
@@ -1065,7 +1084,7 @@ async function renderNorms() {
   const nv = normsView = {data: null, profiles: [], filter: "", tab: (location.hash.split("/")[2] || "docs")};
   view.innerHTML = `<section class="result norms">
     <div class="r-top"><div><h1>Нормативная база</h1></div></div>
-    <div class="segmented" role="tablist"><button type="button" data-ntab="docs" aria-pressed="${nv.tab === "docs"}">Документы</button><button type="button" data-ntab="gost" aria-pressed="${nv.tab === "gost"}">Чеклисты ГОСТ</button></div>
+    <div class="segmented" role="tablist"><button type="button" data-ntab="docs" aria-pressed="${nv.tab === "docs"}">Документы</button><button type="button" data-ntab="gost" aria-pressed="${nv.tab === "gost"}">Чек-листы ГОСТ</button></div>
     <div id="n-tab-docs" ${nv.tab === "docs" ? "" : "hidden"}>
       <div class="n-tools">
         <form class="card n-upload" id="n-upload">

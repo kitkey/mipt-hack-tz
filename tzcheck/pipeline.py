@@ -238,7 +238,7 @@ def core_find(doc, scr, groups, rep) -> list[Finding]:
     found = core.find(doc, scr, cats)
     rep.update(stage="сверка со справочниками")
     found += core.refs(doc, scr, cats)
-    rep.update(stage="сверка с чеклистами ГОСТ")
+    rep.update(stage="сверка с чек-листами ГОСТ")
     found += gost_check.check(doc, scr, cats)
     rep.update(stage="проверка «не указано» по всему комплекту")
     found = core.absent(doc, scr, found)
@@ -379,7 +379,7 @@ def _finish(doc, paths, findings, scr, use_llm, mode, t0, orchestrator, steps, g
             f.id = f"R{i:03d}"
             journal.rejected.append(f.to_dict())
     if rejected:
-        doc.warnings.append(f"Вторая проверка сняла замечаний модели: {len(rejected)}, в отчёт они не вошли.")
+        doc.warnings.append(f"Снято второй проверкой: {len(rejected)}, в отчёт не вошли.")
     if use_llm and main:
         stats = (f"всего {len(main)}: высокий риск {sev.get('high', 0)}, средний {sev.get('medium', 0)}, низкий {sev.get('low', 0)}; "
                  f"требуют ручной проверки {review}. По категориям: " + "; ".join(f"{k} {v}" for k, v in cats.most_common()))

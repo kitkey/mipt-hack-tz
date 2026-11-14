@@ -302,8 +302,8 @@ def find(doc, scr, cats: list) -> list[Finding]:
         prompt = FIND_PROMPT.format(what=scr.scrub(what), passport=pline, practice=practice + "\n" if practice else "",
                                     terms=_terms(doc, scr, u) if u.kind == "position" else "нет",
                                     categories=ctext, norms=norms, data=wrap(u.text))
-        title = "Поиск дефектов: " + what
-        data = ask(doc, prompt, 6000, "поиск дефектов", "find", title, unit_of(u.kind, u.title, u.block_ids)) or {}
+        title = "Поиск замечаний: " + what
+        data = ask(doc, prompt, 6000, "поиск замечаний", "find", title, unit_of(u.kind, u.title, u.block_ids)) or {}
         blocks = [doc.block(x) for x in u.block_ids if doc.block(x)]
         call = data.get("_call", "")
         out = [f for f in (_finding(doc, i, blocks, scr, "model:find", cats, call) for i in data.get("findings") or []) if f]
@@ -417,7 +417,7 @@ def absent(doc, scr, findings: list[Finding]) -> list[Finding]:
     decided, calls = {}, {}
     for start in range(0, len(items), 8):
         part = claims[start:start + 8]
-        unit = unit_of("finding", f"утверждений «не указано»: {len(part)}", [x.block_id for x in part])
+        unit = unit_of("finding", f"утверждения «не указано» ({len(part)})", [x.block_id for x in part])
         data = ask(doc, ABSENT_PROMPT.format(passport=pline, items=wrap("\n".join(items[start:start + 8]))), 3000, "проверка «не указано»",
                    "absent", "Проверка «не указано» по всему комплекту", unit) or {}
         for n in range(start + 1, start + len(part) + 1):
@@ -437,8 +437,9 @@ def absent(doc, scr, findings: list[Finding]) -> list[Finding]:
         hits = cands.get(n) or []
         f.evidence["поиск по комплекту"] = [f"{b.location()}: {b.text[:160]}" for b, _ in hits[:3]] or "кандидатов не найдено"
         why = scr.restore(str((d or {}).get("reason") or ""))[:300]
-        verdict = {"same": f"снято: указано в той же части или общих условиях; {why}", "other": f"понижено: указано в другом разделе; {why}",
-                   "not_found": f"оставлено: не найдено по комплекту; {why}"}.get(str((d or {}).get("decision")), "решения модели нет, на проверку")
+        tail = f". {why}" if why else ""
+        verdict = {"same": f"снято: указано в той же части или общих условиях{tail}", "other": f"понижено: указано в другом разделе{tail}",
+                   "not_found": f"оставлено: не найдено по комплекту{tail}"}.get(str((d or {}).get("decision")), "решения модели нет, на проверку")
         f.trace.append({"step": "absent_search", "call": calls.get(n, ""), "item": d,
                         "text": f"поиск по комплекту: кандидатов {len(hits)} ({', '.join(b.id for b, _ in hits)}); {verdict}"})
         if not d:
@@ -448,21 +449,22 @@ def absent(doc, scr, findings: list[Finding]) -> list[Finding]:
             continue
         dec, where = str(d.get("decision")), doc.block(str(d.get("block_id") or ""))
         reason = scr.restore(str(d.get("reason") or ""))[:300]
+        rtail = f". {reason}" if reason else ""
         if dec == "same":
-            f.evidence["проверка «не указано»"] = f"указано: {where.location() if where else ''}; {reason}"
+            f.evidence["проверка «не указано»"] = f"указано: {where.location() if where else 'в той же части'}{rtail}"
             doc.llm_rejected.append(f)
             continue
         if dec == "other":
             loc = where.location() if where else "другой раздел комплекта"
-            f.explanation = f"Сведения указаны в другом разделе ({loc}), проверить согласованность. Довод модели: {f.explanation}"
+            f.explanation = f"Сведения указаны в другом разделе ({loc}), проверить согласованность. Исходный довод: {f.explanation}"
             f.severity = "low"
             f.needs_review = True
-            f.evidence["проверка «не указано»"] = f"указано в другом разделе: {loc}; {reason}"
+            f.evidence["проверка «не указано»"] = f"указано в другом разделе: {loc}{rtail}"
             if where:
                 f.also_in.append(where.id)
             out.append(f)
             continue
-        f.evidence["проверка «не указано»"] = f"не найдено по комплекту; {reason}"
+        f.evidence["проверка «не указано»"] = f"не найдено по комплекту{rtail}"
         out.append(f)
     return out
 
@@ -590,7 +592,7 @@ def verify(doc, scr, findings: list[Finding]) -> list[Finding]:
 
     def work(batch):
         prompt = VERIFY_PROMPT.format(passport=pline, practice=practice + "\n" if practice else "", items=wrap("\n\n".join(blocks[n] for n in batch)))
-        unit = unit_of("finding", f"замечаний: {len(batch)}", [findings[n].block_id for n in batch])
+        unit = unit_of("finding", f"замечания ({len(batch)})", [findings[n].block_id for n in batch])
         return batch, ask(doc, prompt, 4000, "вторая проверка", "verify", "Вторая проверка замечаний", unit) or {}
 
     calls = {}

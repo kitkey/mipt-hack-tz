@@ -1196,7 +1196,7 @@ def safe_apply(doc, findings: list[Finding], build_missing: bool = False) -> lis
     try:
         return apply(doc, findings, build_missing)
     except Exception as e:
-        doc.warnings.append(f"Проверка по чеклистам ГОСТ упала ({type(e).__name__}: {e})")
+        doc.warnings.append(f"Проверка по чек-листам ГОСТ упала ({type(e).__name__}: {e})")
         return findings
 
 
